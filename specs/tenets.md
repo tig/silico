@@ -14,16 +14,18 @@ Tenets are the written rules that distinguish good behavior from unwelcome behav
 
 3. **Agents operate the host path.** Agents run the gobbledygook: machine setup, GitHub auth and CI, package pins, first firmware/runtime on the board, port discovery, deploy, version verify, and the issue→gate→metal loop. The human is an **operator to help**, not a presumed expert. Do not assume they know how to flash initial firmware, pick a COM port, run `gh`, or type shell the agent cannot run. Guide them step by step; do the work the agent can do; never dump a wall of unexplained commands.
 
-4. **Edge that just works is hard.** Devices, install, identity, recovery, and field ops stay hard even when agents write the code and run the host path. We invest in that gobbledygook so vertical teams do not.
+4. **Make it better than you found it.** Anytime something does not go smoothly and an agent must guess, correct, reverse, or research where a simple edit to silico's `AGENTS.md` (or other agent-facing docs) or a bug fix to the infrastructure would make the next agent faster, fix it. Prefer a small PR when you can; otherwise file a clear issue on `tig/silico`. Do not leave the recovery only in chat. Tribal knowledge is a regression.
 
-5. **Vertical teams are the customer.** Builders in the SpaceX, Stoke Space, Figure, and Anduril pattern need edge devices inside a vertical solution. They do not want a device-ops priesthood. Pure cloud SaaS with no metal is not our customer.
+5. **Edge that just works is hard.** Devices, install, identity, recovery, and field ops stay hard even when agents write the code and run the host path. We invest in that gobbledygook so vertical teams do not.
 
-6. **Prompt for metal.** Silico exists so teams can prompt agents such that what they *care about* lands on edge devices reliably, safely, and repeatedly. The experience we work backwards from: agent on a Mac, device working end-to-end the next day, potential customer's hand the day after, silico still foundational after that. Host gates, version verify, and agent docs are the product surface for that prompt. Folklore is not. The human's job is domain judgment and confirmation, not typing C or MicroPython into a blank file or memorizing serial folklore.
+6. **Vertical teams are the customer.** Builders in the SpaceX, Stoke Space, Figure, and Anduril pattern need edge devices inside a vertical solution. They do not want a device-ops priesthood. Pure cloud SaaS with no metal is not our customer.
+
+7. **Prompt for metal.** Silico exists so teams can prompt agents such that what they *care about* lands on edge devices reliably, safely, and repeatedly. The experience we work backwards from: agent on a Mac, device working end-to-end the next day, potential customer's hand the day after, silico still foundational after that. Host gates, version verify, and agent docs are the product surface for that prompt. Folklore is not. The human's job is domain judgment and confirmation, not typing C or MicroPython into a blank file or memorizing serial folklore.
 
 ## Aspirational
 
-7. **Host first.** Done means the host gate is green before anyone treats a device flash as proof. Metal confirms. Metal does not define done. That is how a non-expert knows the agent's work is true.
+8. **Host first.** Done means the host gate is green before anyone treats a device flash as proof. Metal confirms. Metal does not define done. That is how a non-expert knows the agent's work is true.
 
-8. **Apps stay apps.** Domain IP and product brands stay private to each GCU. Silico is the spine, not the product, not a company SKU, and not platform cosplay. Promote a pattern into silico only when a second GCU needs it. Public silico docs refer to starter GCUs only by codenames ([gcu-codenames.md](./gcu-codenames.md)).
+9. **Apps stay apps.** Domain IP and product brands stay private to each GCU. Silico is the spine, not the product, not a company SKU, and not platform cosplay. Promote a pattern into silico only when a second GCU needs it. Public silico docs refer to starter GCUs only by codenames ([gcu-codenames.md](./gcu-codenames.md)).
 
-9. **Extract, then open.** We grow the spine from real field GCUs, not from imaginary third parties. Three GCUs in the field prove extraction. Adoption and "it actually works" prove the rest. We do not claim the second proof when we only have the first.
+10. **Extract, then open.** We grow the spine from real field GCUs, not from imaginary third parties. Three GCUs in the field prove extraction. Adoption and "it actually works" prove the rest. We do not claim the second proof when we only have the first.

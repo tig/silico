@@ -88,7 +88,7 @@ Skin in the game: Media Center, Home Server, Phone, Echo, Control4 (device ops a
 
 If Grady still needs a software guy and a quarter to move, **Prompt for metal** is a slogan. If only I can run the two days, we are not done.
 
-Load-bearing tenets: [tenets.md](./tenets.md). Especially **Prompt for metal**, **Agents write the code**, **Agents operate the host path**, **Vertical teams are the customer**.
+Load-bearing tenets: [tenets.md](./tenets.md). Especially **Prompt for metal**, **Agents write the code**, **Agents operate the host path**, **Make it better than you found it**, **Vertical teams are the customer**.
 
 ## 3. What is silico, in one sentence?
 
@@ -178,9 +178,10 @@ The Silico tenets ([tenets.md](./tenets.md)). Ties broken most often by:
 
 1. **Agents write the code.** Hand-authored firmware is not the default path.
 2. **Agents operate the host path.** Help the operator; do not assume Git, COM ports, first flash, or agent UI tricks.
-3. **Prompt for metal** and **Host first.** Green host command is done; flash confirms.
-4. **Apps stay apps.** Domain IP stays private.
-5. **Extract, then open.** Second GCU forces promotion; three field GCUs prove extraction only.
+3. **Make it better than you found it.** Friction that forced a guess becomes an `AGENTS.md` fix or a `tig/silico` issue, not chat-only lore.
+4. **Prompt for metal** and **Host first.** Green host command is done; flash confirms.
+5. **Apps stay apps.** Domain IP stays private.
+6. **Extract, then open.** Second GCU forces promotion; three field GCUs prove extraction only.
 
 ## 13. What are the Priorities (in order)?
 

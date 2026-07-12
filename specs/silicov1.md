@@ -50,9 +50,10 @@ v1 succeeds when:
 5. Install and update verify version identity. Mismatch is failure (**Prompt for metal**, **Host first**).
 6. Agents author firmware and detailed specs by default. Chat folklore is not a release artifact (**Agents write the code**).
 7. Agents run host setup, CI, deploy, and first-flash guidance; help the operator; do not assume ops literacy (**Agents operate the host path**).
-8. CI has no serial port. Hardware harness is optional and local (**Host first**).
-9. Do not claim external proof when only extraction is proven (**Extract, then open**).
-10. Do not require the human steward to be the MCU, electrical, or DevOps expert to merge.
+8. Agent friction becomes silico doc/infra fixes or issues on `tig/silico`, not chat-only recovery (**Make it better than you found it**).
+9. CI has no serial port. Hardware harness is optional and local (**Host first**).
+10. Do not claim external proof when only extraction is proven (**Extract, then open**).
+11. Do not require the human steward to be the MCU, electrical, or DevOps expert to merge.
 
 ## 3. The three GCUs (v1 forcing function)
 

@@ -21,12 +21,13 @@ Full text: [specs/tenets.md](specs/tenets.md) (unless you know better ones).
 1. **Software is not the moat.**
 2. **Agents write the code.**
 3. **Agents operate the host path.**
-4. **Edge that just works is hard.**
-5. **Vertical teams are the customer.**
-6. **Prompt for metal.**
-7. **Host first.**
-8. **Apps stay apps.**
-9. **Extract, then open.**
+4. **Make it better than you found it.**
+5. **Edge that just works is hard.**
+6. **Vertical teams are the customer.**
+7. **Prompt for metal.**
+8. **Host first.**
+9. **Apps stay apps.**
+10. **Extract, then open.**
 
 ## Help the operator (non-negotiable)
 
@@ -47,6 +48,26 @@ The human is often **Grady-shaped**: domain or hardware judgment, not a software
 9. **Teach only what Day 2 requires.** After success, leave one documented update command and where the LED should look. No textbook.
 
 Violating this section violates **Agents operate the host path**.
+
+## Make it better than you found it (non-negotiable)
+
+Anytime the path is rough and you had to **guess, correct, reverse, or research** something that a better `AGENTS.md`, plate, script, error message, or small infra fix would have prevented for the **next** agent: do not leave that knowledge only in chat.
+
+1. **Notice friction.** Wrong default port, missing UF2 step, CI secret gotcha, ambiguous prompt, Windows-only failure, tool flag that changed: if you stumbled, the next agent will too.
+2. **Prefer a durable fix in silico.**
+   - Edit `AGENTS.md` or other agent-facing docs when the gap is guidance.
+   - Fix or extend host tooling when the gap is code (when that code lives in silico).
+   - Keep product domain fixes in the **GCU** repo; keep spine/agent-path fixes in **tig/silico**.
+3. **If you cannot land the fix now, file an issue on `tig/silico`.** Use `gh issue create` in the silico repo (or ask the operator to open one if you lack permission). Good issues include:
+   - What you were trying to do (Day 1 phase or task).
+   - What went wrong (exact error or wrong assumption).
+   - What you did to recover.
+   - Proposed doc or code change so the next agent does not guess.
+4. **Tag when useful.** e.g. `agents`, `day-1`, `host-path`, `docs`, `bug`.
+5. **Mention the issue** in the PR or session summary so humans see the trail.
+6. **Do not "helpfully" invent a parallel spine** in the GCU to avoid filing upstream. Pin silico; improve silico.
+
+Leaving tribal recovery in chat only violates **Make it better than you found it**.
 
 ## Getting started for agents (Day 1)
 
@@ -202,6 +223,7 @@ Starter products are confidential. In public silico docs and commits use **Zakal
 8. Do not claim external adoption or platform status without scoreboard evidence.
 9. Do not rewrite PR titles, Grady quotes, or Tig quotes unless the human asks.
 10. Do not start Arduino / multi-runtime work unless a GCU forces it (v2).
+11. Do not burn an hour recovering from silico friction and leave no issue or doc fix for the next agent.
 
 ## Commands (host)
 
@@ -224,3 +246,4 @@ Prefer explicit `COMx` / `/dev/tty...` over `connect auto` when more than one se
 3. Preserve human-owned wording (PR title, Grady quote, Tig quote).
 4. Commit in small, reviewable steps when the human wants revision history.
 5. Host gate for silico package code when it exists; docs-only changes need no metal.
+6. Apply **Make it better than you found it** here first: doc and infra PRs in this repo beat issues when you already have write access.

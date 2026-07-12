@@ -25,9 +25,7 @@ Method notes:
 **Fall 2026**
 **Durango, CO**
 
-## Day one: device working end-to-end. Day two: in a potential customer's hand.
-
-*That is the experience. Silico exists to make it true.*
+## Silco proves `Prompt for Metal` Actually Works
 
 **Durango, CO** — Grady had raised money to build Quilan and spent it on contract manufacture in Asia. The prototype existed. Field trials did not. He is not a software guy. Software was the stall.
 

@@ -88,7 +88,7 @@ Skin in the game: Media Center, Home Server, Phone, Echo, Control4 (device ops a
 
 If Grady still needs a software guy and a quarter to move, **Prompt for metal** is a slogan. If only I can run the two days, we are not done.
 
-Load-bearing tenets: [tenets.md](./tenets.md). Especially **Prompt for metal**, **Agents write the code**, **Vertical teams are the customer**.
+Load-bearing tenets: [tenets.md](./tenets.md). Especially **Prompt for metal**, **Agents write the code**, **Agents operate the host path**, **Vertical teams are the customer**.
 
 ## 3. What is silico, in one sentence?
 
@@ -109,8 +109,8 @@ The checklist for Grady, or anyone who finds `github.com/tig/silico` and wants D
 **Account and tools**
 
 6. Create a GitHub account if needed. Enable 2FA. You will create a **private** product repo here.
-7. Start the agent and prompt: `See https://github.com/tig/silico. Follow the getting started instructions for agents.` The agent installs machine prerequisites (for example GitHub CLI `gh` and Python 3.9+), helps the human authenticate with `gh`, and asks which GitHub repo to use. If none exists, the agent helps create and configure a private GCU repo.
-8. Agent and human confirm setup is complete before hardware work. Do not skip to flashing.
+7. Start the agent and prompt: `See https://github.com/tig/silico. Follow the getting started instructions for agents.` The agent **helps the operator** (see [AGENTS.md](../AGENTS.md)): installs prerequisites, walks auth step by step, does not assume shell or first-flash literacy, and creates or selects a private GCU repo.
+8. Agent and human confirm setup is complete before hardware work. Do not skip to flashing. Do not dump unexplained command lists on the human.
 
 **Talk to real hardware**
 
@@ -177,9 +177,10 @@ Because I still stand by 2011. Calling a tool a platform before the sides show u
 The Silico tenets ([tenets.md](./tenets.md)). Ties broken most often by:
 
 1. **Agents write the code.** Hand-authored firmware is not the default path.
-2. **Prompt for metal** and **Host first.** Green host command is done; flash confirms.
-3. **Apps stay apps.** Domain IP stays private.
-4. **Extract, then open.** Second GCU forces promotion; three field GCUs prove extraction only.
+2. **Agents operate the host path.** Help the operator; do not assume Git, COM ports, first flash, or agent UI tricks.
+3. **Prompt for metal** and **Host first.** Green host command is done; flash confirms.
+4. **Apps stay apps.** Domain IP stays private.
+5. **Extract, then open.** Second GCU forces promotion; three field GCUs prove extraction only.
 
 ## 13. What are the Priorities (in order)?
 

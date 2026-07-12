@@ -20,57 +20,78 @@ Full text: [specs/tenets.md](specs/tenets.md) (unless you know better ones).
 
 1. **Software is not the moat.**
 2. **Agents write the code.**
-3. **Edge that just works is hard.**
-4. **Vertical teams are the customer.**
-5. **Prompt for metal.**
-6. **Host first.**
-7. **Apps stay apps.**
-8. **Extract, then open.**
+3. **Agents operate the host path.**
+4. **Edge that just works is hard.**
+5. **Vertical teams are the customer.**
+6. **Prompt for metal.**
+7. **Host first.**
+8. **Apps stay apps.**
+9. **Extract, then open.**
+
+## Help the operator (non-negotiable)
+
+The human is often **Grady-shaped**: domain or hardware judgment, not a software or embedded expert. Your job is to **help the operator**, not to examine them.
+
+1. **Assume low ops literacy.** Do not assume they know Git, GitHub, Python, pip, COM ports, UF2, bootloader buttons, or your tool's slash-commands.
+2. **Do not dump a wall of shell.** Never paste five unexplained commands and say "run these." One step at a time. Say what it does, then run it yourself when you can.
+3. **Prefer doing over instructing.** If you can install `gh`, create a repo, run pytest, or call `mpremote`, do it. Only hand the human steps that require their body: browser login, plugging USB, holding BOOT, approving a UAC prompt, reading an LED.
+4. **When the human must act, be explicit and dumb-simple.**
+   - Name the exact app/window if relevant.
+   - Give the physical action: "Hold the button labeled BOOT on the board, tap RESET, then release BOOT."
+   - Give the exact string to paste if they must type something you cannot run.
+   - Do **not** assume they know agent UI tricks (for example typing `! xyz` to run a host command, approving a tool, or opening a terminal profile). Explain the click path once.
+5. **First firmware is your problem.** Do not assume the board already has MicroPython or that they know how to get initial firmware on the device. Detect blank vs REPL. Walk UF2 or the board's first-flash path from zero. Once per board, then never make them re-learn it for app updates.
+6. **Serial is scary; own it.** List candidate ports in plain language ("likely the board", "likely a different adapter"). Prefer explicit ports. If something fails, say what you will try next; do not shame them for cable/port confusion.
+7. **Confirm understanding in their words.** Before a irreversible or physical step, one short check: "You should see a drive named RPI-RP2. Do you?"
+8. **Never leave them at a cliff.** If you are blocked (need a password, need a click), say exactly what you need and wait. Do not continue as if they finished.
+9. **Teach only what Day 2 requires.** After success, leave one documented update command and where the LED should look. No textbook.
+
+Violating this section violates **Agents operate the host path**.
 
 ## Getting started for agents (Day 1)
 
 When a human says: *See https://github.com/tig/silico. Follow the getting started instructions for agents.*
 
-Run this playbook. Do not dump a wall of shell on the human. Confirm each phase with them before advancing.
+Run this playbook under **Help the operator**. Confirm each phase with them before advancing.
 
 ### Phase A — Machine prerequisites
 
-1. Detect OS (Windows / macOS / Linux).
-2. Ensure **Git** is installed and on PATH.
-3. Ensure **Python 3.9+** is installed (`py -3` on Windows, `python3` elsewhere).
-4. Ensure **GitHub CLI (`gh`)** is installed. If missing, install via the OS package manager or official installer and verify `gh --version`.
-5. Ensure **pip** works for that Python.
-6. Report what you found/fixed. Stop if the human must click through an installer UI you cannot complete.
+1. Detect OS (Windows / macOS / Linux). Tell them what you detected in one sentence.
+2. Ensure **Git** is installed and on PATH. Install if missing; verify with a version command you run.
+3. Ensure **Python 3.9+** (`py -3` on Windows, `python3` elsewhere). Install/guide if missing; do not assume `python` means 3.
+4. Ensure **GitHub CLI (`gh`)** is installed. Install if missing; verify `gh --version`.
+5. Ensure **pip** works for that same Python.
+6. Summarize ready vs needs a human click. Stop cleanly if an installer UI requires them.
 
 ### Phase B — GitHub identity and GCU repo
 
-1. Check `gh auth status`. If not logged in, guide the human through `gh auth login` (they complete the browser/device flow).
-2. Ask: private GCU repo URL, or create new?
+1. Check `gh auth status`. If not logged in, walk them through `gh auth login` **one prompt at a time** (browser/device code). Do not assume they have used `gh` before.
+2. Ask: use an existing private GCU repo URL, or create new? Offer defaults; do not require Git vocabulary.
 3. If create new:
-   - Confirm product/codename for the repo name (not `silico`).
-   - `gh repo create <name> --private --clone` (or create empty + push after scaffold).
+   - Confirm a product or codename for the repo name (not `silico`).
+   - Create private repo with `gh` and clone, or create empty then push after scaffold.
 4. If existing: clone or open that repo as the **workspace root for product work**.
-5. Silico itself stays at `github.com/tig/silico`. The **product** lives in the private GCU repo.
+5. Remind them: silico stays `github.com/tig/silico`; **their product** is the private GCU repo.
 
 ### Phase C — Pin silico and scaffold the GCU
 
-1. If the GCU is empty or not yet a silico plate, scaffold layout:
+1. If the GCU is empty or not yet a silico plate, scaffold:
 
 ```text
 <gcu>/
-  AGENTS.md          # product agent guide (domain + pointer to silico tenets)
+  AGENTS.md          # product agent guide (domain + silico tenets pointer)
   CLAUDE.md          # stub → AGENTS.md
   firmware/          # on-device app only
   sim/               # host tests + plant; never deploy
   scripts/           # thin wrappers around silico host tools
-  install/           # end-customer update docs
+  install/           # end-customer update docs (plain language)
   requirements-dev.txt
   pytest.ini
   .github/workflows/ci.yml
   silico.toml        # product config when tools exist
 ```
 
-2. Pin silico as a **host** dependency only:
+2. Pin silico as a **host** dependency only (you edit the file; you run pip):
 
 ```text
 # requirements-dev.txt
@@ -81,52 +102,50 @@ pytest>=8
 mpy-cross>=1.20
 ```
 
-3. `pip install -r requirements-dev.txt` (use the same Python as CI will use).
-4. Add a minimal host CI workflow that runs the host gate (pytest; no COM port).
-5. Commit and push. Confirm GitHub Actions (or equivalent) is enabled on the private repo.
+3. Install host deps with the same Python CI will use. Fix failures yourself when possible.
+4. Add minimal host CI (pytest; no COM port).
+5. Commit and push. Confirm Actions (or equivalent) is on. If the human must enable Actions in the GitHub UI, give exact clicks; do not assume they know where Settings is.
 
-Until silico ships a real installable package and plate generator, implement the thinnest plate that satisfies host-first: versioned firmware stub, pytest that fails closed if missing, deploy script stub that will call silico APIs when present.
+Until silico ships a real package and plate generator, implement the thinnest plate that satisfies host-first: versioned firmware stub, pytest that fails closed if missing, deploy path that will call silico APIs when present.
 
 ### Phase D — Talk to real hardware (hello metal)
 
-Goal: LEDs flash **green**, reconnect is **repeatable**, runtime installed once if needed.
+Goal: status LEDs flash **green**, reconnect is **repeatable**, runtime on board once if needed.
 
-1. Ask the human to plug the board via a **data** USB cable.
-2. Prefer explicit port selection. On multi-device Windows hosts, do not trust blind `connect auto`. Prefer Raspberry Pi VID `2e8a`; demote CH340 `1a86` and Debug Probe `2e8a:000c`.
-3. If no MicroPython REPL: guide BOOT+RESET → `RPI-RP2` → RPI_PICO UF2 (or board-appropriate image). Once per board.
-4. Prove REPL: `import sys; print(sys.platform)` → expect `rp2` for RP2040-class.
-5. Deploy a minimal firmware that drives status LED green (or documented hello pattern).
-6. Unplug/replug and redeploy or soft-reset until reconnect is boring.
-7. Document the update command in `install/` for tomorrow morning.
+1. Ask them to use a **data** USB cable (not charge-only). Explain that some cables only power.
+2. Have them plug the board. You list serial candidates in plain language; pick explicit port. On multi-device Windows, never rely on blind `connect auto`. Prefer VID `2e8a`; demote CH340 `1a86` and Debug Probe `2e8a:000c`.
+3. If no MicroPython REPL: **you** drive first firmware. Step-by-step physical: hold BOOT, tap RESET, release BOOT → wait for `RPI-RP2` drive → download/copy the correct UF2 → wait for reconnect. Do not assume they have ever done this. Once per board.
+4. Prove REPL yourself: `import sys; print(sys.platform)` → `rp2` for RP2040-class. Tell them what "good" looks like.
+5. Deploy minimal firmware so LED is green (or documented hello).
+6. Unplug/replug with them until reconnect is boring.
+7. Write `install/` in plain language for tomorrow morning (one command, what LED to expect).
 
 ### Phase E — CI proves metal change
 
-1. Prompt the human to create a GitHub Issue on the **GCU** repo, e.g. title: `Change the firmware to flash green/red`.
+1. Ask the human to open a GitHub Issue on the **GCU** repo. Give them the exact title to paste, e.g. `Change the firmware to flash green/red`. If they do not know how to open an issue, give the UI path or create it with `gh` after they approve.
 2. When the issue exists, implement it: firmware behavior change **and** host tests/CI green.
-3. Open PR or push per repo convention. Wait for CI green.
-4. Deploy to the board; human confirms LED behavior matches the issue.
+3. Push or PR. You watch CI; you fix red builds.
+4. Deploy to the board; ask them only to confirm what they see on the LED.
 5. Close the issue with a short note linking the commit/PR.
 
-This is the first closed loop: **issue → agent → host gate → CI → metal**.
+Closed loop: **issue → agent → host gate → CI → metal**.
 
 ### Phase F — Domain work (still Day 1)
 
 1. Human points at domain intent (docs, notes, rough brief). You do **not** invent the vertical moat.
-2. Write or update detailed specs under `specs/` or product docs in the GCU.
-3. Test-first: host unit/smoke tests and sim where applicable.
-4. Implement `firmware/` behind HAL-style boundaries (no hardware at import; pure domain where possible).
-5. Codify a staged plan as **cross-linked, tagged GitHub Issues** for proprietary work.
-6. Host gate green locally before claiming done. Flash only confirms.
-7. Push; CI matches local. Human change requests arrive as GitHub Issues.
+2. Write detailed specs, tests, and `firmware/` under test-first and host-first rules.
+3. Staged plan as **cross-linked, tagged GitHub Issues** for proprietary work.
+4. Host gate green locally before claiming done. Flash only confirms.
+5. Push; CI matches local. Change requests arrive as GitHub Issues. Implement them without requiring the human to know git branches unless they want to.
 
 ### Day 1 exit criteria (before Day 2)
 
 - [ ] Device works end-to-end on the bench.
 - [ ] Host gate green locally and on GitHub.
 - [ ] Device `FW_VERSION` matches host.
-- [ ] One documented update command a non-expert can re-run.
-- [ ] Silico pinned as host dependency (not a vendored script pile).
-- [ ] `firmware/` is the only thing that must live on metal for the app.
+- [ ] One documented update command a non-expert can re-run (you wrote the doc).
+- [ ] Silico pinned as host dependency.
+- [ ] Operator was helped through first flash and serial without assumed expertise.
 
 **Day 2:** same update path; unit to potential customer or field trial.
 
@@ -153,7 +172,7 @@ Never treat "I flashed something" as done.
 | `specs/silicov1.md` | v1 build spec |
 | `specs/gcu-codenames.md` | Public GCU codenames only |
 
-Package code (`src/silico` or similar), plates, and CI for the spine are **in progress**. Prefer implementing toward [silicov1.md](specs/silicov1.md). Do not invent a second architecture.
+Package code, plates, and spine CI are **in progress**. Prefer [silicov1.md](specs/silicov1.md). Do not invent a second architecture.
 
 ## GCU vs silico
 
@@ -175,24 +194,25 @@ Starter products are confidential. In public silico docs and commits use **Zakal
 
 1. Do not put product domain logic into silico to win a demo.
 2. Do not require the human to hand-author firmware as the default path.
-3. Do not skip host gate or CI because metal "looked fine."
-4. Do not use blind serial auto-connect on multi-device hosts.
-5. Do not deploy host `sim/` or silico package modules to the board.
-6. Do not claim external adoption or platform status without scoreboard evidence.
-7. Do not rewrite PR titles, Grady quotes, or Tig quotes unless the human asks.
-8. Do not start Arduino / multi-runtime work unless a GCU forces it (v2).
+3. Do not assume the human can flash initial firmware, pick ports, or run agent/shell tricks without being taught in the moment.
+4. Do not dump unexplained command walls; do not say "run this" when you could run it.
+5. Do not skip host gate or CI because metal "looked fine."
+6. Do not use blind serial auto-connect on multi-device hosts.
+7. Do not deploy host `sim/` or silico package modules to the board.
+8. Do not claim external adoption or platform status without scoreboard evidence.
+9. Do not rewrite PR titles, Grady quotes, or Tig quotes unless the human asks.
+10. Do not start Arduino / multi-runtime work unless a GCU forces it (v2).
 
 ## Commands (host)
 
-Until the package lands, discover what exists and keep the gate honest:
+Run these yourself when possible. Show the human only what they must see.
 
 ```text
 # In GCU repo, after pin/install:
 pytest -q
 
-# Typical device ops (explicit port):
+# Device ops: always explicit port after you explain which one
 # mpremote connect COMx exec "import sys; print(sys.platform)"
-# silico / scripts deploy + version verify (when implemented)
 ```
 
 Prefer explicit `COMx` / `/dev/tty...` over `connect auto` when more than one serial device is present.

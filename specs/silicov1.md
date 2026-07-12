@@ -49,9 +49,10 @@ v1 succeeds when:
 4. I/O and time cross a HAL as boring values (ints, floats, bools), not driver objects.
 5. Install and update verify version identity. Mismatch is failure (**Prompt for metal**, **Host first**).
 6. Agents author firmware and detailed specs by default. Chat folklore is not a release artifact (**Agents write the code**).
-7. CI has no serial port. Hardware harness is optional and local (**Host first**).
-8. Do not claim external proof when only extraction is proven (**Extract, then open**).
-9. Do not require the human steward to be the MCU or electrical expert to merge.
+7. Agents run host setup, CI, deploy, and first-flash guidance; help the operator; do not assume ops literacy (**Agents operate the host path**).
+8. CI has no serial port. Hardware harness is optional and local (**Host first**).
+9. Do not claim external proof when only extraction is proven (**Extract, then open**).
+10. Do not require the human steward to be the MCU, electrical, or DevOps expert to merge.
 
 ## 3. The three GCUs (v1 forcing function)
 

@@ -96,60 +96,43 @@ The open spine that makes Grady's two days true: Claude Code on a Mac, device en
 
 ## 4. What does Day 1 really look like?
 
-The checklist for Grady, or anyone who finds `github.com/tig/silico` and wants Day 2 to be possible. Order matters. Skip a step and you are demoing folklore, not silico.
+The checklist for Grady, or anyone who finds `github.com/tig/silico` and wants Day 2 to be possible. Order matters. Agent-facing detail lives in [AGENTS.md](../AGENTS.md).
 
 **You need before you start**
 
 1. A Mac or PC with internet.
-2. Hardware that can run the GCU (for RP2040-class: board + USB data cable). First MicroPython UF2 if the board is blank.
+2. Hardware that can run the GCU (for RP2040-class: board + USB data cable).
 3. A rough idea of what the product must do (domain judgment). Silico will not invent your moat.
-4. Willingness to get a **GitHub account** if you do not have one. CI and a durable GCU repo need a real remote. Account alone is not enough; it is required.
+4. A GitHub account. CI and a durable GCU repo need a real remote.
+5. Access to a coding agent (CLI or IDE). Examples: Claude Code, Grok Build, GitHub Copilot, OpenAI Codex.
 
 **Account and tools**
 
-5. Create a GitHub account (if needed). Enable 2FA. You will create a **private** product repo here.
-6. Install Git.
-7. Install Python 3.9+ (`py -3` on Windows is fine).
-8. Install an agent that can edit a repo (Claude Code is the path in the PR; others may work if they respect AGENTS.md).
-9. Optional for Day 1, required for "foundational" after: confirm GitHub Actions (or equivalent CI) will be available on that account/org.
+6. Create a GitHub account if needed. Enable 2FA. You will create a **private** product repo here.
+7. Start the agent and prompt: `See https://github.com/tig/silico. Follow the getting started instructions for agents.` The agent installs machine prerequisites (for example GitHub CLI `gh` and Python 3.9+), helps the human authenticate with `gh`, and asks which GitHub repo to use. If none exists, the agent helps create and configure a private GCU repo.
+8. Agent and human confirm setup is complete before hardware work. Do not skip to flashing.
 
-**Get silico and a GCU shell**
+**Talk to real hardware**
 
-10. Clone or open `https://github.com/tig/silico`. Read `README.md`, `specs/tenets.md`, and this FAQ.
-11. Scaffold a **private GCU repo** from the silico plate (template/copier when it exists; hand copy of the plate layout is fine in early v1).
-12. Create the empty private repo on GitHub. Push the scaffold. Name it for the product (Quilan, Zakalwe, …), not "silico".
-13. Pin silico as a **host** dependency (not on the board):
-
-```text
-# requirements-dev.txt
-silico @ git+https://github.com/tig/silico.git@<tag>
-# while silico is still being extracted / local:
-# -e /path/to/tig/silico
-```
-
-14. Install host deps: `pip install -r requirements-dev.txt` (or `py -3 -m pip …`).
-15. Add `silico.toml` (or equivalent) with product name, `firmware/` path, core deploy file list, USB hints.
-16. Wire CI: `.github/workflows/` runs the host gate on push/PR (`pytest`, compile gate, no COM port). Push a trivial change and confirm Actions is green or fix until it is.
-17. Open the **GCU repo** root in the agent. Read `AGENTS.md`. That is the prompt surface.
+9. Agent prompts the human to plug the device into USB, then configures until status LEDs flash green and reconnect is repeatable. If the board needs a runtime the first time (for example MicroPython UF2), the agent steps the human through it once per board, not on every app change.
+10. Agent ensures the GCU GitHub repo has CI/CD. It prompts the human to open a GitHub issue titled roughly: `Change the firmware to flash green/red`. When that issue exists, the agent implements it so CI is green **and** the real device behavior changes. That is the first prove of host gate + metal together.
 
 **Make the device true (still Day 1)**
 
-18. Human states domain intent (what the device must do). Agent writes or updates detailed specs and `firmware/` under host-first rules.
-19. Run the named host gate locally until green. Red means not done. Do not "just flash it."
-20. If the board needs a runtime first time: follow install docs (e.g. UF2 MicroPython). This is once per board, not every app change.
-21. Deploy application with silico host tools (discover port, copy core files, verify `FW_VERSION`).
-22. Exercise end-to-end on the bench (sim first if helpful, then metal). Iterate agent + human until behavior matches domain judgment and host gate stays green.
-23. Commit and push. CI green on GitHub matches local green.
+11. Human points the agent at domain intent docs (what the product must do). Agent writes or updates detailed specs, automated unit and smoke tests, and `firmware/` under test-first and host-first rules. Agent also creates a staged plan as cross-linked, tagged GitHub Issues for proprietary functionality.
+12. Agent runs the named host gate locally until green. Red means not done. Do not "just flash it."
+13. Agent and human iterate end-to-end on the bench (sim first if helpful, then metal) until behavior matches domain judgment and the host gate stays green.
+14. Commit and push. CI green on GitHub matches local green. Humans file change requests as GitHub Issues at any time.
 
 **Day 1 exit criteria (enables Day 2)**
 
-24. Device works end-to-end on the bench.
-25. Host gate green locally and on GitHub.
-26. Version on device matches host.
-27. One documented update command a non-expert can re-run tomorrow morning.
-28. Silico remains a pinned dependency in the GCU (foundational, not a copied script pile).
+15. Device works end-to-end on the bench.
+16. Host gate green locally and on GitHub.
+17. Version on device matches host.
+18. One documented update command a non-expert can re-run tomorrow morning.
+19. Silico remains a pinned host dependency in the GCU (foundational, not a copied script pile).
 
-**Day 2 is then boring:** same update path, unit to potential customer or field trial. If Day 1 skipped GitHub/CI/pin/gate, Day 2 is a laptop demo, not a company foundation.
+**Day 2 is then boring:** same update path; unit to potential customer or field trial. If Day 1 skipped GitHub, CI, pin, or host gate, Day 2 is a laptop demo, not a company foundation.
 
 **Split to remember:** `firmware/` → metal only. Silico package → Mac and CI only. Product domain stays private in the GCU.
 

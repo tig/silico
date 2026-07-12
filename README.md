@@ -10,7 +10,13 @@ Agents write the firmware. You own the judgment.
 Host gate green means done. Metal confirms.
 
 Tig's open spine for vertical edge. Not a company product.
-Tenets: [specs/tenets.md](specs/tenets.md)
-v1 PR/FAQ (start here): [specs/wb-2026-fall-three-gcus.md](specs/wb-2026-fall-three-gcus.md)
-Codenames: [specs/gcu-codenames.md](specs/gcu-codenames.md)
-Build spec: [specs/silicov1.md](specs/silicov1.md)
+
+| Doc | Who |
+|-----|-----|
+| [AGENTS.md](AGENTS.md) | Agents (Day 1 getting started) |
+| [specs/wb-2026-fall-three-gcus.md](specs/wb-2026-fall-three-gcus.md) | Humans: v1 PR + FAQ |
+| [specs/tenets.md](specs/tenets.md) | Tenets |
+| [specs/silicov1.md](specs/silicov1.md) | v1 build spec |
+| [specs/gcu-codenames.md](specs/gcu-codenames.md) | Public GCU codenames |
+
+Agent prompt to start: `See https://github.com/tig/silico. Follow the getting started instructions for agents.`

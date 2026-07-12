@@ -104,7 +104,7 @@ Public repo contains:
 4. **One thin public example GCU** (not Zakalwe domain) green in CI.
 5. **CI** for the spine itself.
 
-Private GCU repos pin silico as a **host** dependency and follow the plate. Device `firmware/` never imports silico. Details and Grady/GitHub requirements: [v1 WB FAQ 39](./wb-2026-fall-three-gcus.md).
+Private GCU repos pin silico as a **host** dependency and follow the plate. Device `firmware/` never imports silico. Full Day 1 checklist (Grady or anyone discovering this repo): [v1 WB FAQ 39](./wb-2026-fall-three-gcus.md).
 
 ```text
 # GCU depends on silico (host / CI only)
@@ -198,7 +198,7 @@ This is the minimum **Prompt for metal** / **Host first** bar. Soften it and a n
 
 1. **Required:** scriptable path from a product checkout.
 2. **Target:** release zip per GCU (no git required).
-3. **Not required:** MSI/GUI installer, OTA, signed binary chain, fleet CD with automatic rollback (FAQ 39 in the v1 WB).
+3. **Not required:** MSI/GUI installer, OTA, signed binary chain, fleet CD with automatic rollback (FAQ 40 in the v1 WB).
 
 ### 8.3 Port scoring (v1 defaults)
 

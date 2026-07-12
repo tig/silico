@@ -56,22 +56,11 @@ Each GCU is priced as a product. Silico is free under an OSI-approved license. T
 
 ### How it works (the two days)
 
-**Day 0 (before):** Hardware exists. Software and field trials are stalled because the founder is not a software guy (or will not staff an embedded cult).
+**Day 0 (before):** Hardware exists. Software and field trials are stalled (founder is not a software guy, or will not staff an embedded cult).
 
-**Day 1 (end-to-end on the Mac + board):**
+**Day 1:** Mac + agent + silico → device working end-to-end, host gate green. Full checklist: FAQ 39.
 
-1. Open the product repo on a Mac. Read AGENTS.md. That is the prompt surface.
-2. Use Claude Code (or equivalent agent) against silico's host-first contracts. Private GCU repo on GitHub; silico pinned as a host dependency. See FAQ 39.
-3. Agents write or update firmware and specs. Human owns domain judgment.
-4. Human and agent iterate with host sim and real hardware (if available).
-5. Agent keeps AGENTS.md and host gate honest about edge gobbledygook.
-6. Device works end-to-end on the bench. Host gate green.
-
-**Day 2 (potential customer's hand):**
-
-1. Same install/update path ships the verified build to the unit.
-2. Unit leaves the building with a potential customer (or field trial).
-3. The GCU repo keeps depending on silico for prove/update. Foundational, not a one-off demo.
+**Day 2:** Same verified path puts the unit in a potential customer's hand (or field trial). Silico stays how you prove and update after that.
 
 ### How it works for the end customer of a GCU
 
@@ -297,46 +286,64 @@ Commercial brands: **open** per app; not silico sub-brands.
 
 [silicov1.md](./silicov1.md) is the buildable spine spec for three Pi-class GCUs. [tenets.md](./tenets.md) is the Principle set. This WB doc is the v1 customer-facing ambition and FAQ forcing function. If they disagree, fix one.
 
-## 39. How do GCUs use silico?
+## 39. What does Day 1 really look like?
 
-**Necessary but not sufficient.** Pinning silico is how the host spine gets into the GCU. Grady still needs a real product repo, GitHub, CI, and the two-day path.
+The checklist for Grady, or anyone who finds `github.com/tig/silico` and wants Day 2 to be possible. Order matters. Skip a step and you are demoing folklore, not silico.
 
-**Split:**
+**You need before you start**
 
-| Layer | Where | Relationship to silico |
-|-------|--------|-------------------------|
-| Device app (`firmware/`) | Private GCU repo | Ships to metal. Does not import silico on the board. |
-| Host tools (deploy, verify, hygiene, plate helpers) | Mac + CI | Pin `tig/silico` as a package. |
-| Doctrine (AGENTS patterns) | In the GCU | Scaffolded from silico; owned by the GCU after that. |
+1. A Mac or PC with internet.
+2. Hardware that can run the GCU (for RP2040-class: board + USB data cable). First MicroPython UF2 if the board is blank.
+3. A rough idea of what the product must do (domain judgment). Silico will not invent your moat.
+4. Willingness to get a **GitHub account** if you do not have one. CI and a durable GCU repo need a real remote. Account alone is not enough; it is required.
 
-**Shape of a GCU repo:**
+**Account and tools**
+
+5. Create a GitHub account (if needed). Enable 2FA. You will create a **private** product repo here.
+6. Install Git.
+7. Install Python 3.9+ (`py -3` on Windows is fine).
+8. Install an agent that can edit a repo (Claude Code is the path in the PR; others may work if they respect AGENTS.md).
+9. Optional for Day 1, required for "foundational" after: confirm GitHub Actions (or equivalent CI) will be available on that account/org.
+
+**Get silico and a GCU shell**
+
+10. Clone or open `https://github.com/tig/silico`. Read `README.md`, `specs/tenets.md`, and this FAQ.
+11. Scaffold a **private GCU repo** from the silico plate (template/copier when it exists; hand copy of the plate layout is fine in early v1).
+12. Create the empty private repo on GitHub. Push the scaffold. Name it for the product (Quilan, Zakalwe, …), not "silico".
+13. Pin silico as a **host** dependency (not on the board):
 
 ```text
-# private product repo (Quilan, Zakalwe, Sma, …)
-firmware/              # app → metal
-sim/                   # product plant + host tests
-scripts/update.py      # thin wrapper → silico host APIs
-silico.toml            # product config
-.github/workflows/     # host gate CI
-requirements-dev.txt:
-  silico @ git+https://github.com/tig/silico.git@v0.1.0
-  # while extracting:  -e /path/to/tig/silico
+# requirements-dev.txt
+silico @ git+https://github.com/tig/silico.git@<tag>
+# while silico is still being extracted / local:
+# -e /path/to/tig/silico
 ```
 
-**Grady is not optional infrastructure.** He may not have a GitHub account yet. He needs one (or equivalent) so that:
+14. Install host deps: `pip install -r requirements-dev.txt` (or `py -3 -m pip …`).
+15. Add `silico.toml` (or equivalent) with product name, `firmware/` path, core deploy file list, USB hints.
+16. Wire CI: `.github/workflows/` runs the host gate on push/PR (`pytest`, compile gate, no COM port). Push a trivial change and confirm Actions is green or fix until it is.
+17. Open the **GCU repo** root in the agent. Read `AGENTS.md`. That is the prompt surface.
 
-1. The GCU is a real remote repo agents and CI can see.
-2. Actions (or equivalent) run the host gate on every push/PR.
-3. Silico can be pinned from `github.com/tig/silico` (or a path install while developing).
-4. The two-day path is not "files in a folder on one Mac" forever.
+**Make the device true (still Day 1)**
 
-A GitHub account plus a private GCU repo is **necessary** for silico-as-foundational-tech. It is **not sufficient**: he still needs Claude Code (or equivalent), a green host gate, a board, and a potential customer. Silico does not replace product judgment or hardware.
+18. Human states domain intent (what the device must do). Agent writes or updates detailed specs and `firmware/` under host-first rules.
+19. Run the named host gate locally until green. Red means not done. Do not "just flash it."
+20. If the board needs a runtime first time: follow install docs (e.g. UF2 MicroPython). This is once per board, not every app change.
+21. Deploy application with silico host tools (discover port, copy core files, verify `FW_VERSION`).
+22. Exercise end-to-end on the bench (sim first if helpful, then metal). Iterate agent + human until behavior matches domain judgment and host gate stays green.
+23. Commit and push. CI green on GitHub matches local green.
 
-**New GCU:** scaffold from a silico plate, create private GitHub repo, pin silico, open in Claude Code.
+**Day 1 exit criteria (enables Day 2)**
 
-**Existing GCU (Zakalwe today):** keep the private app repo; `pip install -e` silico while the package is young; pin a tag once released. Domain stays in the GCU; shared host machinery moves into silico when a second GCU needs it.
+24. Device works end-to-end on the bench.
+25. Host gate green locally and on GitHub.
+26. Version on device matches host.
+27. One documented update command a non-expert can re-run tomorrow morning.
+28. Silico remains a pinned dependency in the GCU (foundational, not a copied script pile).
 
-**On the board:** only GCU `firmware/*`. Silico stays on the host.
+**Day 2 is then boring:** same update path, unit to potential customer or field trial. If Day 1 skipped GitHub/CI/pin/gate, Day 2 is a laptop demo, not a company foundation.
+
+**Split to remember:** `firmware/` → metal only. Silico package → Mac and CI only. Product domain stays private in the GCU.
 
 ## 40. What is the longer-term vision?
 

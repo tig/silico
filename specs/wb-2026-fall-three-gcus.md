@@ -61,7 +61,7 @@ Each GCU is priced as a product. Silico is free under an OSI-approved license. T
 **Day 1 (end-to-end on the Mac + board):**
 
 1. Open the product repo on a Mac. Read AGENTS.md. That is the prompt surface.
-2. Use Claude Code (or equivalent agent) against silico's host-first contracts. New GCU or existing private app repo; silico is a **pinned host dependency** (not a fork of silico, not a git submodule). See FAQ 39.
+2. Use Claude Code (or equivalent agent) against silico's host-first contracts. Private GCU repo on GitHub; silico pinned as a host dependency. See FAQ 39.
 3. Agents write or update firmware and specs. Human owns domain judgment.
 4. Human and agent iterate with host sim and real hardware (if available).
 5. Agent keeps AGENTS.md and host gate honest about edge gobbledygook.
@@ -297,54 +297,46 @@ Commercial brands: **open** per app; not silico sub-brands.
 
 [silicov1.md](./silicov1.md) is the buildable spine spec for three Pi-class GCUs. [tenets.md](./tenets.md) is the Principle set. This WB doc is the v1 customer-facing ambition and FAQ forcing function. If they disagree, fix one.
 
-## 39. How do GCUs fork or use silico?
+## 39. How do GCUs use silico?
 
-They **do not fork silico** as the product repo, and they **do not use git submodules** as the default.
+**Necessary but not sufficient.** Pinning silico is how the host spine gets into the GCU. Grady still needs a real product repo, GitHub, CI, and the two-day path.
 
-Split the world:
+**Split:**
 
-| Layer | Lives where | How it depends on silico |
-|-------|-------------|---------------------------|
-| **Device app** (`firmware/`) | Private GCU repo only | Does **not** import silico on the board. Product domain stays private. |
-| **Host tools** (deploy, version verify, port scoring, hygiene helpers, plate) | Consumed by the GCU on the Mac/CI | **Pinned package dependency** on `tig/silico`. |
-| **Doctrine** (tenets, AGENTS common sections, anti-pattern patterns) | Copied or generated into the GCU once; refreshed when you choose | Not a live submodule link. |
+| Layer | Where | Relationship to silico |
+|-------|--------|-------------------------|
+| Device app (`firmware/`) | Private GCU repo | Ships to metal. Does not import silico on the board. |
+| Host tools (deploy, verify, hygiene, plate helpers) | Mac + CI | Pin `tig/silico` as a package. |
+| Doctrine (AGENTS patterns) | In the GCU | Scaffolded from silico; owned by the GCU after that. |
 
-**v1 recommended model: pin silico as a host package.**
+**Shape of a GCU repo:**
 
 ```text
-# private GCU repo (Zakalwe / Quilan / Sma)
-firmware/           # app only; ships to metal
-sim/                # product plant + tests
-scripts/update.py   # thin wrapper calling silico host APIs
-silico.toml         # product config (core files, ports, allowlists)
-requirements-dev.txt
+# private product repo (Quilan, Zakalwe, Sma, …)
+firmware/              # app → metal
+sim/                   # product plant + host tests
+scripts/update.py      # thin wrapper → silico host APIs
+silico.toml            # product config
+.github/workflows/     # host gate CI
+requirements-dev.txt:
   silico @ git+https://github.com/tig/silico.git@v0.1.0
-  # local day-to-day while extracting:
-  # -e /path/to/tig/silico
+  # while extracting:  -e /path/to/tig/silico
 ```
 
-**New GCU (Grady day 1):** generate from a silico plate (copier/template later; hand plate is fine for v1), then pin silico. The plate is a one-time scaffold, not a forever fork.
+**Grady is not optional infrastructure.** He may not have a GitHub account yet. He needs one (or equivalent) so that:
 
-**Existing GCU (Zakalwe today):** keep the private app repo. Point host scripts and tests at a silico package (path install while the library is young; git tag pin once it has a real release). Extract shared code *into* silico; leave domain *in* the GCU. Do not turn the GCU into a fork of silico.
+1. The GCU is a real remote repo agents and CI can see.
+2. Actions (or equivalent) run the host gate on every push/PR.
+3. Silico can be pinned from `github.com/tig/silico` (or a path install while developing).
+4. The two-day path is not "files in a folder on one Mac" forever.
 
-**Why not the other options:**
+A GitHub account plus a private GCU repo is **necessary** for silico-as-foundational-tech. It is **not sufficient**: he still needs Claude Code (or equivalent), a green host gate, a board, and a potential customer. Silico does not replace product judgment or hardware.
 
-1. **Fork silico per product** — forks diverge; upstream promotion dies; agents "helpfully" invent three spines.
-2. **Git submodule** — fights Windows and agents; half-updated pins; "forgot to init submodules" breaks the two-day path.
-3. **Git subtree / vendor copy** — acceptable escape hatch for air-gapped builds; default is still pin + upgrade on purpose.
-4. **Monorepo of all GCUs + silico** — kills **Apps stay apps** and private product trees.
+**New GCU:** scaffold from a silico plate, create private GitHub repo, pin silico, open in Claude Code.
 
-**Promotion rule (Extract, then open):** when a second GCU needs the same host machinery, move it into silico and bump the pin. When only one GCU needs it, leave it in the GCU.
+**Existing GCU (Zakalwe today):** keep the private app repo; `pip install -e` silico while the package is young; pin a tag once released. Domain stays in the GCU; shared host machinery moves into silico when a second GCU needs it.
 
-**Device path reminder:** nothing from the silico Python package is required on the RP2040 for v1. Metal gets `firmware/*` from the GCU. Host gets silico.
-
-Until silico has an installable package layout, a GCU may use:
-
-```text
-pip install -e C:\Users\Tig\s\tig\silico
-```
-
-That is the "later today" path for Zakalwe while extraction is in progress.
+**On the board:** only GCU `firmware/*`. Silico stays on the host.
 
 ## 40. What is the longer-term vision?
 

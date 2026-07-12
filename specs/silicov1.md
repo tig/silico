@@ -104,18 +104,19 @@ Public repo contains:
 4. **One thin public example GCU** (not Zakalwe domain) green in CI.
 5. **CI** for the spine itself.
 
-Private GCU repos **pin silico as a host dependency** and follow the plate. They do not fork silico and do not use git submodules by default. Full rationale: [v1 WB FAQ 39](./wb-2026-fall-three-gcus.md).
+Private GCU repos pin silico as a **host** dependency and follow the plate. Device `firmware/` never imports silico. Details and Grady/GitHub requirements: [v1 WB FAQ 39](./wb-2026-fall-three-gcus.md).
 
 ```text
-# GCU depends on silico (host only)
+# GCU depends on silico (host / CI only)
 requirements-dev.txt:
   silico @ git+https://github.com/tig/silico.git@<tag>
   # or while extracting:  -e /path/to/tig/silico
 
-# Device never imports the silico package
 firmware/   -> board
 silico      -> Mac / CI only
 ```
+
+The GCU needs a GitHub remote (or equivalent) so CI can run the host gate. A package pin alone is necessary but not sufficient for Grady's path.
 
 ### 5.1 GCU repo layout (plate)
 

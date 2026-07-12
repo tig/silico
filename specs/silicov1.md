@@ -104,7 +104,7 @@ Public repo contains:
 4. **One thin public example GCU** (not Zakalwe domain) green in CI.
 5. **CI** for the spine itself.
 
-Private GCU repos pin silico as a **host** dependency and follow the plate. Device `firmware/` never imports silico. Full Day 1 checklist (Grady or anyone discovering this repo): [v1 WB FAQ 39](./wb-2026-fall-three-gcus.md).
+Private GCU repos pin silico as a **host** dependency and follow the plate. Device `firmware/` never imports silico. Full Day 1 checklist (Grady or anyone discovering this repo): [v1 WB FAQ 4](./wb-2026-fall-three-gcus.md).
 
 ```text
 # GCU depends on silico (host / CI only)

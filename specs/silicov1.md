@@ -182,7 +182,17 @@ No COM port in CI.
 
 ### 7.1 Definition of done (agents and humans)
 
-A change to `firmware/` is done only when the GCU's named host command is green. Flashing is optional confirmation.
+A change to `firmware/` is **host-done** only when the GCU's named host command is green. Flashing is confirmation, not proof of sensing/actuation.
+
+Layers (see [AGENTS.md](../AGENTS.md) Definition of done):
+
+| Layer | Bar |
+|-------|-----|
+| Host | Named gate green; CI if remote exists |
+| Metal I/O | Named pin path proven (not version-import alone) |
+| Vehicle / field | Product acceptance procedure |
+
+**Forbidden:** close P0 sensing/actuation as fully done with only host/sim when device hooks are stubs — leave a metal follow-up open or finish the pin path. Host-first is not host-only.
 
 This is the minimum **Prompt for metal** / **Host first** bar. Soften it and a non-expert cannot trust agent-authored firmware. Soften it and Grady is right to walk away.
 

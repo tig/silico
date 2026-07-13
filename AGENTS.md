@@ -102,29 +102,31 @@ Run this playbook under **Help the operator**. Confirm each phase with them befo
 
 ```text
 # In GCU requirements-dev.txt (or pip install directly while bootstrapping):
-silico @ git+https://github.com/tig/silico.git@v0.1.0
+silico @ git+https://github.com/tig/silico.git@v0.1.1
 pytest>=8
 mpy-cross==<exact MicroPython version on the board>
 ```
 
 ```text
 python -m pip install -U pip
-python -m pip install "silico @ git+https://github.com/tig/silico.git@v0.1.0" pytest
+python -m pip install "silico @ git+https://github.com/tig/silico.git@v0.1.1" pytest
 # local extraction only:
 # python -m pip install -e /path/to/tig/silico
 ```
 
 If install fails, **stop**, say the pin is broken, and file/fix on `tig/silico`. Do **not** vendor host tooling into the GCU.
 
-2. Scaffold the plate (creates layout + host-gate stub):
+2. Scaffold the plate (merge into existing GCU is OK; product `README.md` / `spec.md` are never overwritten):
 
 ```text
-silico scaffold . --force
-# or into a new directory: silico scaffold ./my-gcu
+silico scaffold .
+# empty dir also fine: silico scaffold ./my-gcu
+# --force overwrites non-protected plate files only (not README/spec)
 ```
 
-3. Run host gate until green: `python -m pytest -q` (or `silico doctor` then pytest).
-4. Commit and push. Confirm CI/Actions is on. If the human must enable Actions, give exact clicks.
+3. Set product identity in `firmware/version.py` and `silico.toml` (plate defaults are generic).
+4. Run host gate until green: `python -m pytest -q` (or `silico doctor` then pytest).
+5. Commit and push. Confirm CI/Actions is on. If the human must enable Actions, give exact clicks.
 
 ### Phase D - Talk to real hardware (hello metal)
 
@@ -132,19 +134,21 @@ Goal: board shows a **distinct, documented blink pattern** a novice can recogniz
 
 **Safety (non-negotiable):**
 
-1. **Poll USB yourself.** After asking the human only for the physical step (data cable + plug in), run `silico wait-device` / `silico doctor`. **Do not** ask them to announce "I'm plugged in."
-2. **Inspect before write.** `silico inspect --port COMx` (read-only). Report what is already on the device.
-3. **Never overwrite without explicit operator confirmation.** State exactly which files you will write and that boot behavior may change. Wait for a clear **yes**. Only then `silico deploy … --yes`.
-4. Prefer explicit `--port`. Never blind `connect auto` on multi-device hosts. Prefer VID `2e8a`; demote CH340 `1a86` and Debug Probe `2e8a:000c`.
+1. **Poll USB yourself.** After asking the human only for the physical step (data cable + plug in), run `silico wait-device` / `silico doctor`. **Do not** ask them to announce "I'm plugged in." On timeout: extend poll; only request physical cable/plug steps - never "tell me when ready."
+2. **High score is a hint, not permission.** After discovery, report port + VID/PID + inspect findings in plain language. **Confirm with the operator that this is the product board for this session** before any deploy plan counts as ready. Do not reuse COM numbers from an earlier session without re-discovery.
+3. **Inspect before write.** `silico inspect --port COMx` (read-only). Report what is already on the device.
+4. **Never overwrite without explicit operator confirmation.** State exactly which files you will write and that boot behavior may change. Wait for a clear **yes**. Only then `silico deploy … --port COMx --yes`.
+5. **Deploy always requires explicit `--port`.** Never blind `connect auto` on multi-device hosts. Prefer VID `2e8a`; demote CH340 `1a86` and Debug Probe `2e8a:000c`.
 
 **Steps:**
 
 1. Ask them to use a **data** USB cable (not charge-only). Explain that some cables only power.
-2. You poll: `silico wait-device` then `silico doctor` / `silico inspect`.
-3. If no MicroPython REPL: drive first firmware with physical steps (BOOT+RESET → `RPI-RP2` → UF2). Once per board.
-4. Prove REPL (`rp2`). Tell them what "good" looks like.
-5. Propose deploy plan (`silico deploy firmware/…` **without** `--yes` shows the plan). Get confirmation. Then deploy with `--yes --verify`.
-6. Document `install/` with one command and LED "good" description.
+2. You poll: `silico wait-device` (progress lines are normal). Then `silico doctor` / `silico inspect --port COMx`.
+3. **Stop and confirm device identity** with the operator (especially if multiple serial devices or the board was unplugged/replugged).
+4. If no MicroPython REPL: drive first firmware with physical steps (BOOT+RESET → `RPI-RP2` → UF2). Once per board.
+5. Prove REPL (`rp2`). Tell them what "good" looks like.
+6. Propose deploy plan (`silico deploy firmware/… --port COMx` **without** `--yes`). Get confirmation of identity + write. Then deploy with `--yes --verify`.
+7. Document `install/` with one command and LED "good" description.
 
 ### Phase E - CI proves metal change
 
@@ -239,21 +243,21 @@ Run these yourself when possible. Show the human only what they must see.
 
 ```text
 # Install spine (tag pin)
-python -m pip install "silico @ git+https://github.com/tig/silico.git@v0.1.0"
+python -m pip install "silico @ git+https://github.com/tig/silico.git@v0.1.1"
 
 silico doctor
 silico wait-device
-silico scaffold . --force
+silico scaffold .
 python -m pytest -q
 
 silico inspect --port COMx
-# plan only (no write):
+# plan only (no write); --port required:
 silico deploy firmware/version.py firmware/main.py --port COMx
-# AFTER operator says yes:
+# AFTER operator confirms identity + write:
 silico deploy firmware/version.py firmware/main.py --port COMx --yes --verify
 ```
 
-Prefer explicit `COMx` / `/dev/tty...` over `connect auto` when more than one serial device is present.
+Always pass explicit `COMx` / `/dev/tty...` to deploy. Confirm device identity every session.
 
 ## When working in silico itself
 

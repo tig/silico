@@ -8,7 +8,7 @@ from dataclasses import dataclass, field
 
 from silico import __version__
 from silico.mpremote_util import mpremote_available
-from silico.ports import list_scored_ports
+from silico.ports import IDENTITY_HINT, list_scored_ports
 
 
 @dataclass
@@ -41,6 +41,7 @@ def run_doctor() -> DoctorReport:
         lines.append("WARN: mpremote not found - install for deploy/inspect (pip install mpremote)")
 
     ports = list_scored_ports()
+    preferred = [p for p in ports if p.score >= 50]
     if not ports:
         lines.append("INFO: no serial ports seen (plug a data USB cable; agent should poll, not ask)")
     else:
@@ -51,5 +52,11 @@ def run_doctor() -> DoctorReport:
             lines.append(f"  {p.device}  vid={vid} pid={pid}  score={p.score} - {p.label}")
             if p.description:
                 lines.append(f"    {p.description}")
+        if preferred:
+            lines.append(IDENTITY_HINT)
+        else:
+            lines.append(
+                "INFO: no preferred board (score>=50). Do not assume CH340 is the product board."
+            )
 
     return DoctorReport(ok=ok, lines=lines)

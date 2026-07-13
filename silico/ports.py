@@ -60,14 +60,26 @@ def list_scored_ports() -> list[PortInfo]:
     return out
 
 
+def port_is_listed(device: str) -> bool:
+    """True if device currently appears in the host serial inventory."""
+    want = device.upper()
+    for p in list_scored_ports():
+        if p.device.upper() == want or p.device == device:
+            return True
+    return False
+
+
 def pick_best_port(explicit: str | None = None) -> PortInfo | None:
-    """Return explicit port if given (must exist), else highest-scoring candidate."""
+    """Return explicit port if given, else highest-scoring candidate (score>=50).
+
+    Explicit ports that are not currently listed still return a PortInfo so
+    callers can fail with a clear message (deploy/inspect should check listed).
+    """
     ports = list_scored_ports()
     if explicit:
         for p in ports:
             if p.device.upper() == explicit.upper() or p.device == explicit:
                 return p
-        # Explicit may still be valid if list_ports missed it
         return PortInfo(
             device=explicit,
             vid=None,
@@ -75,7 +87,7 @@ def pick_best_port(explicit: str | None = None) -> PortInfo | None:
             description="",
             manufacturer="",
             score=0,
-            label="explicit port (not auto-scored)",
+            label="explicit port (not currently in serial inventory)",
         )
     if not ports:
         return None
@@ -83,3 +95,9 @@ def pick_best_port(explicit: str | None = None) -> PortInfo | None:
     if best.score < 50:
         return None  # refuse blind pick of CH340-only benches
     return best
+
+
+IDENTITY_HINT = (
+    "CONFIRM WITH OPERATOR: high score is a hint, not proof this is the product board. "
+    "Report port + inspect findings; get a clear yes on device identity before deploy."
+)

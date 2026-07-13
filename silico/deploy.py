@@ -6,7 +6,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 from silico.mpremote_util import cp_to_device, exec_on_device, mpremote_available, run_mpremote
-from silico.ports import pick_best_port
+from silico.ports import IDENTITY_HINT, pick_best_port, port_is_listed
 
 
 @dataclass
@@ -31,6 +31,15 @@ def plan_deploy(
     if not mpremote_available():
         return DeployResult(False, ["FAIL: mpremote not available (pip install mpremote)"])
 
+    if not port:
+        return DeployResult(
+            False,
+            [
+                "FAIL: deploy requires explicit --port after operator confirms device identity.",
+                "Do not auto-pick a COM from score alone. Flow: wait-device -> doctor/inspect -> confirm -> deploy --port COMx",
+            ],
+        )
+
     chosen = pick_best_port(port)
     if chosen is None:
         return DeployResult(
@@ -41,6 +50,15 @@ def plan_deploy(
             ],
         )
 
+    if not port_is_listed(chosen.device):
+        return DeployResult(
+            False,
+            [
+                f"FAIL: port {chosen.device} is not in the current serial inventory.",
+                "Device may be unplugged or the COM number changed. Re-run wait-device; re-confirm identity.",
+            ],
+        )
+
     if not files:
         return DeployResult(False, ["FAIL: no files to deploy"])
 
@@ -48,6 +66,7 @@ def plan_deploy(
     lines = [
         f"Planned write to {chosen.device} ({chosen.label}):",
         "This will OVERWRITE files on the device and may change boot behavior.",
+        IDENTITY_HINT,
     ]
     for i, f in enumerate(files):
         path = Path(f)
@@ -58,6 +77,10 @@ def plan_deploy(
         lines.append(f"  {path}  ->  :{remote}")
 
     lines.append("Refusing to write without explicit confirmation (--yes).")
+    lines.append(
+        "Operator must have confirmed BOTH: (1) this port is the product board, "
+        "(2) these files may be written."
+    )
     lines.append("Inspect first: silico inspect --port " + chosen.device)
     return DeployPlan(port=chosen.device, files=pairs, lines=lines)
 
@@ -81,7 +104,11 @@ def deploy(
         lines.append("ABORTED: pass --yes only after the operator explicitly confirmed the write.")
         return DeployResult(False, lines)
 
-    lines.append("Confirmed (--yes). Writing…")
+    if not port_is_listed(planned.port):
+        lines.append(f"FAIL: port {planned.port} disappeared before write. Re-discover and re-confirm.")
+        return DeployResult(False, lines)
+
+    lines.append("Confirmed (--yes). Writing...")
     for local, remote in planned.files:
         r = cp_to_device(planned.port, local, remote)
         if r.returncode != 0:
@@ -96,11 +123,7 @@ def deploy(
         lines.append("reset: " + ("ok" if r.returncode == 0 else "warn"))
 
     if verify:
-        code = (
-            "import version\n"
-            f"print(version.FW_NAME)\n"
-            f"print(version.FW_VERSION)\n"
-        )
+        code = "import version\nprint(version.FW_NAME)\nprint(version.FW_VERSION)\n"
         r = exec_on_device(planned.port, code)
         if r.returncode != 0:
             lines.append("FAIL: version verify (import version failed)")

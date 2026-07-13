@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "silico"
-version = "0.1.0"
+version = "0.1.1"
 description = "Prompt for metal: host spine for agent-authored edge products (GCUs)"
 readme = "README.md"
 license = { text = "Apache-2.0" }
@@ -37,7 +37,17 @@ where = ["."]
 include = ["silico*"]
 
 [tool.setuptools.package-data]
-silico = ["plates/**/*"]
+# Source templates only - never ship host bytecode into customer GCUs.
+silico = [
+  "plates/**/*.py",
+  "plates/**/*.md",
+  "plates/**/*.toml",
+  "plates/**/*.ini",
+  "plates/**/*.txt",
+  "plates/**/*.yml",
+  "plates/**/*.yaml",
+  "plates/**/.gitignore",
+]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

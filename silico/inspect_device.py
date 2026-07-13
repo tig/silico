@@ -5,7 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 
 from silico.mpremote_util import exec_on_device, ls_device, mpremote_available
-from silico.ports import pick_best_port
+from silico.ports import IDENTITY_HINT, pick_best_port, port_is_listed
 
 
 @dataclass
@@ -28,16 +28,27 @@ def inspect(port: str | None = None) -> InspectReport:
             [
                 "FAIL: no preferred board port found.",
                 "Plug a data USB cable and run: silico wait-device",
-                "Or pass --port COMx explicitly.",
+                "Or pass --port COMx explicitly after operator confirms identity.",
                 "Do not use CH340-only benches without --port.",
             ],
         )
 
     p = chosen.device
+    if port and not port_is_listed(p):
+        return InspectReport(
+            False,
+            p,
+            [
+                f"FAIL: --port {p} is not in the current serial inventory.",
+                "Device unplugged, wrong COM, or path changed. Re-run: silico wait-device",
+                "Do not reuse a COM number from an earlier session without re-discovery.",
+            ],
+        )
+
     lines.append(f"Port: {p} ({chosen.label})")
     r = exec_on_device(p, "import sys; print(sys.platform); print(sys.version)")
     if r.returncode != 0:
-        lines.append("FAIL: could not talk to device (is something else holding the port?)")
+        lines.append("FAIL: could not talk to device (unplugged, wrong port, or held by another program)")
         if r.stderr:
             lines.append(r.stderr.strip())
         return InspectReport(False, p, lines)
@@ -59,4 +70,5 @@ def inspect(port: str | None = None) -> InspectReport:
         lines.append("Version probe: " + (ver.stdout or "").strip())
 
     lines.append("Read-only inspect complete. No files were written.")
+    lines.append(IDENTITY_HINT)
     return InspectReport(True, p, lines)

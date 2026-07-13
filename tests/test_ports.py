@@ -43,3 +43,15 @@ def test_pick_best_refuses_low_score_only(monkeypatch):
         lambda: [PortInfo("COM3", 0x1A86, 0x7523, "ch", "m", -20, "CH340")],
     )
     assert pick_best_port(None) is None
+
+
+def test_port_is_listed(monkeypatch):
+    import silico.ports as ports
+
+    monkeypatch.setattr(
+        ports,
+        "list_scored_ports",
+        lambda: [PortInfo("COM6", 0x2E8A, 0x0005, "rp", "m", 100, "RP")],
+    )
+    assert ports.port_is_listed("COM6") is True
+    assert ports.port_is_listed("COM9") is False

@@ -1,4 +1,7 @@
 recursive-include silico/plates *
+global-exclude *.py[cod]
+global-exclude __pycache__
+global-exclude *.so
 include LICENSE
 include README.md
 include AGENTS.md

@@ -6,17 +6,28 @@ import shutil
 from importlib import resources
 from pathlib import Path
 
+# Product identity - never overwrite even with --force.
+PROTECTED_NAMES = frozenset(
+    {
+        "README.md",
+        "spec.md",
+        "LICENSE",
+        "LICENSE.md",
+    }
+)
+
+SKIP_DIR_NAMES = frozenset({"__pycache__", ".git", ".pytest_cache", ".venv", "venv"})
+SKIP_SUFFIXES = frozenset({".pyc", ".pyo"})
+
 
 def plate_root() -> Path:
     """Return filesystem path to plates/gcu (package data or repo checkout)."""
-    # Prefer package data after install
     try:
         root = resources.files("silico").joinpath("plates", "gcu")
         if root.is_dir():
             return Path(str(root))
     except Exception:
         pass
-    # Repo checkout: silico/../plates/gcu or silico/plates/gcu
     here = Path(__file__).resolve().parent
     for cand in (here / "plates" / "gcu", here.parent / "plates" / "gcu"):
         if cand.is_dir():
@@ -24,44 +35,61 @@ def plate_root() -> Path:
     raise FileNotFoundError("silico plate tree not found (plates/gcu)")
 
 
+def _should_skip_source(path: Path) -> bool:
+    if any(part in SKIP_DIR_NAMES for part in path.parts):
+        return True
+    if path.suffix in SKIP_SUFFIXES:
+        return True
+    return False
+
+
 def scaffold(dest: Path, *, force: bool = False) -> list[str]:
-    """Copy plate into dest. Refuses to clobber non-empty dest unless force."""
+    """Merge plate into dest.
+
+    Default: add missing plate files; skip existing files (safe for product README/spec).
+    --force: overwrite non-protected existing plate files.
+    Protected (never overwritten): README.md, spec.md, LICENSE.
+    """
     dest = dest.resolve()
     src = plate_root()
-    lines: list[str] = [f"Plate source: {src}", f"Destination: {dest}"]
+    lines: list[str] = [
+        f"Plate source: {src}",
+        f"Destination: {dest}",
+        "Merge mode: skip existing files"
+        + ("; --force overwrites non-protected plate files" if force else ""),
+        f"Protected (never overwrite): {', '.join(sorted(PROTECTED_NAMES))}",
+    ]
 
-    if dest.exists():
-        remaining = [p for p in dest.iterdir() if p.name != ".git"]
-        if remaining and not force:
-            names = ", ".join(sorted(p.name for p in remaining)[:12])
-            raise FileExistsError(
-                f"destination not empty ({names}). Pass force=True / --force to merge, "
-                "or scaffold into a new directory."
-            )
-    else:
+    if not dest.exists():
         dest.mkdir(parents=True)
 
-    skip_dir_names = {"__pycache__", ".git", ".pytest_cache", ".venv", "venv"}
-    skip_suffixes = {".pyc", ".pyo"}
-
     copied = 0
-    for path in src.rglob("*"):
-        if path.is_dir():
-            continue
-        if any(part in skip_dir_names for part in path.parts):
-            continue
-        if path.suffix in skip_suffixes:
+    skipped = 0
+    protected = 0
+    for path in sorted(src.rglob("*")):
+        if path.is_dir() or _should_skip_source(path):
             continue
         rel = path.relative_to(src)
         target = dest / rel
-        if target.exists() and not force:
-            lines.append(f"skip existing: {rel}")
-            continue
+        name = path.name
+
+        if target.exists():
+            if name in PROTECTED_NAMES or str(rel).replace("\\", "/") in PROTECTED_NAMES:
+                lines.append(f"protect product: {rel}")
+                protected += 1
+                continue
+            if not force:
+                lines.append(f"skip existing: {rel}")
+                skipped += 1
+                continue
+
         target.parent.mkdir(parents=True, exist_ok=True)
         shutil.copy2(path, target)
         lines.append(f"wrote {rel}")
         copied += 1
 
-    lines.append(f"Done. {copied} files written.")
-    lines.append("Next: edit silico.toml / firmware/version.py, then: pytest -q")
+    lines.append(
+        f"Done. {copied} written, {skipped} skipped (existing), {protected} protected."
+    )
+    lines.append("Next: set firmware/version.py + silico.toml product names, then: pytest -q")
     return lines

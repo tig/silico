@@ -8,4 +8,4 @@
 silico deploy firmware/version.py firmware/main.py --port COMx --yes --verify --expect-name GCU --expect-version 0.0.1
 ```
 
-Replace names/versions with your product `firmware/version.py`.
+Replace names/versions with your product `firmware/version.py`. Always pass explicit `--port` after confirming the board.

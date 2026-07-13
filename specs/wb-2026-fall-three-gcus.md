@@ -54,19 +54,22 @@ End customers install or update with a short host path that finds the board, loa
 
 Each GCU is priced as a product. Silico is free under an OSI-approved license. There is no silico SKU you must buy to use a GCU.
 
-### How it works (the two days)
+### How it works (timeline)
 
 **Day 0 (before):** Hardware exists. Software and field trials are stalled (founder is not a software guy, or will not staff an embedded cult).
 
-**Day 1:** Mac + agent + silico → device working end-to-end, host gate green. Full checklist: FAQ 4.
+**Day 1:** Mac + agent + silico → device working end-to-end on real USB hardware (and sim), host gate green. Full checklist: FAQ 4.
 
-**Day 2:** Same verified path puts the unit in a potential customer's hand (or field trial). Silico stays how you prove and update after that.
+**Day 2 — alpha, not beta:** Same verified path puts a **prototype** unit with a **real customer for alpha testing** (early feedback, not a polished ship). Version identity and host-honest builds matter. Full **update integrity protection** (whatever that means — hash, signing, provenance) is **not** required on Day 2. Silico is already how Grady proves and updates.
+
+**A month later — beta path:** Customer feedback is in. Grady issues more units at **beta** quality. That is the horizon where **integrity protection** and related hardening belong (exact meaning TBD; spike). Self-hosted runners with real boards may show up here for CI metal, not as a Day 1 prerequisite.
 
 ### How it works for the end customer of a GCU
 
-1. Receive a product that already works in the field story above.
-2. When firmware changes, re-run the product's update path. Host gate was green before the tag.
-3. Never need to know the word silico.
+1. **Alpha (Day 2):** receive a prototype; expect rough edges; feedback loop with Grady.
+2. **Beta (about a month later):** more units; stronger update integrity as defined by the spike and product needs.
+3. When firmware changes, re-run the product's update path. Host gate was green before the tag.
+4. Never need to know the word silico.
 
 # FAQ
 
@@ -132,7 +135,9 @@ The checklist for Grady, or anyone who finds `github.com/tig/silico` and wants D
 18. One documented update command a non-expert can re-run tomorrow morning.
 19. Silico remains a pinned host dependency in the GCU (foundational, not a copied script pile).
 
-**Day 2 is then boring:** same update path; unit to potential customer or field trial. If Day 1 skipped GitHub, CI, pin, or host gate, Day 2 is a laptop demo, not a company foundation.
+**Day 2 (alpha):** same update path; prototype to a real customer for alpha feedback — not beta polish, not full integrity suite. If Day 1 skipped GitHub, CI, pin, gate, or real USB metal, Day 2 is a laptop demo, not a company foundation.
+
+**A month later (beta):** feedback incorporated; more customers get beta-class units; integrity protection and optional self-hosted metal CI land as open work (see silicov1 / integrity spike).
 
 **Split to remember:** `firmware/` → metal only. Silico package → Mac and CI only. Product domain stays private in the GCU.
 
@@ -264,10 +269,11 @@ Per GCU: application firmware on device runtime (MicroPython on RP2040-class for
 
 ## 26. How will we measure success?
 
-Primary: can a Grady-shaped founder reproduce the two-day path without Tig in the room?
-- Day 1: agent on Mac, device working end-to-end, host gate green.
-- Day 2: unit with a potential customer or real field trial.
-- After: silico still foundational (not a one-off demo).
+Primary: can a Grady-shaped founder reproduce the path without Tig in the room?
+- Day 1: agent on Mac, real USB device (+ sim), end-to-end, host gate green.
+- Day 2: prototype with a **real customer for alpha** (not beta).
+- ~1 month later: beta units for more customers; integrity posture per spike (not Day 2 scope).
+- Ongoing: silico still foundational (not a one-off demo).
 
 Secondary: three GCUs on one spine; agent-authored firmware under contracts; public spine usable without private trees.
 Not yet: strangers adopt without meeting Tig.

@@ -32,10 +32,11 @@ Make the two-day path real and repeatable for three GCUs ([gcu-codenames.md](./g
 
 v1 succeeds when:
 
-1. Day 1: non-software human + agent on a Mac → device end-to-end, host gate green.
-2. Day 2: same verified build can leave for a potential customer or field trial.
-3. After: silico remains how that company updates edge (foundational, not a demo).
-4. All three GCUs share the spine without private folklore dumps into silico.
+1. **Day 1:** non-software human + agent on a Mac → real USB device (+ sim) end-to-end, host gate green.
+2. **Day 2 (alpha):** same verified build can leave as a **prototype** with a **real customer for alpha** feedback — not beta polish; not full integrity suite.
+3. **~1 month later (beta horizon):** more customers can get beta-class units; **update integrity** (definition TBD — [spike](https://github.com/tig/silico/issues/4)) and optional self-hosted metal CI belong here, not on Day 2.
+4. Ongoing: silico remains how that company updates edge (foundational, not a demo).
+5. All three GCUs share the spine without private folklore dumps into silico.
 
 > **Host-first** means done lives on the host (tests, compile gates, sim or scenario gates) before anyone treats a flash as proof. That is how a non-expert prompts an agent without lying.
 
@@ -200,7 +201,9 @@ This is the minimum **Prompt for metal** / **Host first** bar. Soften it and a n
 
 1. **Required:** scriptable path from a product checkout.
 2. **Target:** release zip per GCU (no git required).
-3. **Not required:** MSI/GUI installer, OTA, signed binary chain, fleet CD with automatic rollback (FAQ 40 in the v1 WB).
+3. **Not required for Day 1–2:** MSI/GUI installer, OTA, full signing PKI, fleet CD with automatic rollback (FAQ 40).
+4. **Not required for Day 2 alpha:** update integrity protection beyond version identity — see month-later beta horizon and integrity spike.
+5. **Open (spike):** what "protecting integrity" means for beta units (hash manifest, signing, provenance, CRA hooks, …).
 
 ### 8.3 Port scoring (v1 defaults)
 

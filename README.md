@@ -2,9 +2,20 @@
 
 **Prompt for metal.**
 
-Silico is an open host-side spine so AI agents can ship real edge products: prove firmware on the host before anyone trusts a flash, install and update a device a normal human can run twice, and verify version identity so the board cannot lie about what it is running. Your domain and brand stay in your app; silico is not the product, not a company SKU, and not a device-ops cult. One rule: **host gate green means done; metal confirms.**
+Silico is an open host-side spine for edge products built by AI agents. It scaffolds a testable firmware repository, proves changes on the host, identifies the intended device, refuses unsafe writes, deploys the application, and verifies what is actually running on the device.
 
-We work backwards from this:
+The human interface is a coding agent—not an installation guide or shell tutorial. To start, open your coding agent and say:
+
+`See https://github.com/tig/silico. Follow the getting started instructions for agents.`
+
+The agent owns the host path: prerequisites, GitHub setup, scaffolding, testing, device discovery, deployment, and verification. You own the
+product judgment and confirm physical or irreversible actions. 
+
+Silico v1 targets RP2040-class devices running MicroPython. The spine is designed to add other GCU platforms and runtimes—including Arduino-class plates—when real products force them.
+
+Agents write the firmware. You own the judgment.
+
+## We work backwards from this:
 
 > With just Claude Code on my Mac, I had the device working end-to-end the next day, and in a potential customer's hand the day after that. Silico is now a foundational piece of our company's technology.
 
@@ -21,5 +32,3 @@ A **GCU** (General Contact Unit) is one shippable edge product. Silico is the sp
 | [specs/lexicon.md](specs/lexicon.md) | Phrase book (GCU, spine, host-honest, Help the operator, …) |
 | [specs/silicov1.md](specs/silicov1.md) | v1 build spec |
 | [specs/gcu-codenames.md](specs/gcu-codenames.md) | Public GCU codenames |
-
-Agent prompt to start: `See https://github.com/tig/silico. Follow the getting started instructions for agents.`

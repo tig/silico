@@ -132,7 +132,7 @@ The GCU needs a GitHub remote (or equivalent) so CI can run the host gate. A pac
   scripts/                  # thin wrappers: call silico host APIs
   install/                  # end-customer install and update docs
   dev/                      # process notes (CI/CD), not customer docs
-  requirements-dev.txt      # pins silico + pytest + mpy-cross
+  requirements-dev.txt      # pins silico @ tag/SHA + pytest; mpy-cross == device runtime
   pytest.ini
   .github/workflows/ci.yml
   silico.toml               # product config for silico host tools
@@ -173,7 +173,7 @@ v1 defines:
 Every GCU CI and every honest "firmware done" includes:
 
 1. Unit and packaging tests on host.
-2. Bytecode or compile gate for on-device sources (`mpy-cross` for MicroPython v1).
+2. Bytecode or compile gate for on-device sources (`mpy-cross` **pinned to the device MicroPython version**, not a loose floor).
 3. Hygiene gates (import rules, core file set, no sim in deploy set).
 4. At least one scenario or smoke exercising init and tick against a plant or fake HAL.
 5. Print or log of `FW_NAME` and `FW_VERSION` under test.
@@ -191,7 +191,7 @@ This is the minimum **Prompt for metal** / **Host first** bar. Soften it and a n
 ### 8.1 Lifecycle
 
 1. **Discover** board (VID/PID scoring; explicit port wins; never blind auto on multi-device hosts).
-2. **Bootstrap** host tools if needed (Python, mpremote).
+2. **Bootstrap** host tools if needed (Python **3.11+**, mpremote).
 3. **Runtime** (once): document UF2 or equivalent first flash of MicroPython.
 4. **Application:** deploy configured core file set in dependency order.
 5. **Verify:** device `FW_VERSION` matches host.
@@ -282,15 +282,25 @@ Until then, Quilan owns modem, credentials, and uplink protocol in private app c
 
 ## 15. Open decisions
 
-1. Package name on PyPI vs git URL pin only for v1 (git pin is enough for "today").
-2. License (MIT vs Apache-2.0).
-3. Exact config file name (`silico.toml` vs tool table in pyproject).
-4. Ship branch name for silico itself.
-5. How much of Zakalwe's sim plant pattern is example vs library.
-6. Field definition per GCU for the Fall 2026 WB.
-7. When phone-home graduates from Quilan app code into silico.
-8. What "shout from the rooftops" means as external proof.
-9. Minimal package layout so `pip install -e ./silico` works before any PyPI publish.
+**Closed**
+
+1. **License: Apache-2.0** (patent grant for serious vertical legal review).
+2. **Python floor: 3.11+** (do not guide operators onto EOL 3.9).
+3. **Pin silico by tag or commit SHA**, not `@main` (version identity).
+4. **mpy-cross** pinned to device MicroPython runtime (single source in `silico.toml` when tooling lands).
+
+**Still open**
+
+1. Package name on PyPI vs git URL pin only for early v1 (git pin is enough until publish).
+2. Exact config file name (`silico.toml` vs tool table in pyproject).
+3. Ship branch name for silico itself.
+4. How much of Zakalwe's sim plant pattern is example vs library.
+5. Field definition per GCU for the Fall 2026 WB.
+6. When phone-home graduates from Quilan app code into silico.
+7. What "shout from the rooftops" means as external proof.
+8. Minimal package layout so `pip install` of a tag works (make-PR-true; pre-alpha until then).
+9. CLI verbs (spec now; see tui-cs/cli design discussion) and Day 1 rehearsal harness.
+10. MicroPython host-sim stack ([issue #3](https://github.com/tig/silico/issues/3)); integrity for beta ([issue #4](https://github.com/tig/silico/issues/4)).
 
 ## 16. Acceptance for silico v1
 

@@ -43,7 +43,7 @@ The human is often **Grady-shaped**: domain or hardware judgment, not a software
    - Do **not** assume they know agent UI tricks (for example typing `! xyz` to run a host command, approving a tool, or opening a terminal profile). Explain the click path once.
 5. **First firmware is your problem.** Do not assume the board already has MicroPython or that they know how to get initial firmware on the device. Detect blank vs REPL. Walk UF2 or the board's first-flash path from zero. Once per board, then never make them re-learn it for app updates.
 6. **Serial is scary; own it.** List candidate ports in plain language ("likely the board", "likely a different adapter"). Prefer explicit ports. If something fails, say what you will try next; do not shame them for cable/port confusion.
-7. **Confirm understanding in their words.** Before a irreversible or physical step, one short check: "You should see a drive named RPI-RP2. Do you?"
+7. **Confirm understanding in their words.** Before an irreversible or physical step, one short check: "You should see a drive named RPI-RP2. Do you?"
 8. **Never leave them at a cliff.** If you are blocked (need a password, need a click), say exactly what you need and wait. Do not continue as if they finished.
 9. **Teach only what Day 2 requires.** After success, leave one documented update command and where the LED should look. No textbook.
 
@@ -79,7 +79,7 @@ Run this playbook under **Help the operator**. Confirm each phase with them befo
 
 1. Detect OS (Windows / macOS / Linux). Tell them what you detected in one sentence.
 2. Ensure **Git** is installed and on PATH. Install if missing; verify with a version command you run.
-3. Ensure **Python 3.9+** (`py -3` on Windows, `python3` elsewhere). Install/guide if missing; do not assume `python` means 3.
+3. Ensure **Python 3.11+** (`py -3` on Windows, `python3` elsewhere). Install/guide if missing; do not assume `python` means 3. Do not install EOL 3.9/3.10 as the project floor.
 4. Ensure **GitHub CLI (`gh`)** is installed. Install if missing; verify `gh --version`.
 5. Ensure **pip** works for that same Python.
 6. Summarize ready vs needs a human click. Stop cleanly if an installer UI requires them.
@@ -112,18 +112,21 @@ Run this playbook under **Help the operator**. Confirm each phase with them befo
   silico.toml        # product config when tools exist
 ```
 
-2. Pin silico as a **host** dependency only (you edit the file; you run pip):
+2. Pin silico as a **host** dependency only (you edit the file; you run pip). Prefer an **immutable tag or commit SHA**, not `@main` (version identity doctrine):
 
 ```text
-# requirements-dev.txt
-silico @ git+https://github.com/tig/silico.git@main
-# or while developing silico locally:
+# requirements-dev.txt — use a release tag when one exists
+silico @ git+https://github.com/tig/silico.git@v0.1.0
+# local extraction / pre-package:
 # -e /path/to/tig/silico
 pytest>=8
-mpy-cross>=1.20
+# mpy-cross must match the device MicroPython runtime (pin exact version in silico.toml when set)
+mpy-cross==1.22.2
 ```
 
-3. Install host deps with the same Python CI will use. Fix failures yourself when possible.
+If `pip install` of the git pin fails because the package is not installable yet, stop and say so: pre-alpha. Use path install only while extracting; do not invent a vendored spine in the GCU.
+
+3. Install host deps with **Python 3.11+** (same as CI will use). Fix failures yourself when possible.
 4. Add minimal host CI (pytest; no COM port).
 5. Commit and push. Confirm Actions (or equivalent) is on. If the human must enable Actions in the GitHub UI, give exact clicks; do not assume they know where Settings is.
 
@@ -131,22 +134,22 @@ Until silico ships a real package and plate generator, implement the thinnest pl
 
 ### Phase D — Talk to real hardware (hello metal)
 
-Goal: status LEDs flash **green**, reconnect is **repeatable**, runtime on board once if needed.
+Goal: board shows a **distinct, documented blink pattern** a novice can recognize (color LED if present; otherwise clear on/off timing), reconnect is **repeatable**, runtime on board once if needed.
 
 1. Ask them to use a **data** USB cable (not charge-only). Explain that some cables only power.
 2. Have them plug the board. You list serial candidates in plain language; pick explicit port. On multi-device Windows, never rely on blind `connect auto`. Prefer VID `2e8a`; demote CH340 `1a86` and Debug Probe `2e8a:000c`.
 3. If no MicroPython REPL: **you** drive first firmware. Step-by-step physical: hold BOOT, tap RESET, release BOOT → wait for `RPI-RP2` drive → download/copy the correct UF2 → wait for reconnect. Do not assume they have ever done this. Once per board.
 4. Prove REPL yourself: `import sys; print(sys.platform)` → `rp2` for RP2040-class. Tell them what "good" looks like.
-5. Deploy minimal firmware so LED is green (or documented hello).
+5. Deploy minimal firmware with the hello blink pattern; document what “good” looks like.
 6. Unplug/replug with them until reconnect is boring.
-7. Write `install/` in plain language for tomorrow morning (one command, what LED to expect).
+7. Write `install/` in plain language for tomorrow morning (one command, what the board should look like).
 
 ### Phase E — CI proves metal change
 
-1. Ask the human to open a GitHub Issue on the **GCU** repo. Give them the exact title to paste, e.g. `Change the firmware to flash green/red`. If they do not know how to open an issue, give the UI path or create it with `gh` after they approve.
+1. Ask the human to open a GitHub Issue on the **GCU** repo. Give them the exact title to paste, e.g. `Change the firmware blink pattern (distinct A vs B)`. If they do not know how to open an issue, give the UI path or create it with `gh` after they approve.
 2. When the issue exists, implement it: firmware behavior change **and** host tests/CI green.
 3. Push or PR. You watch CI; you fix red builds.
-4. Deploy to the board; ask them only to confirm what they see on the LED.
+4. Deploy to the board; ask them only to confirm the blink pattern matches the issue.
 5. Close the issue with a short note linking the commit/PR.
 
 Closed loop: **issue → agent → host gate → CI → metal**.

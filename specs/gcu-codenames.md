@@ -2,6 +2,8 @@
 
 Unless you know better ones.
 
+> **GCU** means **General Contact Unit**: one shippable edge **product** (app + metal) with end-user value, private domain logic, and a life after the bench. Silico is the open spine, not a GCU. (Culture-flavored label; not a ship or Mind name.)
+
 The three starter GCUs are confidential products. Public silico docs name them only by Culture-series **person** codenames (not ships, not Minds). Domain detail stays in private app repos.
 
 | Codename | Public technical shape only |

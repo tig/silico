@@ -25,7 +25,7 @@ Method notes:
 **Fall 2026**
 **Durango, CO**
 
-## Silco proves `Prompt for Metal` Actually Works
+## Silico proves `Prompt for metal` Actually Works
 
 **Durango, CO** — Grady had raised money to build Quilan and spent it on contract manufacture in Asia. The prototype existed. Field trials did not. He is not a software guy. Software was the stall.
 
@@ -52,7 +52,7 @@ End customers install or update with a short host path that finds the board, loa
 
 ### Pricing
 
-Each GCU is priced as a product. Silico is free under an OSI-approved license. There is no silico SKU you must buy to use a GCU.
+Each GCU is priced as a product. Silico is free under **Apache-2.0**. There is no silico SKU you must buy to use a GCU.
 
 ### How it works
 
@@ -114,8 +114,8 @@ The checklist for Grady, or anyone who finds `github.com/tig/silico` and wants D
 
 **Talk to real hardware**
 
-9. Agent prompts the human to plug the device into USB, then configures until status LEDs flash green and reconnect is repeatable. If the board needs a runtime the first time (for example MicroPython UF2), the agent steps the human through it once per board, not on every app change.
-10. Agent ensures the GCU GitHub repo has CI/CD. It prompts the human to open a GitHub issue titled roughly: `Change the firmware to flash green/red`. When that issue exists, the agent implements it so CI is green **and** the real device behavior changes. That is the first prove of host gate + metal together.
+9. Agent prompts the human to plug the device into USB, then configures until the board shows a **distinct, documented blink pattern** (green if the board has a color LED; otherwise a clear on/off pattern a novice can recognize) and reconnect is repeatable. If the board needs a runtime the first time (for example MicroPython UF2), the agent steps the human through it once per board, not on every app change.
+10. Agent ensures the GCU GitHub repo has CI/CD. It prompts the human to open a GitHub issue titled roughly: `Change the firmware blink pattern (e.g. solid vs blink, or green vs red if RGB)`. When that issue exists, the agent implements it so CI is green **and** the real device behavior changes. That is the first proof of host gate + metal together.
 
 **Make the device true (still Day 1)**
 

@@ -8,16 +8,18 @@ Host path comes from **silico** (https://github.com/tig/silico). Pin as host-onl
 
 Start: *See https://github.com/tig/silico. Follow the getting started instructions for agents.*
 
+That playbook begins with **Phase 0** (welcome the operator, recap what you know, name the next step, get a clear go) **before** any tooling.
+
 ## Help the operator
 
-Assume low ops literacy. Prefer doing over dumping shell. **Poll USB** after asking for a data cable - do not ask humans to announce plug-in. **Never write the device without explicit operator confirmation.**
+Assume low ops literacy. Prefer doing over dumping shell. **Poll USB** after asking for a data cable - do not ask humans to announce plug-in. **Confirm device identity** every session. **Never write the device without explicit operator confirmation.**
 
 ## Definition of done
 
 | Claim | Proof |
 |-------|--------|
 | `firmware/` change done | `pytest -q` green (host gate). CI green if remote exists. |
-| Deployed | `silico deploy … --yes --verify` after operator confirmed. |
+| Deployed | `silico deploy … --port COMx --yes --verify` after operator confirmed identity + write. |
 | Issue fixed | CI green **and** metal matches the issue. |
 
 Never treat "I flashed something" as done.

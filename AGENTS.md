@@ -123,14 +123,14 @@ Only after a clear **go** (or after applying their adjustments and re-confirming
 
 ```text
 # In GCU requirements-dev.txt (or pip install directly while bootstrapping):
-silico @ git+https://github.com/tig/silico.git@v0.1.1
+silico @ git+https://github.com/tig/silico.git@v0.1.2
 pytest>=8
 mpy-cross==<exact MicroPython version on the board>
 ```
 
 ```text
 python -m pip install -U pip
-python -m pip install "silico @ git+https://github.com/tig/silico.git@v0.1.1" pytest
+python -m pip install "silico @ git+https://github.com/tig/silico.git@v0.1.2" pytest
 # local extraction only:
 # python -m pip install -e /path/to/tig/silico
 ```
@@ -264,7 +264,7 @@ Run these yourself when possible. Show the human only what they must see.
 
 ```text
 # Install spine (tag pin)
-python -m pip install "silico @ git+https://github.com/tig/silico.git@v0.1.1"
+python -m pip install "silico @ git+https://github.com/tig/silico.git@v0.1.2"
 
 silico doctor
 silico wait-device

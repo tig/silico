@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "silico"
-version = "0.1.1"
+version = "0.1.2"
 description = "Prompt for metal: host spine for agent-authored edge products (GCUs)"
 readme = "README.md"
 license = { text = "Apache-2.0" }

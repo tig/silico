@@ -121,10 +121,30 @@ def deploy(
     if reset:
         r = run_mpremote(planned.port, "reset")
         lines.append("reset: " + ("ok" if r.returncode == 0 else "warn"))
+        # Windows often drops the CDC port briefly after soft reset.
+        lines.append("Waiting for port to reappear after reset...")
+        import time
+
+        deadline = time.monotonic() + 30.0
+        while time.monotonic() < deadline:
+            if port_is_listed(planned.port):
+                time.sleep(0.5)  # settle
+                break
+            time.sleep(0.25)
+        else:
+            lines.append(
+                f"WARN: port {planned.port} did not reappear within 30s; verify may fail."
+            )
 
     if verify:
+        # Retry verify once if port was mid-reconnect.
         code = "import version\nprint(version.FW_NAME)\nprint(version.FW_VERSION)\n"
         r = exec_on_device(planned.port, code)
+        if r.returncode != 0:
+            import time
+
+            time.sleep(1.0)
+            r = exec_on_device(planned.port, code)
         if r.returncode != 0:
             lines.append("FAIL: version verify (import version failed)")
             if r.stderr:

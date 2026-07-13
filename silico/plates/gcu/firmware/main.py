@@ -1,6 +1,10 @@
-"""Boot entry: init + tick. No hardware at import time."""
+"""Boot entry: init + tick. No hardware at import time on the host."""
 
 from version import FW_NAME, FW_VERSION
+
+# Seeed XIAO RP2040 user green LED (USER_LED_G). Active-low.
+_LED_PIN = 16
+_TICK_SLEEP_S = 0.25
 
 
 def init(hal=None):
@@ -22,11 +26,39 @@ def tick(state):
     return state
 
 
+def _board_hal():
+    try:
+        from machine import Pin  # type: ignore
+    except ImportError:
+        return None
+
+    pin = Pin(_LED_PIN, Pin.OUT)
+    pin.value(1)  # off when active-low
+
+    class BoardHal:
+        def set_led(self, on):
+            pin.value(0 if on else 1)
+
+    return BoardHal()
+
+
 def main():
-    state = init()
+    state = init(hal=_board_hal())
+    try:
+        import time
+
+        sleep = time.sleep
+    except ImportError:
+        sleep = lambda _s: None
     while True:
         tick(state)
+        sleep(_TICK_SLEEP_S)
 
 
-if __name__ == "__main__":
+# Device boot: start loop. Host imports must not hang (no bare main()).
+try:
+    import machine  # type: ignore  # noqa: F401
+
     main()
+except ImportError:
+    pass

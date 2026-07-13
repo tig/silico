@@ -28,6 +28,7 @@ def test_version_identity_present():
 
 
 def test_main_init_tick():
+    # Import must not hang (device main() only runs when machine exists).
     main = _load("main")
 
     class FakeHal:

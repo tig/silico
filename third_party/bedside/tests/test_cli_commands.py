@@ -108,3 +108,27 @@ def test_step_and_confirm_summary_uses_info_not_failed():
     assert "failed=" not in line
     if rep.info_failed:
         assert "info=" in line
+
+
+def test_init_force_preserves_existing_bedside_md(tmp_path: Path):
+    """Re-vendor with --force must not wipe product domain notes."""
+    notes = tmp_path / "BEDSIDE.md"
+    notes.write_text("# product metal notes\nkeep me\n", encoding="utf-8")
+    r = run_init(tmp_path, force=True)
+    assert r.exit_code == OK
+    text = notes.read_text(encoding="utf-8")
+    assert "keep me" in text
+    assert "Left existing BEDSIDE.md" in "\n".join(r.messages)
+
+
+def test_vendor_copy_rejects_self_path(tmp_path: Path):
+    from bedside.vendor import vendor_copy
+
+    src = tmp_path / "bedside"
+    (src / "contract").mkdir(parents=True)
+    (src / "contract" / "README.md").write_text("c\n", encoding="utf-8")
+    try:
+        vendor_copy(src, src)
+        raise AssertionError("expected ValueError for source == dest")
+    except ValueError as e:
+        assert "same path" in str(e)

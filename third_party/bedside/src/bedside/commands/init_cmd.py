@@ -139,7 +139,9 @@ def run_init(
 
     if not skip_domain_notes:
         notes = root / cfg.domain_notes
-        if notes.is_file() and not force:
+        # Never clobber product domain notes on --force re-vendor; only scaffold
+        # when missing. Agents fill BEDSIDE.md once; refresh updates third_party only.
+        if notes.is_file():
             r.line(f"Left existing {cfg.domain_notes}")
         else:
             notes.write_text(BEDSIDE_MD, encoding="utf-8")

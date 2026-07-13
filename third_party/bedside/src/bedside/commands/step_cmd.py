@@ -79,15 +79,17 @@ def run_step(
         pre = CommandResult(OK)
         _emit_step(pre, gate_id, prompt, expect)
         # Print before blocking: CLI only flushes CommandResult after return.
-        _print_now(pre.messages)
+        # Keep stdout JSON-clean when --json.
+        _print_now(pre.messages, to_stderr=json_out)
         interactive_flushed = True
         try:
             if input_fn is not None:
                 raw = input_fn("Confirm (yes/no): ")
             else:
                 stream = stdin if stdin is not None else sys.stdin
-                sys.stdout.write("Confirm (yes/no): ")
-                sys.stdout.flush()
+                prompt_stream = sys.stderr if json_out else sys.stdout
+                prompt_stream.write("Confirm (yes/no): ")
+                prompt_stream.flush()
                 raw = stream.readline()
                 if not raw:
                     raw = ""
@@ -132,10 +134,14 @@ def run_step(
     return r
 
 
-def _print_now(messages: list[str]) -> None:
-    """Flush operator-facing lines before a blocking stdin read."""
+def _print_now(messages: list[str], *, to_stderr: bool = False) -> None:
+    """Flush operator-facing lines before a blocking stdin read.
+
+    When json_out is true, human text goes to stderr so stdout stays JSON-only.
+    """
+    stream = sys.stderr if to_stderr else sys.stdout
     for line in messages:
-        print(line, flush=True)
+        print(line, file=stream, flush=True)
 
 
 def _emit_step(

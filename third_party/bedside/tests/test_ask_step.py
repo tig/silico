@@ -91,7 +91,11 @@ def test_ask_noninteractive_without_answer():
         stdin_isatty=False,
     )
     assert r.exit_code == HUMAN_NEEDED
-    assert "Human action needed" in "\n".join(r.messages)
+    joined = "\n".join(r.messages)
+    assert "Human action needed" in joined
+    # key=value form (not "choice= pending")
+    assert "choice=pending" in joined
+    assert "choice= pending" not in joined
 
 
 def test_ask_interactive_input_fn():

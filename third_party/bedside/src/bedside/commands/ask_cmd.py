@@ -110,22 +110,24 @@ def run_ask(
                 "or use the agent host structured choice UI for this gate."
             )
             r.line(
-                f"Record: bedside.ask id={gate_id} choice= pending "
+                f"Record: bedside.ask id={gate_id} choice=pending "
                 f"recommended={recommended} matched=false"
             )
             return r
         pre = CommandResult(OK)
         _emit_prompt(pre, gate_id, prompt, ordered, recommended)
         # Print before blocking: CLI only flushes CommandResult after return.
-        _print_now(pre.messages)
+        # Keep stdout JSON-clean when --json.
+        _print_now(pre.messages, to_stderr=json_out)
         interactive_flushed = True
         try:
             if input_fn is not None:
                 raw = input_fn("Answer: ")
             else:
                 stream = stdin if stdin is not None else sys.stdin
-                sys.stdout.write("Answer: ")
-                sys.stdout.flush()
+                prompt_stream = sys.stderr if json_out else sys.stdout
+                prompt_stream.write("Answer: ")
+                prompt_stream.flush()
                 raw = stream.readline()
                 if not raw:
                     raw = ""
@@ -173,10 +175,14 @@ def run_ask(
     return r
 
 
-def _print_now(messages: list[str]) -> None:
-    """Flush operator-facing lines before a blocking stdin read."""
+def _print_now(messages: list[str], *, to_stderr: bool = False) -> None:
+    """Flush operator-facing lines before a blocking stdin read.
+
+    When json_out is true, human text goes to stderr so stdout stays JSON-only.
+    """
+    stream = sys.stderr if to_stderr else sys.stdout
     for line in messages:
-        print(line, flush=True)
+        print(line, file=stream, flush=True)
 
 
 def _emit_prompt(

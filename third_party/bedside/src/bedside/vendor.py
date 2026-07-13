@@ -52,6 +52,24 @@ def vendor_copy(
             "(point at a tig/bedside checkout, not a random folder)"
         )
 
+    # Never rmtree the source. Same path, or dest nested under source, would
+    # delete the only copy of contract/src before copytree runs.
+    if source == dest:
+        raise ValueError(
+            f"vendor source and dest are the same path: {source}. "
+            "Point --vendor-from at an upstream tig/bedside checkout, not the "
+            "existing product vendor tree."
+        )
+    try:
+        dest.relative_to(source)
+    except ValueError:
+        pass  # dest is not under source
+    else:
+        raise ValueError(
+            f"vendor dest {dest} is inside source {source}; refusing to delete "
+            "a nested destination that would wipe the source tree."
+        )
+
     if dest.exists():
         shutil.rmtree(dest)
     dest.mkdir(parents=True)

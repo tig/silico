@@ -2,7 +2,7 @@
 
 **Stage:** Placeholder aspiration. Not a build plan. Ambition year 2027.
 **Artifact form:** Short PR plus minimal FAQ.
-**Depends on:** v1 extraction first ([wb-2026-fall-three-gcus.md](./wb-2026-fall-three-gcus.md), especially FAQ 40).
+**Depends on:** v1 extraction first ([wb-2026-fall-three-gcus.md](./wb-2026-fall-three-gcus.md), especially FAQ 37).
 
 Tenets: [tenets.md](./tenets.md). Method: [Working Backwards](https://blog.kindel.com/2024/07/23/how-to-write-a-working-backwards-doc/), [App or platform](https://blog.kindel.com/2011/08/24/be-either-an-app-or-a-platform-not-both/).
 
@@ -22,7 +22,7 @@ Tig still ships Zakalwe, Quilan, and Sma on silico. Strangers ship theirs. End c
 
 # FAQ
 
-## 1. Why keep this doc if v1 FAQ 40 already states long-term vision?
+## 1. Why keep this doc if v1 FAQ 37 already states long-term vision?
 
 So 2027 has a destination PR when external results exist. Until then it is a short stake in the ground, not a second novel.
 

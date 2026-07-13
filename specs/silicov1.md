@@ -3,7 +3,7 @@
 **Status:** Draft spec for build.
 **Steward:** Tig Kindel (github.com/tig/silico). Not a company product line.
 **Scope:** The spine required by three Pi-class GCUs (RP2040 / MicroPython first).
-**Non-scope:** Industry default. Category marketing. Cloud fleet. Built-in phone-home for all GCUs. Arduino-class plates as a deliverable. Company branding of the spine. Full v2 narrative (longer-term vision lives in [wb-2026-fall-three-gcus.md](./wb-2026-fall-three-gcus.md) FAQ 40).
+**Non-scope:** Industry default. Category marketing. Cloud fleet. Built-in phone-home for all GCUs. Arduino-class plates as a deliverable. Company branding of the spine. Full v2 narrative (longer-term vision lives in [wb-2026-fall-three-gcus.md](./wb-2026-fall-three-gcus.md) FAQ 37).
 
 Related: [tenets.md](./tenets.md), [gcu-codenames.md](./gcu-codenames.md), [wb-2026-fall-three-gcus.md](./wb-2026-fall-three-gcus.md).
 
@@ -201,7 +201,7 @@ This is the minimum **Prompt for metal** / **Host first** bar. Soften it and a n
 
 1. **Required:** scriptable path from a product checkout.
 2. **Target:** release zip per GCU (no git required).
-3. **Not required for Day 1–2:** MSI/GUI installer, OTA, full signing PKI, fleet CD with automatic rollback (FAQ 40).
+3. **Not required for Day 1–2:** MSI/GUI installer, OTA, full signing PKI, fleet CD with automatic rollback (FAQ 37).
 4. **Not required for Day 2 alpha:** update integrity protection beyond version identity — see month-later beta horizon and integrity spike.
 5. **Open (spike):** what "protecting integrity" means for beta units (hash manifest, signing, provenance, CRA hooks, …).
 
@@ -271,7 +271,7 @@ Machine-readable config declares at least:
 7. Features for imaginary unicorns before three GCUs force the shape.
 8. Requiring human hand-authorship of firmware as the blessed path.
 
-### 14.1 Later (not v1; see also v1 WB FAQ 40)
+### 14.1 Later (not v1; see also v1 WB FAQ 37)
 
 1. Phone-home through silico when a second GCU needs Quilan's app loop; USB remains always available.
 2. Multi-target plates when a GCU forces them.

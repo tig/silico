@@ -75,26 +75,41 @@ When a human says: *See https://github.com/tig/silico. Follow the getting starte
 
 Run this playbook under **Help the operator**. Confirm each phase with them before advancing.
 
-### Phase 0 - Welcome the operator (before any tooling)
+### Phase 0 - Welcome the operator (proactive, safe)
 
-**Do not** run Phase A commands, scaffold, doctor, or USB polls until the operator has greened the start gate below.
+Be **proactive in a safe way.** Before the start gate, **do** read-only discovery so your welcome is grounded - do **not** wait for the human to ask whether Git exists.
 
-Speak to them first, in plain language. Structure (tone may vary; skeleton may not):
+**Allowed before start gate** (read-only / non-destructive):
+
+- Detect OS; run `git --version`, Python version (`py -3` / `python3`), `gh --version`, `pip` check
+- `gh auth status` (do not start `gh auth login` until after go, unless they already asked)
+- Read product `README` / `spec.md` / workspace layout
+- If silico is already installed: `silico version` / `silico doctor` (read-only port list is fine)
+- List serial ports only as information - **do not** inspect/deploy metal or assume a board identity
+
+**Not allowed before start gate:**
+
+- Installing packages, changing PATH, scaffold, deploy, device writes
+- Destructive git (reset --hard, force-push) unless the operator already ordered that work
+- Walls of shell for the human to paste when you could run the check yourself
+
+Then speak in plain language. Structure (tone may vary; skeleton may not):
 
 1. **Welcome** to Silico.
 2. **Role:** you are here to get their GCU shipped and will step them through it.
-3. **What you know now** about what they want (product brief, domain seed/`spec.md`, repo URL or codename, hardware hints if present). If almost nothing is known, say that and list what you need.
-4. **Next step** in one short sentence (e.g. "check this machine has Git and Python, then open or create your product repo").
+3. **What you know now** - product intent **and** machine readiness (what is already OK vs what will need install after go).
+4. **Next step** in one short sentence (the first *mutating* step after go).
 5. **Start gate:** ask whether to start or adjust something.
 
 Example shape:
 
 > Welcome to Silico. I'm here to get your GCU shipped and will step you through it all.
 > Here's what I know now about what you want: …
+> On this machine I already checked: Git OK, Python 3.12 OK, gh logged in; silico not installed yet.
 > The next step is …
 > Do you want me to start? Or should I adjust something?
 
-Only after a clear **go** (or after applying their adjustments and re-confirming) may you begin Phase A.
+Only after a clear **go** (or after applying their adjustments and re-confirming) may you begin **mutating** Phase A work (installs, scaffold, repo create, device paths).
 
 ### Phase A - Machine prerequisites
 

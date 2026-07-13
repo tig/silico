@@ -157,7 +157,7 @@ Only after a clear **go** (or after applying their adjustments and re-confirming
 # In GCU requirements-dev.txt (or pip install directly while bootstrapping):
 silico @ git+https://github.com/tig/silico.git@v0.1.3
 pytest>=8
-mpy-cross==<exact MicroPython version on the board>
+mpy-cross==<pin matching device MicroPython major.minor — see below>
 ```
 
 ```text
@@ -168,6 +168,14 @@ python -m pip install "silico @ git+https://github.com/tig/silico.git@v0.1.3" py
 ```
 
 If install fails, **stop**, say the pin is broken, and file/fix on `tig/silico`. Do **not** vendor host tooling into the GCU.
+
+**mpy-cross pin (ABI):**
+
+1. Plate defaults ship a **recent stable** PyPI `mpy-cross` (not a multi-year-old stub). That default is a starting point only.
+2. After the board talks (`silico inspect`), read the device MicroPython version and set **both** `silico.toml` `[runtime].mpy_cross` and `requirements-dev.txt` `mpy-cross==…` to the same pin.
+3. Prefer an exact stable match when PyPI has it. If the device runs stable `X.Y.0` but PyPI only has a **matching-minor rc** (e.g. device `1.28.0`, PyPI `1.28.0rc0.post2`), pin that rc — same bytecode line as the device. Do **not** leave a stale older minor.
+4. `silico inspect` prints an mpy-cross pin check; `silico doctor` warns on ancient plate values. Fix before claiming host compile gate is honest.
+
 
 2. Scaffold the plate (merge into existing GCU is OK; product `README.md` / `spec.md` are never overwritten):
 

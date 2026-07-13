@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
+from silico.mpy_pin import pin_advice_lines, read_toml_mpy_cross
 from silico.mpremote_util import exec_on_device, ls_device, mpremote_available
 from silico.ports import IDENTITY_HINT, pick_best_port, port_is_listed
 
@@ -52,8 +53,9 @@ def inspect(port: str | None = None) -> InspectReport:
         if r.stderr:
             lines.append(r.stderr.strip())
         return InspectReport(False, p, lines)
+    repl_out = (r.stdout or "").strip() or "(no output)"
     lines.append("REPL:")
-    lines.append((r.stdout or "").strip() or "(no output)")
+    lines.append(repl_out)
 
     ls = ls_device(p)
     if ls.returncode == 0:
@@ -68,6 +70,12 @@ def inspect(port: str | None = None) -> InspectReport:
     )
     if ver.returncode == 0:
         lines.append("Version probe: " + (ver.stdout or "").strip())
+
+    # mpy-cross pin vs device MicroPython (host gate ABI)
+    toml_pin = read_toml_mpy_cross()
+    lines.append("mpy-cross pin check:")
+    for line in pin_advice_lines(repl_out, toml_pin):
+        lines.append("  " + line)
 
     lines.append("Read-only inspect complete. No files were written.")
     lines.append(IDENTITY_HINT)

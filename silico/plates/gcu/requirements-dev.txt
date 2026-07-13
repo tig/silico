@@ -1,5 +1,6 @@
 # Host-only. Prefer immutable tag:
 silico @ git+https://github.com/tig/silico.git@v0.1.3
 pytest>=8
-# Pin mpy-cross to the MicroPython version on the board (ABI).
-mpy-cross==1.22.2
+# Pin mpy-cross to the board MicroPython major.minor (ABI). Plate default is
+# latest stable on PyPI; after `silico inspect`, re-pin (rc OK if stable missing).
+mpy-cross==1.27.0.post2

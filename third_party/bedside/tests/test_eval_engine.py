@@ -31,3 +31,22 @@ def test_step_and_confirm_passes_focus():
     assert p["R4"] is True
     assert p["R7"] is True
     assert p["R8"] is True
+
+
+def test_choice_wall_fails_r2_r4():
+    text = (FIXTURES / "known-bad" / "choice-wall" / "transcript.md").read_text(
+        encoding="utf-8"
+    )
+    p, reasons = score_transcript(text)
+    assert p["R2"] is False
+    assert p["R4"] is False
+    assert any("choice wall" in r for r in reasons)
+
+
+def test_structured_choice_passes_r2_r4():
+    text = (
+        FIXTURES / "known-good" / "structured-choice" / "transcript.md"
+    ).read_text(encoding="utf-8")
+    p, _ = score_transcript(text)
+    assert p["R2"] is True
+    assert p["R4"] is True

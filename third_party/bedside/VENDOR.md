@@ -1,7 +1,7 @@
 # Vendored tig/bedside
 
 - Source: https://github.com/tig/bedside
-- Commit: 198fdb78831bc1e028c3bd8abccce3ed52bbf02a (198fdb7)
+- Commit: 868e3b81a793c259242175b0afbdbf29d0aca558 (868e3b8)
 - Vendored: not a git submodule (copy for pin/reproducible host path)
 - Refresh: replace this tree from a new bedside commit; update this file and bedside.toml pin
 

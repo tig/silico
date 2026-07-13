@@ -1,0 +1,5 @@
+id = "operator-gate-ask"
+expect = "pass"
+principles = ["R2", "R4"]
+title = "Operator gate via bedside ask"
+notes = "Agent uses bedside ask for a yes/no deploy gate instead of a free-text menu."

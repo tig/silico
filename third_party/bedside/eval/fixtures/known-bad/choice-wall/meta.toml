@@ -1,0 +1,5 @@
+id = "choice-wall"
+expect = "fail"
+principles = ["R2", "R4"]
+title = "Multi-choice free-text dump (choice wall)"
+notes = "Agent offers plan forks as free chat options instead of a structured picker."

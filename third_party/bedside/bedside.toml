@@ -5,3 +5,6 @@ surface_path = "surface"
 eval_path = "eval"
 domain_notes = "BEDSIDE.md"
 agents_stub = true
+fixture_paths = [
+  "eval/fixtures",
+]

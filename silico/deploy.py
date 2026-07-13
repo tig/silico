@@ -3,10 +3,13 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+import re
 from pathlib import Path
 
-from silico.mpremote_util import cp_to_device, exec_on_device, mpremote_available, run_mpremote
+from silico.config_toml import read_deploy_core
+from silico.mpremote_util import cp_to_device, exec_on_device, ls_device, mpremote_available, run_mpremote
 from silico.ports import IDENTITY_HINT, pick_best_port, port_is_listed
+from silico.pull_device import _parse_ls_names
 
 
 @dataclass
@@ -14,6 +17,7 @@ class DeployPlan:
     port: str
     files: list[tuple[Path, str]]  # local path, remote name
     lines: list[str] = field(default_factory=list)
+    prune_remotes: list[str] = field(default_factory=list)
 
 
 @dataclass
@@ -22,11 +26,73 @@ class DeployResult:
     lines: list[str] = field(default_factory=list)
 
 
+
+# Modules that start an infinite loop when imported on-device (plate main.py).
+_BOOT_ENTRY_MODULES = frozenset({"main"})
+
+
+def _safe_module_name(name: str) -> str | None:
+    n = name.strip()
+    if not re.fullmatch(r"[A-Za-z_][A-Za-z0-9_]*", n):
+        return None
+    return n
+
+
+def device_verify_import_snippet(mod: str) -> tuple[str, str]:
+    """Build on-device code for --verify-import.
+
+    Returns (code, mode) where mode is 'import' or 'compile'.
+    Boot entry modules (e.g. main) are compile-checked only so the infinite
+    device loop cannot hang mpremote (CR fix).
+    """
+    if mod in _BOOT_ENTRY_MODULES:
+        # open+compile; do not exec / import the boot module
+        code = (
+            f"src=open('{mod}.py').read()\n"
+            f"compile(src, '{mod}.py', 'exec')\n"
+            f"print('compile_ok', '{mod}')\n"
+        )
+        return code, "compile"
+    code = f"import {mod}\nprint('import_ok', '{mod}')\n"
+    return code, "import"
+
+
+def resolve_deploy_files(
+    files: list[Path] | None,
+    *,
+    root: Path | None = None,
+) -> list[Path] | DeployResult:
+    """Use CLI files, or silico.toml [deploy].core when files empty."""
+    if files:
+        return list(files)
+    core = read_deploy_core(root)
+    if not core:
+        return DeployResult(
+            False,
+            [
+                "FAIL: no files given and no [deploy].core in silico.toml.",
+                "Pass files on the CLI, or add:",
+                '  [deploy]',
+                '  core = ["firmware/version.py", "firmware/main.py"]',
+            ],
+        )
+    root = root or Path.cwd()
+    out: list[Path] = []
+    for rel in core:
+        p = (root / rel).resolve()
+        if not p.is_file():
+            return DeployResult(False, [f"FAIL: manifest file missing: {rel}"])
+        out.append(p)
+    return out
+
+
 def plan_deploy(
-    files: list[Path],
+    files: list[Path] | None,
     *,
     port: str | None = None,
     remote_names: list[str] | None = None,
+    prune: bool = False,
+    root: Path | None = None,
 ) -> DeployPlan | DeployResult:
     if not mpremote_available():
         return DeployResult(False, ["FAIL: mpremote not available (pip install mpremote)"])
@@ -59,8 +125,10 @@ def plan_deploy(
             ],
         )
 
-    if not files:
-        return DeployResult(False, ["FAIL: no files to deploy"])
+    resolved = resolve_deploy_files(files, root=root)
+    if isinstance(resolved, DeployResult):
+        return resolved
+    file_list = resolved
 
     pairs: list[tuple[Path, str]] = []
     lines = [
@@ -68,7 +136,9 @@ def plan_deploy(
         "This will OVERWRITE files on the device and may change boot behavior.",
         IDENTITY_HINT,
     ]
-    for i, f in enumerate(files):
+    if not files:
+        lines.append("Using [deploy].core from silico.toml")
+    for i, f in enumerate(file_list):
         path = Path(f)
         if not path.is_file():
             return DeployResult(False, [f"FAIL: not a file: {path}"])
@@ -76,26 +146,53 @@ def plan_deploy(
         pairs.append((path, remote))
         lines.append(f"  {path}  ->  :{remote}")
 
+    prune_remotes: list[str] = []
+    if prune:
+        ls = ls_device(chosen.device)
+        if ls.returncode == 0:
+            on_dev = set(_parse_ls_names(ls.stdout or ""))
+            want = {remote for _, remote in pairs}
+            # Never auto-delete unknown system leftovers without listing
+            prune_remotes = sorted(n for n in on_dev if n.endswith(".py") and n not in want)
+            if prune_remotes:
+                lines.append("Will REMOVE on device (--prune), .py not in manifest:")
+                for n in prune_remotes:
+                    lines.append(f"  delete :{n}")
+            else:
+                lines.append("Prune: no orphan .py files on device")
+        else:
+            lines.append("WARN: could not ls device for prune plan")
+
     lines.append("Refusing to write without explicit confirmation (--yes).")
     lines.append(
         "Operator must have confirmed BOTH: (1) this port is the product board, "
-        "(2) these files may be written."
+        "(2) these files may be written"
+        + (" and orphans removed" if prune_remotes else "")
+        + "."
     )
     lines.append("Inspect first: silico inspect --port " + chosen.device)
-    return DeployPlan(port=chosen.device, files=pairs, lines=lines)
+    return DeployPlan(
+        port=chosen.device,
+        files=pairs,
+        lines=lines,
+        prune_remotes=prune_remotes,
+    )
 
 
 def deploy(
-    files: list[Path],
+    files: list[Path] | None,
     *,
     port: str | None = None,
     yes: bool = False,
     verify: bool = False,
+    verify_import: str | None = None,
     expect_name: str | None = None,
     expect_version: str | None = None,
     reset: bool = False,
+    prune: bool = False,
+    root: Path | None = None,
 ) -> DeployResult:
-    planned = plan_deploy(files, port=port)
+    planned = plan_deploy(files, port=port, prune=prune, root=root)
     if isinstance(planned, DeployResult):
         return planned
 
@@ -118,17 +215,25 @@ def deploy(
             return DeployResult(False, lines)
         lines.append(f"OK: wrote :{remote}")
 
+    for remote in planned.prune_remotes:
+        r = run_mpremote(planned.port, "rm", f":{remote}")
+        if r.returncode != 0:
+            lines.append(f"WARN: could not remove :{remote}")
+            if r.stderr:
+                lines.append(r.stderr.strip())
+        else:
+            lines.append(f"OK: removed :{remote}")
+
     if reset:
         r = run_mpremote(planned.port, "reset")
         lines.append("reset: " + ("ok" if r.returncode == 0 else "warn"))
-        # Windows often drops the CDC port briefly after soft reset.
         lines.append("Waiting for port to reappear after reset...")
         import time
 
         deadline = time.monotonic() + 30.0
         while time.monotonic() < deadline:
             if port_is_listed(planned.port):
-                time.sleep(0.5)  # settle
+                time.sleep(0.5)
                 break
             time.sleep(0.25)
         else:
@@ -137,7 +242,6 @@ def deploy(
             )
 
     if verify:
-        # Retry verify once if port was mid-reconnect.
         code = "import version\nprint(version.FW_NAME)\nprint(version.FW_VERSION)\n"
         r = exec_on_device(planned.port, code)
         if r.returncode != 0:
@@ -161,5 +265,26 @@ def deploy(
             lines.append(f"FAIL: FW_VERSION want {expect_version!r} got {got_version!r}")
             return DeployResult(False, lines)
         lines.append("OK: version verify")
+
+    # Optional soft liveness: import module, or compile-check boot entrypoints
+    if verify_import:
+        mod = _safe_module_name(verify_import)
+        if not mod:
+            lines.append(
+                f"FAIL: --verify-import {verify_import!r} is not a simple module name"
+            )
+            return DeployResult(False, lines)
+        code, mode = device_verify_import_snippet(mod)
+        r = exec_on_device(planned.port, code)
+        if r.returncode != 0:
+            lines.append(f"FAIL: {mode} verify for {mod!r}")
+            if r.stderr:
+                lines.append(r.stderr.strip())
+            if mode == "compile":
+                lines.append(
+                    "Hint: boot modules are compile-checked (not imported) so the app loop cannot hang deploy."
+                )
+            return DeployResult(False, lines)
+        lines.append(f"OK: {mode} verify {mod}")
 
     return DeployResult(True, lines)

@@ -11,3 +11,11 @@ board = "xiao-rp2040"
 
 [host]
 gate = "pytest -q"
+
+# Ordered deploy set (basenames land on device as remote names).
+# `silico deploy --port COMx` with no file args uses this list.
+[deploy]
+core = [
+  "firmware/version.py",
+  "firmware/main.py",
+]

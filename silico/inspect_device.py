@@ -3,10 +3,13 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from pathlib import Path
 
+from silico.config_toml import read_deploy_core
 from silico.mpy_pin import pin_advice_lines, read_toml_mpy_cross
 from silico.mpremote_util import exec_on_device, ls_device, mpremote_available
 from silico.ports import IDENTITY_HINT, pick_best_port, port_is_listed
+from silico.pull_device import _parse_ls_names
 
 
 @dataclass
@@ -61,6 +64,20 @@ def inspect(port: str | None = None) -> InspectReport:
     if ls.returncode == 0:
         lines.append("Files on device:")
         lines.append((ls.stdout or "").strip() or "(empty)")
+        core = read_deploy_core()
+        if core:
+            want = {Path(c).name for c in core}
+            on_dev = set(_parse_ls_names(ls.stdout or ""))
+            orphans = sorted(n for n in on_dev if n.endswith(".py") and n not in want)
+            missing = sorted(n for n in want if n not in on_dev)
+            if orphans:
+                lines.append("WARN: on device but not in [deploy].core:")
+                for n in orphans:
+                    lines.append(f"  :{n}")
+            if missing:
+                lines.append("INFO: in [deploy].core but not on device yet:")
+                for n in missing:
+                    lines.append(f"  :{n}")
     else:
         lines.append("WARN: could not list device files")
 

@@ -62,6 +62,16 @@ def test_deploy_requires_port(tmp_path: Path):
         assert e.code != 0
 
 
+def test_deploy_help_mentions_manifest():
+    # files are optional nargs=*
+    from silico.cli import build_parser
+
+    p = build_parser()
+    # ensure deploy subparser accepts zero files
+    args = p.parse_args(["deploy", "--port", "COM9"])
+    assert args.files == []
+
+
 def test_deploy_plan_lines_mention_confirmation(tmp_path: Path, monkeypatch):
     from silico import deploy as deploy_mod
     from silico.ports import PortInfo

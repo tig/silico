@@ -1,55 +1,44 @@
-# BEDSIDE.md (silico domain notes only)
+# BEDSIDE.md (silico metal domain notes only)
 
 This file is **not** a fork of the Bedside principles.
 
-Normative rules: `third_party/bedside/contract` (vendored from https://github.com/tig/bedside).
-Pin: see `bedside.toml`.
+| Need | Open once |
+|------|-----------|
+| Portable manners (normative) | 	hird_party/bedside/contract (pin: edside.toml) |
+| Silico Day 1 / CLI / plate | root AGENTS.md |
+| This file | metal-host glossary only — do **not** also reload the full contract if AGENTS already pinned it |
 
-## Operator persona
+## Metal first-run (domain pack)
 
-Smart, high-judgment (product / hardware / field). Often low literacy in Git, pip, COM ports, UF2, agent UIs. Own judgment and metal confirmation. Do not examine or shame them.
+Host tools and Day-1 phases live in **AGENTS.md**. Metal-specific once-only path:
 
-## First-run from zero
+1. Data USB cable (not charge-only).
+2. Long silico wait-device (agent polls; human does not announce plug-in).
+3. silico inspect --port COMx proves REPL, or UF2 first-flash of MicroPython **once**.
+4. Operator confirms this port is the product board before any write.
+5. App updates after that: no re-teaching UF2.
 
-1. Machine: Git, Python 3.11+, `gh`, pip (`silico` host package).
-2. `pip install -e ".[dev]"` and `pip install -e ./third_party/bedside` (or CI equivalent).
-3. `silico doctor` then GCU pin/scaffold/pytest (Day 1 playbook in AGENTS.md).
-4. **Device USB talk + prep (required):** data cable → long `silico wait-device` → `silico inspect` proves REPL (or UF2 first-flash once) → operator confirms port → deploy only with yes.
-5. Do **not** stop after host gate green. Metal prep is part of Day 1 unless the operator explicitly defers it.
-6. After runtime is on board once: app updates only (no re-teaching UF2).
+Do **not** stop Day 1 after host gate green unless the operator explicitly defers metal.
 
-## Scary surfaces (plain language)
+## Scary surfaces (metal glossary)
 
-- **USB serial:** list ports with scores; prefer explicit `COMx`; demote CH340 and Debug Probe.
-- **Multi-device hosts:** never blind `connect auto`.
-- **Deploy:** inspect first; never write without operator yes (`silico deploy … --yes`).
-- **USB wait:** if you say you are polling, actually run a long `silico wait-device`; do not ask them to announce plug-in.
-- **Board identity:** high score is a hint; confirm product board before deploy.
-- **Deferred metal:** "check back before the board" after scaffold only is a cliff - keep going into wait-device/inspect unless they said hold off.
+| Surface | Plain language |
+|---------|----------------|
+| USB serial / COM | Prefer explicit COMx; demote CH340 and Debug Probe; never blind connect auto on multi-device hosts |
+| Deploy overwrite | Inspect first; write only with operator yes (silico deploy --port COMx --yes, usually [deploy].core) |
+| Board identity | High score is a hint; confirm product board in their words |
+| After reset | Port may re-enumerate; re-discover before reuse |
 
-## Decisions (agent UI)
+## Day-2 leave-behind (metal)
 
-When the agent runtime provides a **choice / question UI**, use it for plan forks and yes/no gates. Do not make the operator answer multi-choice questions by typing in chat. Free text is for open-ended judgment only. Recommend a default option first.
-
-## Day-2 leave-behind
-
-One update path (GCU install docs), typically:
-
-```text
+`	ext
 pytest -q
-silico deploy firmware/… --port COMx --yes --verify
-```
+silico deploy --port COMx --yes --verify
+`
 
-What good looks like: host gate green; device `FW_VERSION` matches host; documented LED/status pattern.
+Good: host gate green; device FW_VERSION matches host; documented LED/status.
 
-## Improve Bedside (customer 0)
+## Customer 0 → tig/bedside
 
-When silico use finds gaps in contract, surface patterns, CLI, eval heuristics, or fixtures:
-
-1. Prefer fixing silico domain notes / silico CLI when the gap is metal-specific.
-2. Prefer **filing an issue on `tig/bedside`** when the gap is portable operator manners.
-3. Do not soft-fork the nine principles into a kinder local copy.
-
-```text
-gh issue create -R tig/bedside --title "…" --body "…"
-```
+Portable manners gaps (contract, surface, edside CLI, eval): file **tig/bedside**, do not soft-fork principles here.
+Metal/host-spine gaps: fix **tig/silico**.

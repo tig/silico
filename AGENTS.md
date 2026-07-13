@@ -4,6 +4,37 @@ Canonical guidance for AI coding agents (Claude Code, Grok Build, Copilot, Codex
 
 Human overview: [README.md](README.md). Tenets: [specs/tenets.md](specs/tenets.md). Phrase book: [specs/lexicon.md](specs/lexicon.md). Day 1 narrative: [specs/wb-2026-fall-three-gcus.md](specs/wb-2026-fall-three-gcus.md) FAQ 4. Build target: [specs/silicov1.md](specs/silicov1.md).
 
+
+## Agent context load path (read once)
+
+Context is finite. **Do not** open every manners file into the active window.
+
+| Priority | Open | Job | Skip when |
+|----------|------|-----|-----------|
+| 1 | This file (AGENTS.md) | Silico spine: Day 1 phases, silico CLI, plate, host/metal DoD | — |
+| 2 | edside.toml + contract path it names | Normative portable manners (nine principles) | Already summarized below and you are not changing manners |
+| 3 | BEDSIDE.md | **Metal domain pack only** (COM, UF2, deploy identity) | Already in Day 1 metal sections of this file for the current step |
+| — | 	hird_party/bedside/README.md, vendored stub AGENTS.md/BEDSIDE.md, full val/ docs | Upstream product / scoring | Almost always — use edside doctor / edside eval instead of loading prose |
+| — | Full FAQ / tenets | Strategy | Only when the task is doctrine, not a metal slice |
+
+### Canonical owner (overlap map)
+
+| Topic | Canonical owner | Silico may hold |
+|-------|-----------------|-----------------|
+| Nine principles, anti-patterns, portable persona | **tig/bedside** contract/ | One short summary + pin (no kinder soft-fork) |
+| Structured ask UI / no multi-choice free text | Bedside surface intent; **silico AGENTS** encodes agent-host practice until bedside owns an ask API | Keep one short section here |
+| Day 1 phases, silico verbs, plate, mpy-cross, deploy manifest | **silico AGENTS** + code | Not bedside |
+| COM / UF2 / board identity / metal deploy confirm | **silico BEDSIDE.md** domain pack + silico CLI | AGENTS Day 1 may point here; avoid full restatement |
+| Eval rubric / fixtures | **tig/bedside** val/ | Run CLI; do not paste rubric into context |
+| Product domain (idle, vehicle, …) | **GCU repo** | Never silico or bedside |
+
+### Context budget rule
+
+Prefer **tools that encode manners** (silico doctor|wait-device|inspect|deploy, edside doctor|eval) over re-loading essays. If two files say the same rule, follow the **canonical owner** and treat the other as a pointer.
+
+Follow-up: further shrink Day 1 prose that still duplicates BEDSIDE.md once agents reliably follow this table (see issue #34 / follow-ups).
+
+
 ## What silico is
 
 **Prompt for metal.** Open host-first spine for vertical edge products (GCUs). Not a company product line. Not the vertical domain app.
@@ -31,14 +62,14 @@ Full text: [specs/tenets.md](specs/tenets.md) (unless you know better ones).
 
 ## Help the operator (Bedside)
 
-We follow **[Bedside](https://github.com/tig/bedside)** for how to treat the operator. Normative rules live in the **vendored contract** (not a soft-fork of principles here):
+We follow **[Bedside](https://github.com/tig/bedside)**. Load rules per **Agent context load path** above — do not also dump the full vendored README into context.
 
 - Pin / paths: [bedside.toml](bedside.toml)
-- Contract: [	third_party/bedside/contract](third_party/bedside/contract)
-- Domain notes (metal only): [BEDSIDE.md](BEDSIDE.md)
-- Vendor stamp: [	third_party/bedside/VENDOR.md](third_party/bedside/VENDOR.md)
+- Contract (normative): [third_party/bedside/contract](third_party/bedside/contract)
+- Metal domain notes only: [BEDSIDE.md](BEDSIDE.md)
+- Vendor stamp: [third_party/bedside/VENDOR.md](third_party/bedside/VENDOR.md)
 
-Summary (full contract is normative):
+Summary (full contract is normative; do not soft-fork):
 
 1. Assume low ops literacy, high judgment.
 2. No wall of unexplained shell.
@@ -72,7 +103,7 @@ Anytime the path is rough and you had to **guess, correct, reverse, or research*
 
 1. **Notice friction.** Wrong default port, missing UF2 step, bedside eval miss, Windows-only failure, tool flag that changed: if you stumbled, the next agent will too.
 2. **Prefer a durable fix in the right repo.**
-   - **Portable operator manners** (contract, surface patterns, CLI init/doctor/eval, fixtures, rubric): file and/or fix on **	tig/bedside**. Silico is customer 0.
+   - **Portable operator manners** (contract, surface patterns, CLI init/doctor/eval, fixtures, rubric): file and/or fix on **tig/bedside**. Silico is customer 0.
    - **Metal host spine** (ports, deploy, GCU plate, Day 1 playbook specifics): fix in **tig/silico**.
    - **Product domain** (idle control, vehicle): fix in the **GCU** repo.
 3. **If you cannot land the fix now, file an issue.**

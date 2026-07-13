@@ -10,7 +10,7 @@ Layer 2 of 3. Product patterns that encode operator manners in tools so agents a
 
 Without surface work, Bedside is doctrine agents may ignore. Without the [contract](../contract/), surface copy has no normative bar. Without [eval](../eval/), surface quality can rot unnoticed.
 
-This repo ships a minimal Python CLI (`bedside init|doctor|eval`) as a first surface. Command cores are UI-agnostic for a future tui-cs/cli front-end; see the [root README](../README.md#cli-minimal-python).
+This repo ships a minimal Python CLI (`bedside init|doctor|eval|ask|step`) as a first surface. Command cores are UI-agnostic for a future tui-cs/cli front-end; see the [root README](../README.md#cli-minimal-python).
 
 ## Purpose
 
@@ -33,11 +33,39 @@ Thin, scriptable commands with operator-facing messages (not only machine logs).
 | Verb (examples) | Intent |
 |-----------------|--------|
 | `doctor` | Check host, tool, or device readiness; report in plain language; exit non-zero with recovery hints |
+| `ask` | One structured yes/no or multi-choice operator gate; recommended option first; stable id for logs/eval |
+| `step` | One human body/browser act: show instruction → confirm in their words → next |
 | `first-run` / `flash-first` | Own first-time setup from zero once; detect blank vs ready |
 | `deploy --verify` | Deploy then prove identity or version; fail closed on mismatch |
 | `gate` | Named host proof of done (tests or sim); green means claimable |
 
-Agents should prefer these verbs over assembling ad-hoc shell walls. Humans should be able to re-run one documented verb on Day 2.
+Agents should prefer these verbs over assembling ad-hoc shell walls or free-text multi-choice menus. Humans should be able to re-run one documented verb on Day 2.
+
+### Operator gates (`bedside ask` / `bedside step`)
+
+Products that pin Bedside should not restate long "how to ask the human" essays in every `AGENTS.md`. Point agents at these verbs (or the host structured UI that implements the same contract):
+
+```text
+bedside ask --id confirm-deploy --prompt "Deploy to production now?" --choices yes,no --default no
+bedside step --id plug-usb --prompt "Plug the data USB cable into the board." --expect "Power LED is on."
+```
+
+| Verb | Intent |
+|------|--------|
+| `ask` | One structured choice or yes/no with recommended default; plain-language prompt required; stable `--id` |
+| `step` | One human body/browser act: show instruction → wait/confirm in their words → next |
+
+Rules:
+
+1. **UI-agnostic cores** under `commands/` so argparse, tui-cs/cli, or an agent host adapter can render pickers without rewriting behavior.
+2. Prefer the **agent host structured choice UI** when present; CLI `--answer` / `--confirm` is the scriptable path; interactive stdin is the human fallback.
+3. Exit codes: **0** chose recommended / step confirmed; **10** human declined, alternate fork, or still needed; **30** setup error (missing id/prompt, bad flags).
+4. Each run prints a fixture-friendly `Record:` line (`bedside.ask` / `bedside.step`) so sessions can be scored later.
+5. Scope is the **operator path** (setup, scary surfaces, irreversible writes, physical steps). Domain design taste stays in the product.
+
+Prefer `ask` / `step` (or host pickers) over multi-choice free-text walls. See also anti-walls below.
+
+Maps to contract principles 2, 4, 7, and 8.
 
 ### 2. Step machines (human body or account)
 
@@ -89,7 +117,26 @@ If a tool must print a command for the human to paste (for example a browser dev
 
 Maps to contract principles 2 and 3.
 
-### 6. Day-2 leave-behind
+### 6. Structured choice UI (no free-text multi-choice)
+
+When the agent host provides a structured picker (AskUserQuestion-style tools, radio lists, plan-fork choosers), use it for:
+
+1. Yes/no gates before irreversible or scary work.
+2. Plan forks the operator must choose among.
+3. Multi-candidate picks that are not open-ended prose (accounts, regions, devices already listed by a discovery verb).
+
+Rules:
+
+1. Prefer the structured UI over a chat free-text menu of options.
+2. Put the **recommended** option first (and label it when the API allows).
+3. Keep free text for open-ended domain judgment the picker cannot express.
+4. If no structured UI exists, one short numbered list is better than a shell wall, but it is still a weaker fallback. Prefer a surface verb that encodes the gate (see guided verbs and step machines).
+
+Anti-pattern (choice wall): a good plan table followed by "reply with start #15, fold issues, reprioritize P1, …" when a picker was available.
+
+Maps to contract principles 2 and 4.
+
+### 7. Day-2 leave-behind
 
 After success, the surface (or the docs it generates) leaves one routine path:
 

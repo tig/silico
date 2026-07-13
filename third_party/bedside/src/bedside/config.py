@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import tomllib
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 
 CONFIG_NAME = "bedside.toml"
@@ -19,9 +19,16 @@ class BedsideConfig:
     eval_path: str = "third_party/bedside/eval"
     domain_notes: str = "BEDSIDE.md"
     agents_stub: bool = True
+    # Extra fixture roots (product domain packs). Survive re-vendor of third_party/bedside.
+    fixture_paths: list[str] = field(default_factory=list)
 
     @classmethod
     def from_dict(cls, data: dict) -> BedsideConfig:
+        raw_paths = data.get("fixture_paths", [])
+        if isinstance(raw_paths, str):
+            paths = [raw_paths]
+        else:
+            paths = [str(p) for p in raw_paths]
         return cls(
             pin=str(data.get("pin", "main")),
             contract_path=str(data.get("contract_path", "third_party/bedside/contract")),
@@ -29,6 +36,7 @@ class BedsideConfig:
             eval_path=str(data.get("eval_path", "third_party/bedside/eval")),
             domain_notes=str(data.get("domain_notes", "BEDSIDE.md")),
             agents_stub=bool(data.get("agents_stub", True)),
+            fixture_paths=paths,
         )
 
 
@@ -53,16 +61,25 @@ def _toml_str(value: str) -> str:
 
 def write_config(root: Path, cfg: BedsideConfig) -> Path:
     path = config_path(root)
-    text = (
-        f"# Bedside project config (see https://github.com/tig/bedside)\n"
-        f"pin = {_toml_str(cfg.pin)}\n"
-        f"contract_path = {_toml_str(cfg.contract_path)}\n"
-        f"surface_path = {_toml_str(cfg.surface_path)}\n"
-        f"eval_path = {_toml_str(cfg.eval_path)}\n"
-        f"domain_notes = {_toml_str(cfg.domain_notes)}\n"
-        f"agents_stub = {'true' if cfg.agents_stub else 'false'}\n"
-    )
-    path.write_text(text, encoding="utf-8")
+    lines = [
+        "# Bedside project config (see https://github.com/tig/bedside)",
+        f"pin = {_toml_str(cfg.pin)}",
+        f"contract_path = {_toml_str(cfg.contract_path)}",
+        f"surface_path = {_toml_str(cfg.surface_path)}",
+        f"eval_path = {_toml_str(cfg.eval_path)}",
+        f"domain_notes = {_toml_str(cfg.domain_notes)}",
+        f"agents_stub = {'true' if cfg.agents_stub else 'false'}",
+    ]
+    if cfg.fixture_paths:
+        lines.append("fixture_paths = [")
+        for p in cfg.fixture_paths:
+            lines.append(f"  {_toml_str(p)},")
+        lines.append("]")
+    else:
+        lines.append(
+            "# fixture_paths = [\"third_party/bedside/eval/fixtures\", \"eval/fixtures\"]"
+        )
+    path.write_text("\n".join(lines) + "\n", encoding="utf-8")
     return path
 
 

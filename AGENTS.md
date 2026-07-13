@@ -14,7 +14,7 @@ Context is finite. **Do not** open every manners file into the active window.
 | 1 | This file (`AGENTS.md`) | Silico spine: Day 1 phases, silico CLI, plate, host/metal DoD | — |
 | 2 | `bedside.toml` + contract path it names | Normative portable manners (nine principles) | Already summarized below and you are not changing manners |
 | 3 | `BEDSIDE.md` | **Metal domain pack only** (COM, UF2, deploy identity) | Already in Day 1 metal sections of this file for the current step |
-| — | `third_party/bedside/README.md`, vendored stub `AGENTS.md`/`BEDSIDE.md`, full `eval/` docs | Upstream product / scoring | Almost always — use `bedside doctor` / `bedside eval` instead of loading prose |
+| — | `third_party/bedside/README.md`, vendored stub `AGENTS.md`/`BEDSIDE.md`, full `eval/` docs | Upstream product / scoring | Almost always — use `bedside doctor|eval|ask|step` instead of loading prose |
 | — | Full FAQ / tenets | Strategy | Only when the task is doctrine, not a metal slice |
 
 ### Canonical owner (overlap map)
@@ -22,7 +22,7 @@ Context is finite. **Do not** open every manners file into the active window.
 | Topic | Canonical owner | Silico may hold |
 |-------|-----------------|-----------------|
 | Nine principles, anti-patterns, portable persona | **tig/bedside** `contract/` | One short summary + pin (no kinder soft-fork) |
-| Structured ask UI / no multi-choice free text | Bedside surface intent; **silico AGENTS** encodes agent-host practice until bedside owns an ask API | Keep one short section here |
+| Operator gates (`ask` / `step`) | **tig/bedside** surface + CLI | One short pointer here; agent host pickers OK if same contract |
 | Day 1 phases, silico verbs, plate, mpy-cross, deploy manifest | **silico AGENTS** + code | Not bedside |
 | COM / UF2 / board identity / metal deploy confirm | **silico BEDSIDE.md** domain pack + silico CLI | AGENTS Day 1 may point here; avoid full restatement |
 | Eval rubric / fixtures | **tig/bedside** `eval/` | Run CLI; do not paste rubric into context |
@@ -30,9 +30,7 @@ Context is finite. **Do not** open every manners file into the active window.
 
 ### Context budget rule
 
-Prefer **tools that encode manners** (`silico doctor|wait-device|inspect|deploy`, `bedside doctor|eval`) over re-loading essays. If two files say the same rule, follow the **canonical owner** and treat the other as a pointer.
-
-Follow-up: further shrink Day 1 prose that still duplicates `BEDSIDE.md` once agents reliably follow this table (see issue #34 / follow-ups).
+Prefer **tools that encode manners** (`silico doctor|wait-device|inspect|deploy`, `bedside doctor|eval|ask|step`) over re-loading essays. If two files say the same rule, follow the **canonical owner** and treat the other as a pointer.
 
 ## What silico is
 
@@ -80,19 +78,31 @@ Summary (full contract is normative; do not soft-fork):
 8. Never leave them at a cliff.
 9. Teach only what Day 2 requires.
 
-Silico domain (metal / host path) details: **BEDSIDE.md** and Day 1 phases below. Host tools that encode manners: `silico doctor`, `wait-device`, `inspect`, `deploy --yes`.
+Silico domain (metal / host path) details: **BEDSIDE.md** and Day 1 phases below. Host tools that encode manners: `silico doctor`, `wait-device`, `inspect`, `deploy --yes`, plus Bedside operator gates below.
 
-Prove manners: `bedside doctor` and `bedside eval` (vendored fixtures + future silico fixtures).
+Prove manners: `bedside doctor` and `bedside eval` (vendored fixtures include `operator-gate-ask` / `operator-gate-step`).
 
-### Ask with the product UI, not multi-choice free text
+### Operator gates: `bedside ask` / `bedside step` (not multi-choice free text)
 
-When the agent product has a **structured question / choice tool** (pickers, multi-select, approval cards, `AskUserQuestion`, etc.):
+Do **not** restate long "how to ask the human" essays. Prefer tools:
 
-1. **Use it** for forks the operator must choose: start vs adjust plan, which issue next, yes/no metal write, A vs B sequence.
-2. **Do not** dump multi-option questions as chat prose the human must type back ("Want me to start on #15, or fold issues, or reprioritize P1?"). That is a wall of choice, same class of bad as a wall of shell.
-3. Put your **recommended** option first and say it is recommended in the option label.
-4. Free-text chat is fine for open-ended domain judgment ("what does good idle feel like?") or when **no** choice UI exists. One short recommended default still helps.
-5. Tables and issue boards in chat are OK for **status**. Pair them with a structured ask when you need a decision, not a paragraph of alternatives.
+| Gate | Tool | Example |
+|------|------|---------|
+| Structured choice / yes-no | `bedside ask` | start Day 1, confirm board identity, confirm deploy overwrite |
+| One physical / browser act | `bedside step` | plug data cable, hold BOOT, approve OS dialog |
+
+```text
+bedside ask --id start-day1 --prompt "Start Day 1 on this machine?" --choices yes,adjust --default yes
+bedside ask --id confirm-board --prompt "Is COM9 the product board for this session?" --choices yes,no --default no
+bedside ask --id confirm-deploy --prompt "Overwrite device firmware on COM9 now?" --choices yes,no --default no
+bedside step --id plug-usb --prompt "Plug a data USB cable into the board." --expect "Board power LED on or new COM in wait-device."
+```
+
+Exit codes (agents): **0** recommended path / step confirmed; **10** declined, other choice, or human still needed; **30** setup error.
+
+**Also OK:** the agent product's **structured question UI** (pickers, `AskUserQuestion`, etc.) when it implements the same contract: one gate, recommended first, no multi-option free-text walls. Free text remains for open domain judgment only.
+
+Non-interactive / CI: `--answer` on `ask`, `--confirm` / `--decline` / `--no-wait` on `step` (see `bedside ask --help`).
 
 Violating Bedside on the operator path violates **Agents operate the host path**.
 
@@ -102,7 +112,7 @@ Anytime the path is rough and you had to **guess, correct, reverse, or research*
 
 1. **Notice friction.** Wrong default port, missing UF2 step, bedside eval miss, Windows-only failure, tool flag that changed: if you stumbled, the next agent will too.
 2. **Prefer a durable fix in the right repo.**
-   - **Portable operator manners** (contract, surface patterns, CLI init/doctor/eval, fixtures, rubric): file and/or fix on **tig/bedside**. Silico is customer 0.
+   - **Portable operator manners** (contract, surface patterns, CLI init/doctor/eval/ask/step, fixtures, rubric): file and/or fix on **tig/bedside**. Silico is customer 0.
    - **Metal host spine** (ports, deploy, GCU plate, Day 1 playbook specifics): fix in **tig/silico**.
    - **Product domain** (idle control, vehicle): fix in the **GCU** repo.
 3. **If you cannot land the fix now, file an issue.**
@@ -225,7 +235,7 @@ silico scaffold .
 
 **Required for Day 1 exit** (not optional polish). Goal: board **talks over USB**, is **prepped** (REPL when that is the runtime), then a **distinct, documented** blink/app; reconnect is **repeatable**.
 
-Metal COM/UF2/identity/deploy rules live once in **[BEDSIDE.md](BEDSIDE.md)** (domain pack). Do not re-open the full Bedside contract README for this phase. Prefer tools: `silico wait-device`, `inspect`, `pull`, `deploy`, `monitor`.
+Metal COM/UF2/identity/deploy rules live once in **[BEDSIDE.md](BEDSIDE.md)** (domain pack). Do not re-open the full Bedside contract README for this phase. Prefer tools: `silico wait-device`, `inspect`, `pull`, `deploy`, `monitor`, and `bedside ask` / `bedside step` for human gates.
 
 #### Phase D0 - Device talks (prep) before any deploy plan
 
@@ -233,8 +243,8 @@ Until true, device is **not** prepped (details: BEDSIDE.md metal first-run + sca
 
 1. Preferred port appears after a **real** poll (`silico wait-device`, often `--timeout 300`) — or operator confirmed a named port after inspect.
 2. `silico inspect --port COMx` proves REPL **or** you are walking UF2 first-flash once.
-3. Operator confirmed **this port is the product board** this session.
-4. Only then: deploy plan → `--yes` write → `--verify` (optional `--verify-import main` is compile-not-import for boot modules; `--prune` / `--reset` as needed).
+3. Operator confirmed **this port is the product board** this session (`bedside ask --id confirm-board …` or host structured UI; default **no** if unsure).
+4. Only then: deploy plan → operator gate (`bedside ask --id confirm-deploy …`) → `--yes` write → `--verify` (optional `--verify-import main` is compile-not-import for boot modules; `--prune` / `--reset` as needed).
 
 **If the board was missing at Phase 0:** after host gate, ask only for the data cable plug, then **immediately** run a long `wait-device` poll. Do not end the turn with "plug it in whenever" and no poll.
 
@@ -242,11 +252,11 @@ Until true, device is **not** prepped (details: BEDSIDE.md metal first-run + sca
 
 **Phase D steps (order only — rules in BEDSIDE.md):**
 
-1. Data cable → long `silico wait-device`.
-2. `silico doctor` / `silico inspect --port COMx` → confirm identity with operator.
+1. Data cable (`bedside step --id plug-usb …` if they must act) → long `silico wait-device`.
+2. `silico doctor` / `silico inspect --port COMx` → `bedside ask --id confirm-board …`.
 3. No REPL → UF2 once (BOOT+RESET → `RPI-RP2`) → re-inspect until talk.
 4. Optional backup: `silico pull <dir> --port COMx`.
-5. Dry plan: `silico deploy --port COMx` (manifest / files) **without** `--yes` → operator yes → `--yes --verify` (and friends).
+5. Dry plan: `silico deploy --port COMx` (manifest / files) **without** `--yes` → `bedside ask --id confirm-deploy …` (recommended **no** until they mean it) → `--yes --verify` (and friends).
 6. Optional: `silico monitor --port COMx --duration 10`.
 7. Document `install/` leave-behind (BEDSIDE Day-2 one-liner + LED "good").
 
@@ -380,6 +390,10 @@ python -m pip install -e ./third_party/bedside
 
 bedside doctor
 bedside eval
+# operator gates (use host structured UI when it matches this contract):
+# bedside ask --id confirm-board --prompt "Is COMx the product board?" --choices yes,no --default no
+# bedside ask --id confirm-deploy --prompt "Overwrite firmware on COMx now?" --choices yes,no --default no
+# bedside step --id plug-usb --prompt "Plug a data USB cable." --expect "Board shows power / new COM."
 
 silico doctor
 silico wait-device
@@ -387,13 +401,13 @@ silico scaffold .
 python -m pytest -q
 
 silico inspect --port COMx
-# plan only (no write); --port required:
-silico deploy firmware/version.py firmware/main.py --port COMx
-# AFTER operator confirms identity + write:
-silico deploy firmware/version.py firmware/main.py --port COMx --yes --verify
+# plan only (no write); --port required; prefer silico.toml [deploy].core with no file args:
+silico deploy --port COMx
+# AFTER bedside ask (or equivalent) confirms identity + write:
+silico deploy --port COMx --yes --verify
 ```
 
-Always pass explicit `COMx` / `/dev/tty...` to deploy. Confirm device identity every session.
+Always pass explicit `COMx` / `/dev/tty...` to deploy. Confirm device identity every session via `bedside ask` (or host picker), not chat multi-choice walls.
 
 ## When working in silico itself
 

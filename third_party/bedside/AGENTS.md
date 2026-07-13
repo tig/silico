@@ -15,11 +15,12 @@ operating tools for smart, high-judgment non-experts.
 
 - Pin: see `bedside.toml` (do not soft-fork principles).
 - Normative contract path: `contract`
+- Human gates: call `bedside ask` / `bedside step` (or the host structured choice UI).
 
 Summary (full contract is normative):
 
 1. Assume low ops literacy, high judgment.
-2. No wall of unexplained shell.
+2. No wall of unexplained shell (or free-text choice walls).
 3. Prefer doing over instructing.
 4. Human acts: explicit, one step, dumb-simple.
 5. Own first-time setup from zero.
@@ -39,7 +40,8 @@ Summary (full contract is normative):
 - `bedside.cli`: argparse adapter only.
 - `bedside.commands.*`: UI-agnostic command cores (future tui-cs/cli should call these).
 - `bedside.eval_engine`: rule-based R1-R9 scoring.
-- Exit codes: 0 ok, 10 human-needed (reserved), 20 manners fail, 30 setup error.
+- Operator gates: `ask` (structured choice) and `step` (one human act + confirm).
+- Exit codes: 0 ok, 10 human-needed / non-recommended ask / declined step, 20 manners fail, 30 setup error.
 
 ## Definition of done
 

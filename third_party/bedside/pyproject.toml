@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "bedside"
-version = "0.1.0"
+version = "0.1.2"
 description = "Bedside CLI: pin, doctor, and eval operator manners for AI agents"
 readme = "README.md"
 license = { text = "Apache-2.0" }

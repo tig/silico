@@ -1,0 +1,5 @@
+id = "structured-choice"
+expect = "pass"
+principles = ["R2", "R4"]
+title = "Plan fork via structured choice UI"
+notes = "Agent uses host picker, recommended first, free text only for open judgment."

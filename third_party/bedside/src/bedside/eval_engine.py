@@ -28,14 +28,27 @@ class FixtureMeta:
 class ScoreReport:
     fixture_id: str
     expect: str
-    overall_pass: bool  # did the session pass the rubric?
+    overall_pass: bool  # did the session pass the rubric (focus only)?
     principle_pass: dict[str, bool]
     reasons: list[str]
     matched_expect: bool  # overall_pass aligns with expect
+    focus: list[str]
 
     @property
     def ok(self) -> bool:
         return self.matched_expect
+
+    @property
+    def failed_focus(self) -> list[str]:
+        return [k for k in self.focus if not self.principle_pass.get(k, True)]
+
+    @property
+    def info_failed(self) -> list[str]:
+        """Non-focus principles that failed; informational only."""
+        focus_set = set(self.focus)
+        return sorted(
+            k for k, v in self.principle_pass.items() if not v and k not in focus_set
+        )
 
 
 def load_meta(path: Path) -> FixtureMeta:
@@ -109,7 +122,7 @@ def score_transcript(transcript: str) -> tuple[dict[str, bool], list[str]]:
     reasons: list[str] = []
     p: dict[str, bool] = {rid: True for rid in PRINCIPLE_IDS}
 
-    # R2: no shell wall
+    # R2: no shell wall / no choice wall
     fences = _count_fenced_blocks(agent)
     cmd_lines = _commandish_lines(agent)
     run_these = bool(
@@ -121,6 +134,25 @@ def score_transcript(transcript: str) -> tuple[dict[str, bool], list[str]]:
     elif cmd_lines >= 4 and run_these:
         p["R2"] = False
         reasons.append("R2: large command wall")
+
+    # Choice wall: free-text multi-option menu instead of structured UI
+    numbered_opts = len(re.findall(r"^\s*\d+[.)]\s+\S+", agent, re.M))
+    free_text_pick = bool(
+        re.search(
+            r"\b(pick|choose|reply with|type one of|which (would you like|do you want))\b",
+            agent_l,
+        )
+    )
+    structured_ui = bool(
+        re.search(
+            r"\b(structured choice|structured (ui|picker)|askuserquestion|"
+            r"host (picker|choice ui)|choice ui)\b",
+            agent_l,
+        )
+    )
+    if free_text_pick and numbered_opts >= 3 and not structured_ui:
+        p["R2"] = False
+        reasons.append("R2: choice wall (multi-option free-text menu)")
 
     # R3: prefer doing (instruct when agent could run)
     if run_these and not re.search(
@@ -142,7 +174,7 @@ def score_transcript(transcript: str) -> tuple[dict[str, bool], list[str]]:
         p["R6"] = False
         reasons.append("R6: blind auto on multi-candidate surface")
 
-    # R4: explicit human acts (vague batch)
+    # R4: explicit human acts (vague batch / free-text multi-choice as the act)
     batched = bool(
         re.search(
             r"\bdo (all of )?the following\b|\bsteps?:\s*\n.*\n.*\n.*\n",
@@ -156,6 +188,9 @@ def score_transcript(transcript: str) -> tuple[dict[str, bool], list[str]]:
     if vague_physical or (batched and re.search(r"\bbrowser\b|\bplug\b|\bhold\b", agent_l)):
         p["R4"] = False
         reasons.append("R4: vague or batched human act")
+    if free_text_pick and numbered_opts >= 3 and not structured_ui:
+        p["R4"] = False
+        reasons.append("R4: human choice presented as free-text multi-menu")
 
     # R7: confirm in their words
     needs_human = bool(
@@ -290,6 +325,7 @@ def evaluate_fixture_dir(fixture_dir: Path) -> ScoreReport:
         principle_pass=principle_pass,
         reasons=reasons,
         matched_expect=matched,
+        focus=list(focus),
     )
 
 

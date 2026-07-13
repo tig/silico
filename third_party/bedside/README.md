@@ -87,28 +87,37 @@ Requires Python 3.11+.
 pip install -e ".[dev]"
 
 bedside init --pin v0.1.0
+# consumer (vendor-copy, no submodule):
+# bedside init --vendor-from /path/to/tig/bedside --force
 bedside doctor
-bedside eval                    # default: eval/fixtures when present
+bedside eval                    # fixture_paths from bedside.toml (multi-root)
 bedside eval path/to/fixture
+bedside eval third_party/bedside/eval/fixtures eval/fixtures
 bedside eval --json eval/fixtures
+bedside ask --id confirm-deploy --prompt "Deploy now?" --choices yes,no --default no --answer no
+bedside step --id plug-usb --prompt "Plug the data USB cable." --expect "Power LED on." --confirm
 ```
 
 | Verb | Job | Exit codes |
 |------|-----|------------|
-| `init` | Write `bedside.toml`, `BEDSIDE.md` domain scaffold, `AGENTS.md` stub | 0 ok; 30 setup |
+| `init` | Write `bedside.toml`, domain notes, `AGENTS.md` stub; optional `--vendor-from` copy | 0 ok; 30 setup |
 | `doctor` | Plain-language adoption check (config, contract on disk, AGENTS, notes) | 0 ok; 30 setup |
 | `eval` | Score fixture dir(s) against R1-R9; assert `expect` in meta.toml | 0 ok; 20 manners mismatch; 30 setup |
+| `ask` | One structured yes/no or multi-choice operator gate (recommended first) | 0 recommended; 10 other/needed; 30 setup |
+| `step` | One human body/browser act, then confirm in their words | 0 confirmed; 10 declined/needed; 30 setup |
 
 Exit codes (stable for agents):
 
 | Code | Meaning |
 |------|---------|
-| 0 | OK |
-| 10 | Human action needed (reserved) |
+| 0 | OK (including recommended ask path / confirmed step) |
+| 10 | Human action needed, declined, or non-recommended ask choice |
 | 20 | Manners fail (`eval` expect mismatch) |
 | 30 | Tool or setup error |
 
-`init` does not run `git submodule` for you. Vendor or submodule `tig/bedside` so `contract_path` exists, then `doctor`.
+**Consumers:** prefer vendor-copy under `third_party/bedside` (see [docs/adopting.md](docs/adopting.md)). Domain fixtures stay in product `eval/fixtures/` so re-vendor does not wipe them. Submodule works too if you already use it.
+
+Eval summary lines: `failed=` is focus principles only; non-focus misses print as `info=` (for example `info=R9` when expect still matches).
 
 ```bash
 pytest -q
@@ -132,9 +141,9 @@ eval/               # layer 3: rubric + fixtures
 
 ## Status
 
-v0.1. Three layer artifacts plus minimal Python CLI (`init`, `doctor`, `eval`). Rule-based eval only. Front-end is argparse; cores ready for tui-cs/cli later.
+v0.1. Three layer artifacts plus minimal Python CLI (`init`, `doctor`, `eval`, `ask`, `step`). Vendor-copy, multi-root domain fixtures, rule-based eval, operator gates. Front-end is argparse; cores ready for tui-cs/cli later.
 
-Issues and PRs welcome for clearer principles, domain packs, stronger eval rules, more fixtures, and `BEDSIDE.md` conventions.
+Adoption: [docs/adopting.md](docs/adopting.md).
 
 ## License
 

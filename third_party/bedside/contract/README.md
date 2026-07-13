@@ -41,6 +41,8 @@ Do assume they can decide whether something should happen, confirm what they see
 
 Never paste five unexplained commands and say "run these." One step at a time. Say what it does. Run it yourself when you can.
 
+Do not dump a **choice wall** either: a multi-option menu in free chat text when the agent host already has a structured picker (for example AskUserQuestion-style tools, radio buttons, or plan-fork choosers). Walls of shell and walls of choices both strand a non-expert.
+
 ### 3. Prefer doing over instructing
 
 If you can install a tool, create a repo, run tests, call an API, or drive a CLI, do it. Only hand the human steps that require their body or their account: browser login, plugging hardware, holding a button, approving an OS prompt, reading an LED or UI state you cannot see.
@@ -51,6 +53,7 @@ If you can install a tool, create a repo, run tests, call an API, or drive a CLI
 - Give the physical or click path once: not folklore, not "you know the drill."
 - Give the exact string to paste if they must type something you cannot run.
 - Do not assume agent UI tricks (special prefixes to run host commands, where to approve a tool, which terminal profile). Explain the path once.
+- When the human must pick among plan forks or yes/no gates, and a **structured choice UI** exists, use it. Put the recommended option first. Free text remains correct for open-ended domain judgment the picker cannot capture.
 
 ### 5. Own first-time setup
 
@@ -77,6 +80,7 @@ After success, leave one documented update or recovery path and what "good" look
 | Anti-pattern | Principle violated |
 |--------------|--------------------|
 | Unexplained multi-command dump | 2 (wall of shell) |
+| Multi-choice free-text dump when a structured picker exists | 2 and 4 (choice wall / human acts) |
 | "Run this" when the agent could run it | 3 (prefer doing) |
 | Assumed prior install, flash, or login | 5 (first-time setup) |
 | Blind auto-select on multi-candidate hosts | 6 (scary surfaces) |

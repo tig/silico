@@ -1,6 +1,6 @@
-# silico
+**Prompt for metal.** 
 
-**Prompt for metal.** Silico is an open host-side spine so AI agents can ship real edge products: prove firmware on the host before anyone trusts a flash, install and update a device a normal human can run twice, and verify version identity so the board cannot lie about what it is running. Your domain and brand stay in your app; silico is not the product, not a company SKU, and not a device-ops cult. One rule: **host gate green means done; metal confirms.**
+Silico is an open host-side spine so AI agents can ship real edge products: prove firmware on the host before anyone trusts a flash, install and update a device a normal human can run twice, and verify version identity so the board cannot lie about what it is running. Your domain and brand stay in your app; silico is not the product, not a company SKU, and not a device-ops cult. One rule: **host gate green means done; metal confirms.**
 
 > **Pre-alpha.** Doctrine and agent playbooks are here. An installable `silico` host package and CLI are **not** complete yet. Day 1 in the Working Backwards doc is the Fall 2026 target; agents must not pretend the pin installs until `pyproject.toml` lands. See [specs/silicov1.md](specs/silicov1.md).
 

@@ -205,6 +205,15 @@ Closed loop: **issue → agent → host gate → CI → metal**.
 4. Host gate green locally before claiming done. Flash only confirms.
 5. Push; CI matches local. Change requests arrive as GitHub Issues. Implement them without requiring the human to know git branches unless they want to.
 
+#### Spec gaps (late step only)
+
+While coding, you will find product `spec.md` items that are lacking, confusing, or wrong.
+
+1. **Do not block the current slice** on rewriting the spec. Prefer configurable defaults, explicit assumptions in code/issue comments, and host tests.
+2. Quietly note gaps (issue comment or checklist).
+3. **Late step** — after the current issue's host gate is green, or at a phase boundary — prompt the operator: what was wrong/missing, a proposed edit, and ask whether to update the spec **now**.
+4. Edit the product spec only after a clear **yes**.
+
 ### Day 1 exit criteria (before Day 2)
 
 - [ ] Device works end-to-end on the bench.

@@ -154,10 +154,6 @@ The unicorn's core product. Vertical domain truth is their moat. Silico refuses 
 
 Legend: [gcu-codenames.md](./gcu-codenames.md). Do not expand codenames to brands or markets in public silico docs.
 
-## 8. Who is the customer of each GCU?
-
-**open.** Name the buyer, the installer, and the person who suffers if the unit lies. Do not collapse them into "users." Keep real brands out of public silico docs.
-
 ## 9. Who is the customer of silico?
 
 Near term: me, shipping three GCUs with agents under contracts I write; partners who supply domain rough specs (Galahad-shaped).
@@ -173,17 +169,6 @@ Today it is a builder tool (an app for people who ship GCUs) governed by tenets.
 ## 11. Why not call this a platform in the press release?
 
 Because I still stand by 2011. Calling a tool a platform before the sides show up loses focus. The PR names three apps, a spine, agent-authored firmware as proof, and honest language under **Extract, then open**.
-
-## 12. What are the Principles for this release?
-
-The Silico tenets ([tenets.md](./tenets.md)). Ties broken most often by:
-
-1. **Agents write the code.** Hand-authored firmware is not the default path.
-2. **Agents operate the host path.** Help the operator; do not assume Git, COM ports, first flash, or agent UI tricks.
-3. **Make it better than you found it.** Friction that forced a guess becomes an `AGENTS.md` fix or a `tig/silico` issue, not chat-only lore.
-4. **Prompt for metal** and **Host first.** Green host command is done; flash confirms.
-5. **Apps stay apps.** Domain IP stays private.
-6. **Extract, then open.** Second GCU forces promotion; three field GCUs prove extraction only.
 
 ## 13. What are the Priorities (in order)?
 
@@ -241,10 +226,6 @@ Whether "in the field" is honest for all three GCUs by Fall 2026, and whether I 
 6. Agents shipping confident wrong firmware because anti-patterns were never written down.
 7. Humans "helping" by bypassing the host gate and reintroducing folklore.
 8. Building spine features vertical teams do not care about while the gate is still soft.
-
-## 20. Risk: Impact, likelihood, exposure?
-
-**open.**
 
 ## 21. Risk: Mitigations?
 
@@ -308,12 +289,11 @@ Because **Vertical teams are the customer** and **Prompt for metal** are not one
 
 ## 31. Will end customers need Python installed?
 
-Zakalwe path often yes today. Fall 2026 ambition: at least one GCU has a path that is not developer onboarding.
-**open:** L1 release zip vs L2 installer.
+The agent will help.
 
 ## 32. What happens when the wrong USB device is on the machine?
 
-Updater prefers known VIDs, allows explicit port, fails closed with a readable error. "connect auto" is not the product story. This is gobbledygook vertical teams should not re-learn.
+The agent will help.
 
 ## 33. How do agents know they are done?
 
@@ -362,10 +342,6 @@ v1 success does not require any of that. v1 requires three field GCUs, agent-hon
 ## 41. Is silico a company product?
 
 No. Tig Kindel's open-source spine under the Silico tenets. Private GCU apps ship under whatever brand each requires.
-
-## 42. When are the tenets proven externally?
-
-Not when three GCUs ship. When silico works in a way I will shout about, and either others adopt it for vertical edge work or a clearer better thing forces better tenets. Until then: under test. Zakalwe already proves agents can write the firmware for a non-expert human. That is necessary and not sufficient.
 
 ## 43. When is this doc done?
 

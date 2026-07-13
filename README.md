@@ -20,6 +20,7 @@ A **GCU** (General Contact Unit) is one shippable edge product. Silico is the sp
 | [AGENTS.md](AGENTS.md) | Agents (Day 1 getting started) |
 | [specs/wb-2026-fall-three-gcus.md](specs/wb-2026-fall-three-gcus.md) | Humans: v1 PR + FAQ |
 | [specs/tenets.md](specs/tenets.md) | Tenets |
+| [specs/lexicon.md](specs/lexicon.md) | Phrase book (GCU, spine, host-honest, Help the operator, …) |
 | [specs/silicov1.md](specs/silicov1.md) | v1 build spec |
 | [specs/gcu-codenames.md](specs/gcu-codenames.md) | Public GCU codenames |
 

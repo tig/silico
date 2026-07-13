@@ -5,7 +5,7 @@
 **Scope:** The spine required by three Pi-class GCUs (RP2040 / MicroPython first).
 **Non-scope:** Industry default. Category marketing. Cloud fleet. Built-in phone-home for all GCUs. Arduino-class plates as a deliverable. Company branding of the spine. Full v2 narrative (longer-term vision lives in [wb-2026-fall-three-gcus.md](./wb-2026-fall-three-gcus.md) FAQ 37).
 
-Related: [tenets.md](./tenets.md), [gcu-codenames.md](./gcu-codenames.md), [wb-2026-fall-three-gcus.md](./wb-2026-fall-three-gcus.md).
+Related: [tenets.md](./tenets.md), [lexicon.md](./lexicon.md), [gcu-codenames.md](./gcu-codenames.md), [wb-2026-fall-three-gcus.md](./wb-2026-fall-three-gcus.md).
 
 ## 0. Why this exists
 

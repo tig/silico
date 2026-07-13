@@ -9,11 +9,12 @@ How to read: we work backwards from **this** customer experience. Everything in 
 > "I met Tig, and he showed me Silico. With just Claude Code on my Mac, I had the device working end-to-end the next day, and in a potential customer's hand the day after that. Silico is now a foundational piece of our company's technology."
 > — Grady, CEO and Founder of Quilan
 
-The press release is that experience made public. The FAQ is everything the PR cannot carry without becoming a strategy deck. See [tenets.md](./tenets.md).
+The press release is that experience made public. The FAQ is everything the PR cannot carry without becoming a strategy deck. See [tenets.md](./tenets.md). Phrase book: [lexicon.md](./lexicon.md).
 
 Method notes:
 
 - [Tenets](https://blog.kindel.com/2020/02/10/tenets/) and [Silico tenets](./tenets.md)
+- [Lexicon](./lexicon.md) (GCU, spine, host-first, Help the operator / bedside manners, …)
 - [How To: Write a Working Backwards Doc](https://blog.kindel.com/2024/07/23/how-to-write-a-working-backwards-doc/)
 - [A FAQ About Frequently Asked Questions](https://blog.kindel.com/2018/11/18/a-faq-on-frequently-asked-questions/)
 - [Be Either an App or a Platform, Not Both](https://blog.kindel.com/2011/08/24/be-either-an-app-or-a-platform-not-both/)

@@ -33,10 +33,10 @@ Full text: [specs/tenets.md](specs/tenets.md) (unless you know better ones).
 
 We follow **[Bedside](https://github.com/tig/bedside)** for how to treat the operator. Normative rules live in the **vendored contract** (not a soft-fork of principles here):
 
-- Pin / paths: [edside.toml](bedside.toml)
-- Contract: [	hird_party/bedside/contract](third_party/bedside/contract)
+- Pin / paths: [bedside.toml](bedside.toml)
+- Contract: [	third_party/bedside/contract](third_party/bedside/contract)
 - Domain notes (metal only): [BEDSIDE.md](BEDSIDE.md)
-- Vendor stamp: [	hird_party/bedside/VENDOR.md](third_party/bedside/VENDOR.md)
+- Vendor stamp: [	third_party/bedside/VENDOR.md](third_party/bedside/VENDOR.md)
 
 Summary (full contract is normative):
 
@@ -50,9 +50,19 @@ Summary (full contract is normative):
 8. Never leave them at a cliff.
 9. Teach only what Day 2 requires.
 
-Silico domain (metal / host path) details: **BEDSIDE.md** and Day 1 phases below. Host tools that encode manners: silico doctor, wait-device, inspect, deploy --yes.
+Silico domain (metal / host path) details: **BEDSIDE.md** and Day 1 phases below. Host tools that encode manners: `silico doctor`, `wait-device`, `inspect`, `deploy --yes`.
 
-Prove manners: edside doctor and edside eval (vendored fixtures + future silico fixtures).
+Prove manners: `bedside doctor` and `bedside eval` (vendored fixtures + future silico fixtures).
+
+### Ask with the product UI, not multi-choice free text
+
+When the agent product has a **structured question / choice tool** (pickers, multi-select, approval cards, `AskUserQuestion`, etc.):
+
+1. **Use it** for forks the operator must choose: start vs adjust plan, which issue next, yes/no metal write, A vs B sequence.
+2. **Do not** dump multi-option questions as chat prose the human must type back ("Want me to start on #15, or fold issues, or reprioritize P1?"). That is a wall of choice, same class of bad as a wall of shell.
+3. Put your **recommended** option first and say it is recommended in the option label.
+4. Free-text chat is fine for open-ended domain judgment ("what does good idle feel like?") or when **no** choice UI exists. One short recommended default still helps.
+5. Tables and issue boards in chat are OK for **status**. Pair them with a structured ask when you need a decision, not a paragraph of alternatives.
 
 Violating Bedside on the operator path violates **Agents operate the host path**.
 
@@ -62,7 +72,7 @@ Anytime the path is rough and you had to **guess, correct, reverse, or research*
 
 1. **Notice friction.** Wrong default port, missing UF2 step, bedside eval miss, Windows-only failure, tool flag that changed: if you stumbled, the next agent will too.
 2. **Prefer a durable fix in the right repo.**
-   - **Portable operator manners** (contract, surface patterns, CLI init/doctor/eval, fixtures, rubric): file and/or fix on **	ig/bedside**. Silico is customer 0.
+   - **Portable operator manners** (contract, surface patterns, CLI init/doctor/eval, fixtures, rubric): file and/or fix on **	tig/bedside**. Silico is customer 0.
    - **Metal host spine** (ports, deploy, GCU plate, Day 1 playbook specifics): fix in **tig/silico**.
    - **Product domain** (idle control, vehicle): fix in the **GCU** repo.
 3. **If you cannot land the fix now, file an issue.**
@@ -104,7 +114,7 @@ Then speak in plain language. Structure (tone may vary; skeleton may not):
 2. **Role:** you are here to get their GCU shipped and will step them through it.
 3. **What you know now** - product intent **and** machine readiness (what is already OK vs what will need install after go), including **whether a preferred USB board is already talking**.
 4. **Next step** in one short sentence (the first *mutating* step after go). Frame Day 1 as **host plate + device talk** - not host-only.
-5. **Start gate:** ask whether to start or adjust something.
+5. **Start gate:** ask whether to start or adjust something. Prefer the agent product's **structured question UI** when available (not a multi-option free-text paragraph).
 
 Example shape:
 

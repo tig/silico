@@ -27,6 +27,10 @@ Smart, high-judgment (product / hardware / field). Often low literacy in Git, pi
 - **Board identity:** high score is a hint; confirm product board before deploy.
 - **Deferred metal:** "check back before the board" after scaffold only is a cliff - keep going into wait-device/inspect unless they said hold off.
 
+## Decisions (agent UI)
+
+When the agent runtime provides a **choice / question UI**, use it for plan forks and yes/no gates. Do not make the operator answer multi-choice questions by typing in chat. Free text is for open-ended judgment only. Recommend a default option first.
+
 ## Day-2 leave-behind
 
 One update path (GCU install docs), typically:

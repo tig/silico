@@ -223,42 +223,32 @@ silico scaffold .
 
 ### Phase D - Talk to real hardware (hello metal)
 
-**Required for Day 1 exit** (not optional polish). Goal: the board **talks over USB**, is **prepped** (MicroPython REPL when that is the runtime), then shows a **distinct, documented blink** (or app) a novice can recognize; reconnect is **repeatable**.
+**Required for Day 1 exit** (not optional polish). Goal: board **talks over USB**, is **prepped** (REPL when that is the runtime), then a **distinct, documented** blink/app; reconnect is **repeatable**.
+
+Metal COM/UF2/identity/deploy rules live once in **[BEDSIDE.md](BEDSIDE.md)** (domain pack). Do not re-open the full Bedside contract README for this phase. Prefer tools: `silico wait-device`, `inspect`, `pull`, `deploy`, `monitor`.
 
 #### Phase D0 - Device talks (prep) before any deploy plan
 
-Until the following are true, the device is **not** prepped. Do not skip to domain work or declare Day 1 done.
+Until true, device is **not** prepped (details: BEDSIDE.md metal first-run + scary surfaces):
 
-1. Preferred USB serial device appears (score>=50 after real poll) - or operator confirmed a named port after inspect.
-2. `silico inspect --port COMx` succeeds: REPL responds (e.g. `rp2` / MicroPython version) **or** you are actively walking first-flash because there is no REPL yet.
-3. Operator has confirmed **this port is the product board** for this session.
-4. Only then: deploy plan → write with `--yes` → verify.
+1. Preferred port appears after a **real** poll (`silico wait-device`, often `--timeout 300`) — or operator confirmed a named port after inspect.
+2. `silico inspect --port COMx` proves REPL **or** you are walking UF2 first-flash once.
+3. Operator confirmed **this port is the product board** this session.
+4. Only then: deploy plan → `--yes` write → `--verify` (optional `--verify-import main` is compile-not-import for boot modules; `--prune` / `--reset` as needed).
 
-**If the board was missing at Phase 0:** after host gate, ask only for the physical plug (data cable), then **immediately** run extended `silico wait-device --timeout 300` (or longer). Keep polling. Do not end the turn with "plug it in whenever" and no poll running.
+**If the board was missing at Phase 0:** after host gate, ask only for the data cable plug, then **immediately** run a long `wait-device` poll. Do not end the turn with "plug it in whenever" and no poll.
 
-**Anti-pattern:** host gate green + "we'll touch hardware later" with no wait-device, no inspect, no REPL proof.
+**Anti-pattern:** host gate green + "hardware later" with no wait-device/inspect/REPL proof.
 
-**Safety (non-negotiable):**
+**Phase D steps (order only — rules in BEDSIDE.md):**
 
-1. **Poll USB yourself.** After asking the human only for the physical step (data cable + plug in), run `silico wait-device` / `silico doctor`. **Do not** ask them to announce "I'm plugged in." On timeout: extend poll; only request physical cable/plug steps - never "tell me when ready."
-2. **High score is a hint, not permission.** After discovery, report port + VID/PID + inspect findings in plain language. **Confirm with the operator that this is the product board for this session** before any deploy plan counts as ready. Do not reuse COM numbers from an earlier session without re-discovery.
-3. **Inspect before write.** `silico inspect --port COMx` (read-only). Report what is already on the device. **Prove talk:** platform/version output is the prep bar.
-4. **Never overwrite without explicit operator confirmation.** State exactly which files you will write and that boot behavior may change. Wait for a clear **yes**. Only then `silico deploy --port COMx --yes` (uses `[deploy].core` in `silico.toml` when no file args) or pass explicit paths.
-5. **Deploy always requires explicit `--port`.** Never blind `connect auto` on multi-device hosts. Prefer VID `2e8a`; demote CH340 `1a86` and Debug Probe `2e8a:000c`.
-6. Deploy **all** app modules the firmware imports (not only `main.py` / `version.py`). Keep `[deploy].core` complete; prefer `silico deploy --port COMx` (manifest) over hand-lists that drift.
-7. Before overwrite on a board with unknown content: `silico pull <dir> --port COMx`. After rewrite when orphans matter: `silico deploy --port COMx --yes --prune`. Read-only CDC: `silico monitor --port COMx` (does not Ctrl-C the app).
-
-**Steps:**
-
-1. Ask them to use a **data** USB cable (not charge-only). Explain that some cables only power.
-2. **Immediately** start an extended poll (`silico wait-device --timeout 300` or longer). Do not claim you are monitoring unless that poll is actually running. Do not stop after a short timeout and wait for the human to announce plug-in.
-3. When a preferred port appears: `silico doctor` / `silico inspect --port COMx`. **Confirm REPL talk** (or start UF2 path).
-4. **Stop and confirm device identity** with the operator (especially if multiple serial devices or the board was unplugged/replugged).
-5. If no MicroPython REPL: drive first firmware with physical steps (BOOT+RESET → `RPI-RP2` → UF2). Once per board. Re-inspect until REPL talks.
-6. Prove REPL (`rp2`). Tell them what "good" looks like.
-7. Propose deploy plan (`silico deploy --port COMx` **without** `--yes`, or explicit files). Get confirmation of identity + write. Then deploy with `--yes --verify` (optional `--verify-import main` uses compile-not-import so the boot loop cannot hang; `--prune`, `--reset`).
-8. Optional: `silico monitor --port COMx --duration 10` to confirm CDC telemetry without stopping the app.
-9. Document `install/` with one command and LED "good" description.
+1. Data cable → long `silico wait-device`.
+2. `silico doctor` / `silico inspect --port COMx` → confirm identity with operator.
+3. No REPL → UF2 once (BOOT+RESET → `RPI-RP2`) → re-inspect until talk.
+4. Optional backup: `silico pull <dir> --port COMx`.
+5. Dry plan: `silico deploy --port COMx` (manifest / files) **without** `--yes` → operator yes → `--yes --verify` (and friends).
+6. Optional: `silico monitor --port COMx --duration 10`.
+7. Document `install/` leave-behind (BEDSIDE Day-2 one-liner + LED "good").
 
 
 ### Phase E - CI proves metal change
@@ -290,15 +280,17 @@ While coding, you will find product `spec.md` items that are lacking, confusing,
 
 ### Day 1 exit criteria (before Day 2)
 
-- [ ] **Device talks over USB** (`silico inspect` / REPL proved) and was **prepped** (runtime on board once if needed).
+Metal bar detail: [BEDSIDE.md](BEDSIDE.md). Spine/DoD: layered table below.
+
+- [ ] **Device talks over USB** (`silico inspect` / REPL) and was **prepped** (runtime once if needed).
 - [ ] Device works end-to-end on the bench (hello-metal or app after confirmed deploy).
 - [ ] Host gate green locally and on GitHub.
 - [ ] Device `FW_VERSION` matches host.
-- [ ] One documented update command a non-expert can re-run (you wrote the doc).
+- [ ] One documented update path (BEDSIDE Day-2 leave-behind).
 - [ ] Silico pinned as host dependency.
-- [ ] Operator was helped through first flash and serial without assumed expertise.
+- [ ] Operator helped through first flash/serial without assumed ops expertise.
 
-**Not exit criteria:** host gate alone, scaffold alone, or "we'll do the board later" with no poll/inspect.
+**Not exit criteria:** host gate alone, scaffold alone, or deferred metal with no poll/inspect.
 
 **Day 2:** same update path; unit to potential customer or field trial.
 

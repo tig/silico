@@ -41,9 +41,16 @@ def scaffold(dest: Path, *, force: bool = False) -> list[str]:
     else:
         dest.mkdir(parents=True)
 
+    skip_dir_names = {"__pycache__", ".git", ".pytest_cache", ".venv", "venv"}
+    skip_suffixes = {".pyc", ".pyo"}
+
     copied = 0
     for path in src.rglob("*"):
         if path.is_dir():
+            continue
+        if any(part in skip_dir_names for part in path.parts):
+            continue
+        if path.suffix in skip_suffixes:
             continue
         rel = path.relative_to(src)
         target = dest / rel

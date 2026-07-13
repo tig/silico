@@ -4,7 +4,9 @@ fw_name = "GCU"
 fw_version = "0.0.1"
 
 [runtime]
-mpy_cross = "1.22.2"
+# Latest *stable* PyPI mpy-cross at plate ship time. After silico inspect,
+# re-pin to the device MicroPython major.minor (see AGENTS.md mpy-cross notes).
+mpy_cross = "1.27.0.post2"
 board = "xiao-rp2040"
 
 [host]

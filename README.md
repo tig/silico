@@ -13,7 +13,7 @@ See https://github.com/tig/silico. Follow the getting started instructions for a
 The agent owns the host path: prerequisites, GitHub setup, scaffolding, testing, device discovery, deployment, and verification. You own the
 product judgment and confirm physical or irreversible actions. 
 
-Silico v1 targets RP2040-class devices running MicroPython. The spine is designed to add other GCU platforms and runtimes—including Arduino-class plates—when real products force them.
+Silico v1 targets RP2040-class devices running MicroPython. The spine is designed to add other GCU platforms and runtimes (including Arduino-class plates) when real products force them.
 
 Agents write the firmware. You own the judgment.
 

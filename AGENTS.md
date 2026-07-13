@@ -155,14 +155,14 @@ Only after a clear **go** (or after applying their adjustments and re-confirming
 
 ```text
 # In GCU requirements-dev.txt (or pip install directly while bootstrapping):
-tig-silico @ git+https://github.com/tig/silico.git@v0.1.3
+tig-silico @ git+https://github.com/tig/silico.git@main  # pin tag v0.1.4+ once cut (not v0.1.3: name mismatch)
 pytest>=8
 mpy-cross==<pin matching device MicroPython major.minor — see below>
 ```
 
 ```text
 python -m pip install -U pip
-python -m pip install "tig-silico @ git+https://github.com/tig/silico.git@v0.1.3" pytest
+python -m pip install "tig-silico @ git+https://github.com/tig/silico.git@main" pytest
 # Never: pip install silico  — unrelated PyPI package (issue #27).
 # local extraction only:
 # python -m pip install -e /path/to/tig/silico
@@ -337,7 +337,7 @@ Run these yourself when possible. Show the human only what they must see.
 ```text
 # Install spine (tag pin) + vendored bedside CLI (from a silico checkout)
 # Package: tig-silico. CLI: silico. Not `pip install silico` (unrelated PyPI name).
-python -m pip install "tig-silico @ git+https://github.com/tig/silico.git@v0.1.3"
+python -m pip install "tig-silico @ git+https://github.com/tig/silico.git@main"
 # when working in this repo:
 python -m pip install -e ".[dev]"
 python -m pip install -e ./third_party/bedside

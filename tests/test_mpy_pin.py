@@ -27,6 +27,12 @@ def test_suggest_128_uses_rc():
     assert suggest_mpy_cross_pin("1.28.0") == "1.28.0rc0.post2"
 
 
+def test_suggest_126_uses_published_post():
+    # CR: bare 1.26.1 is not on PyPI; map to installable post builds.
+    assert suggest_mpy_cross_pin("1.26.0") == "1.26.0.post2"
+    assert suggest_mpy_cross_pin("1.26.1") == "1.26.1.post2"
+
+
 def test_plate_default_not_ancient():
     assert PLATE_DEFAULT_MPY_CROSS != "1.22.2"
     maj = parse_mpy_cross_pin(PLATE_DEFAULT_MPY_CROSS)

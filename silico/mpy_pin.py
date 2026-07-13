@@ -9,12 +9,15 @@ from pathlib import Path
 # Agents must re-pin to the board after inspect (see AGENTS.md).
 PLATE_DEFAULT_MPY_CROSS = "1.27.0.post2"
 
-# When device is 1.28.0 and stable 1.28.0 is not on PyPI, matching-minor rc is OK.
-# Keep this table short; extend when agents hit new gaps.
+# Device MicroPython X.Y.Z -> installable PyPI mpy-cross pin (must exist on PyPI).
+# Prefer matching-minor .postN / rc when bare X.Y.Z is unpublished.
+# Keep short; extend when agents hit new gaps (file issue + PR).
 KNOWN_DEVICE_TO_PIN: dict[str, str] = {
     "1.28.0": "1.28.0rc0.post2",
     "1.27.0": "1.27.0.post2",
-    "1.26.0": "1.26.1",  # fallback if needed; agents may adjust
+    "1.26.1": "1.26.1.post2",
+    "1.26.0": "1.26.0.post2",
+    "1.25.0": "1.25.0.post2",
 }
 
 

@@ -75,6 +75,27 @@ When a human says: *See https://github.com/tig/silico. Follow the getting starte
 
 Run this playbook under **Help the operator**. Confirm each phase with them before advancing.
 
+### Phase 0 - Welcome the operator (before any tooling)
+
+**Do not** run Phase A commands, scaffold, doctor, or USB polls until the operator has greened the start gate below.
+
+Speak to them first, in plain language. Structure (tone may vary; skeleton may not):
+
+1. **Welcome** to Silico.
+2. **Role:** you are here to get their GCU shipped and will step them through it.
+3. **What you know now** about what they want (product brief, domain seed/`spec.md`, repo URL or codename, hardware hints if present). If almost nothing is known, say that and list what you need.
+4. **Next step** in one short sentence (e.g. "check this machine has Git and Python, then open or create your product repo").
+5. **Start gate:** ask whether to start or adjust something.
+
+Example shape:
+
+> Welcome to Silico. I'm here to get your GCU shipped and will step you through it all.
+> Here's what I know now about what you want: …
+> The next step is …
+> Do you want me to start? Or should I adjust something?
+
+Only after a clear **go** (or after applying their adjustments and re-confirming) may you begin Phase A.
+
 ### Phase A - Machine prerequisites
 
 1. Detect OS (Windows / macOS / Linux). Tell them what you detected in one sentence.

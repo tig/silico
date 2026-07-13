@@ -4,7 +4,7 @@
 
 Silico is an open host-side spine for edge products built by AI agents. It scaffolds a testable firmware repository, proves changes on the host, identifies the intended device, refuses unsafe writes, deploys the application, and verifies what is actually running on the device.
 
-The human interface is a coding agent—not an installation guide or shell tutorial. To start, open your coding agent and say:
+The human interface is a coding agent; not an installation guide or shell tutorial. To start, open your coding agent and say:
 
 `See https://github.com/tig/silico. Follow the getting started instructions for agents.`
 

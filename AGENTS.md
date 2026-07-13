@@ -270,15 +270,27 @@ While coding, you will find product `spec.md` items that are lacking, confusing,
 
 **Day 2:** same update path; unit to potential customer or field trial.
 
-## Definition of done
+## Definition of done (layered)
 
-| Claim | Required proof |
-|-------|----------------|
-| `firmware/` change done | Named host gate green (default: `pytest -q` or project AGENTS command). CI green if remote exists. |
-| Deployed | Device version matches host; optional harness OK. |
-| Issue fixed | CI green **and** metal behavior matches the issue. |
+Host-first is **not** host-only. Claims must name the layer they prove:
 
-Never treat "I flashed something" as done.
+| Layer | Claim example | Required proof |
+|-------|---------------|----------------|
+| **Host** | Domain logic / sim / plate | Named host gate green (default: `pytest -q`). CI green if remote exists. |
+| **Metal I/O** | Sensing or actuation on pins | Inject/measure on **named** pins (or harness signature), not only LED blink or version import. |
+| **Vehicle / field** | Product acceptance on real plant | Product Appendix / field procedure; not bench buzz alone. |
+| **Deployed** | Board runs this build | Device `FW_VERSION` matches host; optional harness OK. |
+| **Issue fixed** | Ticket closed | Proof matching the issue's **stated layer**. CI green alone is not enough for a metal/vehicle claim. |
+
+### Forbidden closes
+
+- Do **not** close a **P0 sensing/actuation** issue as done with only host/sim code if the device path is still a stub (`pass`, empty IRQ, no feed into the estimator). Either:
+  1. land metal code that proves the pin path, or
+  2. leave a **blocking metal follow-up** open (title/status makes metal-TODO obvious) and do not narrate the product as metal-ready.
+- Do **not** mark vehicle/Appendix acceptance done without the vehicle procedure (or explicit defer with open tracker).
+- Prefer issue titles like `host-done / metal-TODO` when splitting layers is honest.
+
+Never treat "I flashed something" or "pytest green" as metal/vehicle done.
 
 ## Repository layout (this repo: silico)
 

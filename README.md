@@ -1,5 +1,9 @@
 # silico
 
+<p align="center">
+  <img src="docs/hero.jpg" alt="Silico: host spine to edge metal" width="100%" />
+</p>
+
 **Prompt for metal.**
 
 Silico is an open host-side spine for edge products built by AI agents. It scaffolds a testable firmware repository, proves changes on the host, identifies the intended device, refuses unsafe writes, deploys the application, and verifies what is actually running on the device.

@@ -213,9 +213,10 @@ Until the following are true, the device is **not** prepped. Do not skip to doma
 1. **Poll USB yourself.** After asking the human only for the physical step (data cable + plug in), run `silico wait-device` / `silico doctor`. **Do not** ask them to announce "I'm plugged in." On timeout: extend poll; only request physical cable/plug steps - never "tell me when ready."
 2. **High score is a hint, not permission.** After discovery, report port + VID/PID + inspect findings in plain language. **Confirm with the operator that this is the product board for this session** before any deploy plan counts as ready. Do not reuse COM numbers from an earlier session without re-discovery.
 3. **Inspect before write.** `silico inspect --port COMx` (read-only). Report what is already on the device. **Prove talk:** platform/version output is the prep bar.
-4. **Never overwrite without explicit operator confirmation.** State exactly which files you will write and that boot behavior may change. Wait for a clear **yes**. Only then `silico deploy … --port COMx --yes`.
+4. **Never overwrite without explicit operator confirmation.** State exactly which files you will write and that boot behavior may change. Wait for a clear **yes**. Only then `silico deploy --port COMx --yes` (uses `[deploy].core` in `silico.toml` when no file args) or pass explicit paths.
 5. **Deploy always requires explicit `--port`.** Never blind `connect auto` on multi-device hosts. Prefer VID `2e8a`; demote CH340 `1a86` and Debug Probe `2e8a:000c`.
-6. Deploy **all** app modules the firmware imports (not only `main.py` / `version.py`) when the tree has multiple files.
+6. Deploy **all** app modules the firmware imports (not only `main.py` / `version.py`). Keep `[deploy].core` complete; prefer `silico deploy --port COMx` (manifest) over hand-lists that drift.
+7. Before overwrite on a board with unknown content: `silico pull <dir> --port COMx`. After rewrite when orphans matter: `silico deploy --port COMx --yes --prune`. Read-only CDC: `silico monitor --port COMx` (does not Ctrl-C the app).
 
 **Steps:**
 
@@ -225,8 +226,9 @@ Until the following are true, the device is **not** prepped. Do not skip to doma
 4. **Stop and confirm device identity** with the operator (especially if multiple serial devices or the board was unplugged/replugged).
 5. If no MicroPython REPL: drive first firmware with physical steps (BOOT+RESET → `RPI-RP2` → UF2). Once per board. Re-inspect until REPL talks.
 6. Prove REPL (`rp2`). Tell them what "good" looks like.
-7. Propose deploy plan (`silico deploy firmware/… --port COMx` **without** `--yes`). Get confirmation of identity + write. Then deploy with `--yes --verify`.
-8. Document `install/` with one command and LED "good" description.
+7. Propose deploy plan (`silico deploy --port COMx` **without** `--yes`, or explicit files). Get confirmation of identity + write. Then deploy with `--yes --verify` (optional `--verify-import main` uses compile-not-import so the boot loop cannot hang; `--prune`, `--reset`).
+8. Optional: `silico monitor --port COMx --duration 10` to confirm CDC telemetry without stopping the app.
+9. Document `install/` with one command and LED "good" description.
 
 
 ### Phase E - CI proves metal change

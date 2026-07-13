@@ -10,6 +10,8 @@ from silico import __version__
 from silico.deploy import DeployResult, deploy, plan_deploy
 from silico.doctor import run_doctor
 from silico.inspect_device import inspect
+from silico.monitor import monitor_port
+from silico.pull_device import pull_device
 from silico.scaffold import scaffold
 from silico.wait_device import TIMEOUT_SOP, format_port_snapshot, wait_for_board
 
@@ -37,7 +39,6 @@ def cmd_wait_device(args: argparse.Namespace) -> int:
 
     def on_poll(elapsed: float, ports) -> None:
         snap = format_port_snapshot(ports)
-        # Print when inventory changes, or every ~10s heartbeat.
         if snap != last_snap["text"] or int(elapsed) % 10 == 0:
             print(f"  t={elapsed:5.1f}s  ports: {snap}", flush=True)
             last_snap["text"] = snap
@@ -66,25 +67,42 @@ def cmd_inspect(args: argparse.Namespace) -> int:
 
 
 def cmd_deploy(args: argparse.Namespace) -> int:
-    files = [Path(f) for f in args.files]
+    files = [Path(f) for f in args.files] if args.files else None
     if not args.yes:
-        planned = plan_deploy(files, port=args.port)
+        planned = plan_deploy(files, port=args.port, prune=args.prune)
         _print_lines(planned.lines)
         if isinstance(planned, DeployResult):
             return 1
         print("Dry plan only. Re-run with --yes only after operator confirmed identity + write.")
-        return 2  # needs confirmation
+        return 2
 
     result = deploy(
         files,
         port=args.port,
         yes=True,
         verify=args.verify,
+        verify_import=args.verify_import,
         expect_name=args.expect_name,
         expect_version=args.expect_version,
         reset=args.reset,
+        prune=args.prune,
     )
     _print_lines(result.lines)
+    return 0 if result.ok else 1
+
+
+def cmd_pull(args: argparse.Namespace) -> int:
+    result = pull_device(Path(args.dest), port=args.port)
+    _print_lines(result.lines)
+    return 0 if result.ok else 1
+
+
+def cmd_monitor(args: argparse.Namespace) -> int:
+    result = monitor_port(port=args.port, duration_s=args.duration, baud=args.baud)
+    # stream already printed; append summary lines
+    for line in result.lines:
+        if line != "---":
+            print(line)
     return 0 if result.ok else 1
 
 
@@ -129,9 +147,13 @@ def build_parser() -> argparse.ArgumentParser:
 
     dep = sub.add_parser(
         "deploy",
-        help="copy files to device; requires --port + --yes after operator confirmation",
+        help="copy files to device; requires --port + --yes; files optional if [deploy].core set",
     )
-    dep.add_argument("files", nargs="+", help="local files to copy (basename = remote name)")
+    dep.add_argument(
+        "files",
+        nargs="*",
+        help="local files (basename = remote). If omitted, use silico.toml [deploy].core",
+    )
     dep.add_argument(
         "--port",
         required=True,
@@ -143,10 +165,35 @@ def build_parser() -> argparse.ArgumentParser:
         help="operator explicitly confirmed overwrite (required to write)",
     )
     dep.add_argument("--verify", action="store_true", help="import version on device after write")
+    dep.add_argument(
+        "--verify-import",
+        default=None,
+        metavar="MOD",
+        help="soft check MOD on device (import, or compile-only for boot entry main)",
+    )
+    dep.add_argument(
+        "--prune",
+        action="store_true",
+        help="after write, remove device .py files not in the deploy set (needs --yes)",
+    )
     dep.add_argument("--expect-name", default=None)
     dep.add_argument("--expect-version", default=None)
     dep.add_argument("--reset", action="store_true", help="soft reset after deploy")
     dep.set_defaults(func=cmd_deploy)
+
+    pull = sub.add_parser("pull", help="backup device files to a host directory (read-only)")
+    pull.add_argument("dest", help="host directory to write into")
+    pull.add_argument("--port", default=None)
+    pull.set_defaults(func=cmd_pull)
+
+    mon = sub.add_parser(
+        "monitor",
+        help="stream USB CDC read-only for a while (does not send Ctrl-C)",
+    )
+    mon.add_argument("--port", default=None)
+    mon.add_argument("--duration", type=float, default=10.0, help="seconds (default 10)")
+    mon.add_argument("--baud", type=int, default=115200)
+    mon.set_defaults(func=cmd_monitor)
 
     s = sub.add_parser("scaffold", help="merge GCU plate from versioned template")
     s.add_argument("path", nargs="?", default=".", help="destination directory (default: .)")
@@ -184,3 +231,4 @@ def main(argv: list[str] | None = None) -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
+

@@ -210,9 +210,22 @@ Tomorrow the device works end-to-end with Claude Code on your Mac. The day after
 
 **open.**
 
-## 17. How will this compare to "just use PlatformIO" or "just use MicroPython"?
+## 17. How does this compare to Embedder, Simantic, ESPHome, PlatformIO, etc.?
 
-Those are tools for building firmware if you are already the embedded engineer. Silico is the productized loop for **Prompt for metal**: host proof, version identity, agent contracts, customer install, so a Grady-shaped lead does not invent a device-ops cult. You can use PlatformIO or MicroPython *inside* a GCU. They are not the spine.
+Those are real tools. Most stop at an **expert developer's desk** or lock you into a **hub/cloud/module** story. Silico's wedge is the combination, not any single feature:
+
+1. **Open spine** — not a closed "Claude Code for embedded" SaaS.
+2. **Host-first done** — green named gate before metal counts; built for **agent-authored** firmware.
+3. **Help the operator** — non-software founders (Grady), not only career embedded engineers.
+4. **Customer path** — install/update/version identity after Day 1, through alpha and beta.
+
+**PlatformIO / raw MicroPython / ESP-IDF** are fine *inside* a GCU. They are build runtimes, not the Day 1→Day 2 product loop.
+
+**ESPHome** proved non-programmer firmware UX at hobby/smart-home scale. Silico aims that operator energy at **vertical product** GCUs, not YAML-for-the-home as the product.
+
+**Embedder / Simantic / similar** (agent + firmware / sim) are the 2026 comparison class. Where they optimize expert velocity or simulation, silico optimizes **open doctrine + operator bedside manner + customer update path**. Use them as complements when they help; they are not a substitute for the spine.
+
+No full SWOT in this FAQ. Landscape shifts; the wedge should not.
 
 ## 18. What is the thing you think hardest about?
 

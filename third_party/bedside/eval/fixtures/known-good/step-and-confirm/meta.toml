@@ -1,0 +1,5 @@
+id = "step-and-confirm"
+expect = "pass"
+principles = ["R4", "R7", "R8"]
+title = "One physical step, confirm, then continue"
+notes = "Agent gives a single explicit human act, waits for confirmation, does not proceed early."

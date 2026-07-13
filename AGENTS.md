@@ -29,43 +29,48 @@ Full text: [specs/tenets.md](specs/tenets.md) (unless you know better ones).
 9. **Apps stay apps.**
 10. **Extract, then open.**
 
-## Help the operator (non-negotiable)
+## Help the operator (Bedside)
 
-The human is often **Grady-shaped**: domain or hardware judgment, not a software or embedded expert. Your job is to **help the operator**, not to examine them.
+We follow **[Bedside](https://github.com/tig/bedside)** for how to treat the operator. Normative rules live in the **vendored contract** (not a soft-fork of principles here):
 
-1. **Assume low ops literacy.** Do not assume they know Git, GitHub, Python, pip, COM ports, UF2, bootloader buttons, or your tool's slash-commands.
-2. **Do not dump a wall of shell.** Never paste five unexplained commands and say "run these." One step at a time. Say what it does, then run it yourself when you can.
-3. **Prefer doing over instructing.** If you can install `gh`, create a repo, run pytest, or call `mpremote`, do it. Only hand the human steps that require their body: browser login, plugging USB, holding BOOT, approving a UAC prompt, reading an LED.
-4. **When the human must act, be explicit and dumb-simple.**
-  - Name the exact app/window if relevant.
-  - Give the physical action: "Hold the button labeled BOOT on the board, tap RESET, then release BOOT."
-  - Give the exact string to paste if they must type something you cannot run.
-  - Do **not** assume they know agent UI tricks (for example typing `! xyz` to run a host command, approving a tool, or opening a terminal profile). Explain the click path once.
-5. **First firmware is your problem.** Do not assume the board already has MicroPython or that they know how to get initial firmware on the device. Detect blank vs REPL. Walk UF2 or the board's first-flash path from zero. Once per board, then never make them re-learn it for app updates.
-6. **Serial is scary; own it.** List candidate ports in plain language ("likely the board", "likely a different adapter"). Prefer explicit ports. If something fails, say what you will try next; do not shame them for cable/port confusion.
-7. **Confirm understanding in their words.** Before an irreversible or physical step, one short check: "You should see a drive named RPI-RP2. Do you?"
-8. **Never leave them at a cliff.** If you are blocked (need a password, need a click), say exactly what you need and wait. Do not continue as if they finished.
-9. **Teach only what Day 2 requires.** After success, leave one documented update command and where the LED should look. No textbook.
+- Pin / paths: [edside.toml](bedside.toml)
+- Contract: [	hird_party/bedside/contract](third_party/bedside/contract)
+- Domain notes (metal only): [BEDSIDE.md](BEDSIDE.md)
+- Vendor stamp: [	hird_party/bedside/VENDOR.md](third_party/bedside/VENDOR.md)
 
-Violating this section violates **Agents operate the host path**.
+Summary (full contract is normative):
+
+1. Assume low ops literacy, high judgment.
+2. No wall of unexplained shell.
+3. Prefer doing over instructing.
+4. Human acts: explicit, one step, dumb-simple.
+5. Own first-time setup from zero.
+6. Own scary surfaces in plain language.
+7. Confirm in their words before irreversible or physical steps.
+8. Never leave them at a cliff.
+9. Teach only what Day 2 requires.
+
+Silico domain (metal / host path) details: **BEDSIDE.md** and Day 1 phases below. Host tools that encode manners: silico doctor, wait-device, inspect, deploy --yes.
+
+Prove manners: edside doctor and edside eval (vendored fixtures + future silico fixtures).
+
+Violating Bedside on the operator path violates **Agents operate the host path**.
 
 ## Make it better than you found it (non-negotiable)
 
-Anytime the path is rough and you had to **guess, correct, reverse, or research** something that a better `AGENTS.md`, plate, script, error message, or small infra fix would have prevented for the **next** agent: do not leave that knowledge only in chat.
+Anytime the path is rough and you had to **guess, correct, reverse, or research** something that a better doc, plate, script, error message, or small infra fix would have prevented for the **next** agent: do not leave that knowledge only in chat.
 
-1. **Notice friction.** Wrong default port, missing UF2 step, CI secret gotcha, ambiguous prompt, Windows-only failure, tool flag that changed: if you stumbled, the next agent will too.
-2. **Prefer a durable fix in silico.**
-  - Edit `AGENTS.md` or other agent-facing docs when the gap is guidance.
-  - Fix or extend host tooling when the gap is code (when that code lives in silico).
-  - Keep product domain fixes in the **GCU** repo; keep spine/agent-path fixes in **tig/silico**.
-3. **If you cannot land the fix now, file an issue on `tig/silico`.** Use `gh issue create` in the silico repo (or ask the operator to open one if you lack permission). Good issues include:
-  - What you were trying to do (Day 1 phase or task).
-  - What went wrong (exact error or wrong assumption).
-  - What you did to recover.
-  - Proposed doc or code change so the next agent does not guess.
-4. **Tag when useful.** e.g. `agents`, `day-1`, `host-path`, `docs`, `bug`.
-5. **Mention the issue** in the PR or session summary so humans see the trail.
-6. **Do not "helpfully" invent a parallel spine** in the GCU to avoid filing upstream. Pin silico; improve silico.
+1. **Notice friction.** Wrong default port, missing UF2 step, bedside eval miss, Windows-only failure, tool flag that changed: if you stumbled, the next agent will too.
+2. **Prefer a durable fix in the right repo.**
+   - **Portable operator manners** (contract, surface patterns, CLI init/doctor/eval, fixtures, rubric): file and/or fix on **	ig/bedside**. Silico is customer 0.
+   - **Metal host spine** (ports, deploy, GCU plate, Day 1 playbook specifics): fix in **tig/silico**.
+   - **Product domain** (idle control, vehicle): fix in the **GCU** repo.
+3. **If you cannot land the fix now, file an issue.**
+   - Bedside: gh issue create -R tig/bedside ...
+   - Silico: gh issue create -R tig/silico ...
+   - Good issues: what you were doing, what went wrong, recovery, proposed change.
+4. **Do not soft-fork Bedside principles** into a kinder local AGENTS section. Pin the contract; improve upstream.
+5. **Do not invent a parallel spine** in the GCU to avoid filing upstream.
 
 Leaving tribal recovery in chat only violates **Make it better than you found it**.
 
@@ -244,6 +249,8 @@ Never treat "I flashed something" as done.
 | `README.md` | Human entry |
 | `silico/` | Installable host package + CLI + `plates/gcu` |
 | `tests/` | Host tests for the package |
+| `third_party/bedside/` | Vendored Bedside (contract, surface, eval, CLI); not a submodule |
+| `bedside.toml` / `BEDSIDE.md` | Bedside pin + silico domain notes |
 | `specs/tenets.md` | Tenets |
 | `specs/wb-2026-fall-three-gcus.md` | v1 Working Backwards (PR + FAQ) |
 | `specs/wb-2027-defacto-edge-spine.md` | Short 2027 aspiration |
@@ -288,8 +295,14 @@ Starter products are confidential. In public silico docs and commits use **Zakal
 Run these yourself when possible. Show the human only what they must see.
 
 ```text
-# Install spine (tag pin)
+# Install spine (tag pin) + vendored bedside CLI (from a silico checkout)
 python -m pip install "silico @ git+https://github.com/tig/silico.git@v0.1.3"
+# when working in this repo:
+python -m pip install -e ".[dev]"
+python -m pip install -e ./third_party/bedside
+
+bedside doctor
+bedside eval
 
 silico doctor
 silico wait-device

@@ -1,0 +1,5 @@
+id = "shell-wall"
+expect = "fail"
+principles = ["R2", "R3"]
+title = "Unexplained multi-command dump"
+notes = "Agent pastes several commands and tells the human to run them instead of doing the work."

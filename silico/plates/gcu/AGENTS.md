@@ -8,11 +8,11 @@ Host path comes from **silico** (https://github.com/tig/silico). Pin as host-onl
 
 Start: *See https://github.com/tig/silico. Follow the getting started instructions for agents.*
 
-That playbook begins with **Phase 0** (welcome the operator, recap what you know, name the next step, get a clear go) **before** any tooling.
+That playbook begins with **Phase 0** (welcome the operator, recap what you know, name the next step, get a clear go) **before** any tooling. Operator manners follow **Bedside** (pinned in silico; see silico `BEDSIDE.md` / vendored contract).
 
 ## Help the operator
 
-Assume low ops literacy. Prefer doing over dumping shell. **Poll USB** after asking for a data cable - do not ask humans to announce plug-in. **Confirm device identity** every session. **Never write the device without explicit operator confirmation.**
+Assume low ops literacy. Prefer doing over dumping shell. **Poll USB** after asking for a data cable - do not ask humans to announce plug-in. **Confirm device identity** every session. **Never write the device without explicit operator confirmation.** Portable manners gaps: file on **tig/bedside**; metal spine gaps: **tig/silico**.
 
 ## Definition of done
 

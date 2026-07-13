@@ -1,0 +1,7 @@
+# Bedside project config (see https://github.com/tig/bedside)
+pin = "v0.1.0"
+contract_path = "contract"
+surface_path = "surface"
+eval_path = "eval"
+domain_notes = "BEDSIDE.md"
+agents_stub = true

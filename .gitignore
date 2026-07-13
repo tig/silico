@@ -9,3 +9,7 @@ build/
 .mypy_cache/
 .ruff_cache/
 .DS_Store
+
+# local installs of vendored packages
+third_party/**/src/*.egg-info/
+third_party/**/*.egg-info/

@@ -1,0 +1,5 @@
+id = "day2-leavebehind"
+expect = "pass"
+principles = ["R9"]
+title = "Single Day-2 update path after success"
+notes = "After success, agent leaves one re-run path and what good looks like; not a textbook."

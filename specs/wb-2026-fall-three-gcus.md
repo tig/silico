@@ -54,22 +54,19 @@ End customers install or update with a short host path that finds the board, loa
 
 Each GCU is priced as a product. Silico is free under an OSI-approved license. There is no silico SKU you must buy to use a GCU.
 
-### How it works (timeline)
+### How it works
 
-**Day 0 (before):** Hardware exists. Software and field trials are stalled (founder is not a software guy, or will not staff an embedded cult).
+**Day 1.** Grady opens a coding agent on his Mac, points it at silico, and works against a real board on USB (with host simulation in the loop). By the end of the day the device runs end-to-end and the host gate is green.
 
-**Day 1:** Mac + agent + silico → device working end-to-end on real USB hardware (and sim), host gate green. Full checklist: FAQ 4.
+**Day 2.** The same path produces a prototype unit for a real customer in an **alpha** trial — early feedback, not a polished ship. Silico is how the team proves builds and updates the device.
 
-**Day 2 — alpha, not beta:** Same verified path puts a **prototype** unit with a **real customer for alpha testing** (early feedback, not a polished ship). Version identity and host-honest builds matter. Full **update integrity protection** (whatever that means — hash, signing, provenance) is **not** required on Day 2. Silico is already how Grady proves and updates.
+**A month later.** Alpha feedback is in. Grady ships **beta** units to more customers with a hardened update path and the operational maturity that comes from real field use. Silico remains the spine through alpha and beta.
 
-**A month later — beta path:** Customer feedback is in. Grady issues more units at **beta** quality. That is the horizon where **integrity protection** and related hardening belong (exact meaning TBD; spike). Self-hosted runners with real boards may show up here for CI metal, not as a Day 1 prerequisite.
+### How it works for the end customer
 
-### How it works for the end customer of a GCU
-
-1. **Alpha (Day 2):** receive a prototype; expect rough edges; feedback loop with Grady.
-2. **Beta (about a month later):** more units; stronger update integrity as defined by the spike and product needs.
-3. When firmware changes, re-run the product's update path. Host gate was green before the tag.
-4. Never need to know the word silico.
+1. **Alpha:** receive a prototype; try it; send feedback.
+2. **Beta:** receive a later unit built with that feedback and a production-minded update path.
+3. When firmware changes, run the product's short update path. They never need to know the word silico.
 
 # FAQ
 
@@ -135,9 +132,9 @@ The checklist for Grady, or anyone who finds `github.com/tig/silico` and wants D
 18. One documented update command a non-expert can re-run tomorrow morning.
 19. Silico remains a pinned host dependency in the GCU (foundational, not a copied script pile).
 
-**Day 2 (alpha):** same update path; prototype to a real customer for alpha feedback — not beta polish, not full integrity suite. If Day 1 skipped GitHub, CI, pin, gate, or real USB metal, Day 2 is a laptop demo, not a company foundation.
+**Day 2 (alpha):** same update path; prototype to a real customer for alpha feedback — not beta polish. If Day 1 skipped GitHub, CI, pin, gate, or real USB metal, Day 2 is a laptop demo, not a company foundation. Full update-integrity suite is **not** a Day 2 requirement (that is the month-later beta horizon; see silicov1 and the integrity spike).
 
-**A month later (beta):** feedback incorporated; more customers get beta-class units; integrity protection and optional self-hosted metal CI land as open work (see silicov1 / integrity spike).
+**A month later (beta):** feedback incorporated; more customers get beta-class units. Integrity protection (definition TBD — spike), optional self-hosted metal CI, and related hardening belong here.
 
 **Split to remember:** `firmware/` → metal only. Silico package → Mac and CI only. Product domain stays private in the GCU.
 

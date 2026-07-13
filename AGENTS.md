@@ -179,12 +179,13 @@ Goal: board shows a **distinct, documented blink pattern** a novice can recogniz
 **Steps:**
 
 1. Ask them to use a **data** USB cable (not charge-only). Explain that some cables only power.
-2. You poll: `silico wait-device` (progress lines are normal). Then `silico doctor` / `silico inspect --port COMx`.
-3. **Stop and confirm device identity** with the operator (especially if multiple serial devices or the board was unplugged/replugged).
-4. If no MicroPython REPL: drive first firmware with physical steps (BOOT+RESET → `RPI-RP2` → UF2). Once per board.
-5. Prove REPL (`rp2`). Tell them what "good" looks like.
-6. Propose deploy plan (`silico deploy firmware/… --port COMx` **without** `--yes`). Get confirmation of identity + write. Then deploy with `--yes --verify`.
-7. Document `install/` with one command and LED "good" description.
+2. **Immediately** start an extended poll (`silico wait-device --timeout 300` or longer). Do not claim you are monitoring unless that poll is actually running. Do not stop after a short timeout and wait for the human to announce plug-in.
+3. When a preferred port appears: `silico doctor` / `silico inspect --port COMx`.
+4. **Stop and confirm device identity** with the operator (especially if multiple serial devices or the board was unplugged/replugged).
+5. If no MicroPython REPL: drive first firmware with physical steps (BOOT+RESET → `RPI-RP2` → UF2). Once per board.
+6. Prove REPL (`rp2`). Tell them what "good" looks like.
+7. Propose deploy plan (`silico deploy firmware/… --port COMx` **without** `--yes`). Get confirmation of identity + write. Then deploy with `--yes --verify`.
+8. Document `install/` with one command and LED "good" description.
 
 ### Phase E - CI proves metal change
 

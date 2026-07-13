@@ -14,7 +14,9 @@ Smart, high-judgment (product / hardware / field). Often low literacy in Git, pi
 1. Machine: Git, Python 3.11+, `gh`, pip (`silico` host package).
 2. `pip install -e ".[dev]"` and `pip install -e ./third_party/bedside` (or CI equivalent).
 3. `silico doctor` then GCU pin/scaffold/pytest (Day 1 playbook in AGENTS.md).
-4. First MicroPython / UF2 on the board once; then app updates only.
+4. **Device USB talk + prep (required):** data cable → long `silico wait-device` → `silico inspect` proves REPL (or UF2 first-flash once) → operator confirms port → deploy only with yes.
+5. Do **not** stop after host gate green. Metal prep is part of Day 1 unless the operator explicitly defers it.
+6. After runtime is on board once: app updates only (no re-teaching UF2).
 
 ## Scary surfaces (plain language)
 
@@ -23,6 +25,7 @@ Smart, high-judgment (product / hardware / field). Often low literacy in Git, pi
 - **Deploy:** inspect first; never write without operator yes (`silico deploy … --yes`).
 - **USB wait:** if you say you are polling, actually run a long `silico wait-device`; do not ask them to announce plug-in.
 - **Board identity:** high score is a hint; confirm product board before deploy.
+- **Deferred metal:** "check back before the board" after scaffold only is a cliff - keep going into wait-device/inspect unless they said hold off.
 
 ## Day-2 leave-behind
 

@@ -102,19 +102,21 @@ Then speak in plain language. Structure (tone may vary; skeleton may not):
 
 1. **Welcome** to Silico.
 2. **Role:** you are here to get their GCU shipped and will step them through it.
-3. **What you know now** - product intent **and** machine readiness (what is already OK vs what will need install after go).
-4. **Next step** in one short sentence (the first *mutating* step after go).
+3. **What you know now** - product intent **and** machine readiness (what is already OK vs what will need install after go), including **whether a preferred USB board is already talking**.
+4. **Next step** in one short sentence (the first *mutating* step after go). Frame Day 1 as **host plate + device talk** - not host-only.
 5. **Start gate:** ask whether to start or adjust something.
 
 Example shape:
 
 > Welcome to Silico. I'm here to get your GCU shipped and will step you through it all.
 > Here's what I know now about what you want: …
-> On this machine I already checked: Git OK, Python 3.12 OK, gh logged in; silico not installed yet.
-> The next step is …
+> On this machine I already checked: Git OK, Python 3.12 OK, gh logged in; preferred board not on USB yet (only a CH340).
+> The next step is scaffold the plate, get host tests green, then get the board talking over USB (REPL) before we write anything.
 > Do you want me to start? Or should I adjust something?
 
 Only after a clear **go** (or after applying their adjustments and re-confirming) may you begin **mutating** Phase A work (installs, scaffold, repo create, device paths).
+
+**Anti-pattern:** promising to stop after host gate and "check back before we go near the board." Host gate is a checkpoint, not Day 1 done. After go, you drive through Phase D prep (USB talk + REPL) unless the operator explicitly defers metal.
 
 ### Phase A - Machine prerequisites
 
@@ -168,29 +170,45 @@ silico scaffold .
 3. Set product identity in `firmware/version.py` and `silico.toml` (plate defaults are generic).
 4. Run host gate until green: `python -m pytest -q` (or `silico doctor` then pytest).
 5. Commit and push. Confirm CI/Actions is on. If the human must enable Actions, give exact clicks.
+6. **Do not stop here.** Host gate green is a checkpoint. **Immediately continue into Phase D** (device USB talk + prep). Do not treat "I'll come back before the board" as the plan after scaffold unless the operator explicitly said to defer metal.
 
 ### Phase D - Talk to real hardware (hello metal)
 
-Goal: board shows a **distinct, documented blink pattern** a novice can recognize, reconnect is **repeatable**, runtime on board once if needed.
+**Required for Day 1 exit** (not optional polish). Goal: the board **talks over USB**, is **prepped** (MicroPython REPL when that is the runtime), then shows a **distinct, documented blink** (or app) a novice can recognize; reconnect is **repeatable**.
+
+#### Phase D0 - Device talks (prep) before any deploy plan
+
+Until the following are true, the device is **not** prepped. Do not skip to domain work or declare Day 1 done.
+
+1. Preferred USB serial device appears (score>=50 after real poll) - or operator confirmed a named port after inspect.
+2. `silico inspect --port COMx` succeeds: REPL responds (e.g. `rp2` / MicroPython version) **or** you are actively walking first-flash because there is no REPL yet.
+3. Operator has confirmed **this port is the product board** for this session.
+4. Only then: deploy plan → write with `--yes` → verify.
+
+**If the board was missing at Phase 0:** after host gate, ask only for the physical plug (data cable), then **immediately** run extended `silico wait-device --timeout 300` (or longer). Keep polling. Do not end the turn with "plug it in whenever" and no poll running.
+
+**Anti-pattern:** host gate green + "we'll touch hardware later" with no wait-device, no inspect, no REPL proof.
 
 **Safety (non-negotiable):**
 
 1. **Poll USB yourself.** After asking the human only for the physical step (data cable + plug in), run `silico wait-device` / `silico doctor`. **Do not** ask them to announce "I'm plugged in." On timeout: extend poll; only request physical cable/plug steps - never "tell me when ready."
 2. **High score is a hint, not permission.** After discovery, report port + VID/PID + inspect findings in plain language. **Confirm with the operator that this is the product board for this session** before any deploy plan counts as ready. Do not reuse COM numbers from an earlier session without re-discovery.
-3. **Inspect before write.** `silico inspect --port COMx` (read-only). Report what is already on the device.
+3. **Inspect before write.** `silico inspect --port COMx` (read-only). Report what is already on the device. **Prove talk:** platform/version output is the prep bar.
 4. **Never overwrite without explicit operator confirmation.** State exactly which files you will write and that boot behavior may change. Wait for a clear **yes**. Only then `silico deploy … --port COMx --yes`.
 5. **Deploy always requires explicit `--port`.** Never blind `connect auto` on multi-device hosts. Prefer VID `2e8a`; demote CH340 `1a86` and Debug Probe `2e8a:000c`.
+6. Deploy **all** app modules the firmware imports (not only `main.py` / `version.py`) when the tree has multiple files.
 
 **Steps:**
 
 1. Ask them to use a **data** USB cable (not charge-only). Explain that some cables only power.
 2. **Immediately** start an extended poll (`silico wait-device --timeout 300` or longer). Do not claim you are monitoring unless that poll is actually running. Do not stop after a short timeout and wait for the human to announce plug-in.
-3. When a preferred port appears: `silico doctor` / `silico inspect --port COMx`.
+3. When a preferred port appears: `silico doctor` / `silico inspect --port COMx`. **Confirm REPL talk** (or start UF2 path).
 4. **Stop and confirm device identity** with the operator (especially if multiple serial devices or the board was unplugged/replugged).
-5. If no MicroPython REPL: drive first firmware with physical steps (BOOT+RESET → `RPI-RP2` → UF2). Once per board.
+5. If no MicroPython REPL: drive first firmware with physical steps (BOOT+RESET → `RPI-RP2` → UF2). Once per board. Re-inspect until REPL talks.
 6. Prove REPL (`rp2`). Tell them what "good" looks like.
 7. Propose deploy plan (`silico deploy firmware/… --port COMx` **without** `--yes`). Get confirmation of identity + write. Then deploy with `--yes --verify`.
 8. Document `install/` with one command and LED "good" description.
+
 
 ### Phase E - CI proves metal change
 
@@ -221,12 +239,15 @@ While coding, you will find product `spec.md` items that are lacking, confusing,
 
 ### Day 1 exit criteria (before Day 2)
 
-- [ ] Device works end-to-end on the bench.
+- [ ] **Device talks over USB** (`silico inspect` / REPL proved) and was **prepped** (runtime on board once if needed).
+- [ ] Device works end-to-end on the bench (hello-metal or app after confirmed deploy).
 - [ ] Host gate green locally and on GitHub.
 - [ ] Device `FW_VERSION` matches host.
 - [ ] One documented update command a non-expert can re-run (you wrote the doc).
 - [ ] Silico pinned as host dependency.
 - [ ] Operator was helped through first flash and serial without assumed expertise.
+
+**Not exit criteria:** host gate alone, scaffold alone, or "we'll do the board later" with no poll/inspect.
 
 **Day 2:** same update path; unit to potential customer or field trial.
 

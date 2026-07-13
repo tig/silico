@@ -91,9 +91,9 @@ If Grady still needs a software guy and a quarter to move, **Prompt for metal** 
 
 Load-bearing tenets: [tenets.md](./tenets.md). Especially **Prompt for metal**, **Agents write the code**, **Agents operate the host path**, **Make it better than you found it**, **Vertical teams are the customer**.
 
-## 3. What is silico, in one sentence?
+## 3. What is silico?
 
-The open spine that makes Grady's two days true: Claude Code on a Mac, device end-to-end tomorrow, potential customer's hand the day after, silico still foundational after that.
+**Prompt for metal.** Silico is an open host-side spine so AI agents can ship real edge products: prove firmware on the host before anyone trusts a flash, install and update a device a normal human can run twice, and verify version identity so the board cannot lie about what it is running. Your domain and brand stay in your app; silico is not the product, not a company SKU, and not a device-ops cult. One rule: **host gate green means done; metal confirms.**
 
 ## 4. What does Day 1 really look like?
 

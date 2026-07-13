@@ -112,7 +112,7 @@ Private GCU repos pin silico as a **host** dependency and follow the plate. Devi
 ```text
 # GCU depends on silico (host / CI only)
 requirements-dev.txt:
-  silico @ git+https://github.com/tig/silico.git@<tag>
+  tig-silico @ git+https://github.com/tig/silico.git@<tag>
   # or while extracting:  -e /path/to/tig/silico
 
 firmware/   -> board

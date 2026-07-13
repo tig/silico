@@ -95,7 +95,11 @@ Load-bearing tenets: [tenets.md](./tenets.md). Especially **Prompt for metal**, 
 
 **Prompt for metal.** Silico is an open host-side spine so AI agents can ship real edge products: prove firmware on the host before anyone trusts a flash, install and update a device a normal human can run twice, and verify version identity so the board cannot lie about what it is running. Your domain and brand stay in your app; silico is not the product, not a company SKU, and not a device-ops cult. One rule: **host gate green means done; metal confirms.**
 
+The operator's getting-started interface is an AI coding agent. Human-facing Silico documentation intentionally does not begin with package installation or shell commands. The agent owns those mechanics.
+
 ## 4. What does Day 1 really look like?
+
+Day 1 begins with one human action: open a coding agent and give it the Silico start prompt. The agent owns machine discovery, prerequisites, GitHub authentication, Silico installation, repository setup, testing, and the device host path. The human supplies domain judgment, performs necessary physical actions, and confirms irreversible writes.
 
 The checklist for Grady, or anyone who finds `github.com/tig/silico` and wants Day 2 to be possible. Order matters. Agent-facing detail lives in [AGENTS.md](../AGENTS.md).
 
@@ -290,7 +294,7 @@ Because **Vertical teams are the customer** and **Prompt for metal** are not one
 
 ## 28. Will end customers need Python installed?
 
-The agent will help.
+They may need host runtime dependencies in v1, but they do not need Python knowledge or a Python tutorial. The agent owns installation and operation of host tooling. End customers use the GCU's product-specific update path and do not need to know Silico exists. Longer term, packaged update paths should reduce host prerequisites further.
 
 ## 29. What happens when the wrong USB device is on the machine?
 

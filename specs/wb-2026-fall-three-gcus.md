@@ -306,7 +306,9 @@ Same gate. Same version verify. Same anti-patterns. The point of Zakalwe is that
 
 ## 32. What is the naming plan?
 
-Spine: silico (github.com/tig/silico).
+Spine brand and GitHub: silico (github.com/tig/silico).
+CLI entry point: `silico`.
+PyPI distribution name: **tig-silico** (the bare name `silico` is already taken by an unrelated package; see issue #27).
 Product class: GCU (GCV later if needed).
 Public product references: Zakalwe, Quilan, Sma only.
 Commercial brands: **open** per app; not silico sub-brands.

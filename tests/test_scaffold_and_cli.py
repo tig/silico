@@ -1,0 +1,107 @@
+from pathlib import Path
+
+from silico.cli import main
+from silico.scaffold import plate_root, scaffold
+
+
+def test_plate_root_exists():
+    root = plate_root()
+    assert (root / "firmware" / "version.py").is_file()
+    assert (root / "sim" / "test_host_gate.py").is_file()
+
+
+def test_scaffold_into_empty(tmp_path: Path):
+    dest = tmp_path / "gcu"
+    lines = scaffold(dest)
+    assert (dest / "firmware" / "version.py").is_file()
+    assert (dest / "requirements-dev.txt").is_file()
+    assert any("files written" in x for x in lines)
+
+
+def test_scaffold_refuses_nonempty(tmp_path: Path):
+    dest = tmp_path / "gcu"
+    dest.mkdir()
+    (dest / "keep.txt").write_text("x", encoding="utf-8")
+    try:
+        scaffold(dest)
+        assert False, "expected FileExistsError"
+    except FileExistsError:
+        pass
+
+
+def test_cli_version():
+    assert main(["version"]) == 0
+
+
+def test_cli_doctor():
+    # doctor should run even with no ports
+    assert main(["doctor"]) in (0, 1)
+
+
+def test_deploy_refuses_without_yes(tmp_path: Path):
+    f = tmp_path / "version.py"
+    f.write_text("FW_NAME='X'\nFW_VERSION='0.0.1'\n", encoding="utf-8")
+    # Without mpremote/port may fail differently; without --yes must not write.
+    code = main(["deploy", str(f)])
+    assert code != 0
+
+
+def test_deploy_plan_lines_mention_confirmation(tmp_path: Path, monkeypatch):
+    from silico import deploy as deploy_mod
+    from silico.ports import PortInfo
+
+    f = tmp_path / "version.py"
+    f.write_text("FW_NAME='X'\nFW_VERSION='0.0.1'\n", encoding="utf-8")
+    monkeypatch.setattr(deploy_mod, "mpremote_available", lambda: True)
+    monkeypatch.setattr(
+        deploy_mod,
+        "pick_best_port",
+        lambda explicit=None: PortInfo(
+            device="COM9",
+            vid=0x2E8A,
+            pid=0x0005,
+            description="test",
+            manufacturer="test",
+            score=100,
+            label="test board",
+        ),
+    )
+    plan = deploy_mod.plan_deploy([f], port="COM9")
+    assert not isinstance(plan, deploy_mod.DeployResult)
+    text = "\n".join(plan.lines)
+    assert "--yes" in text
+    assert "OVERWRITE" in text
+    assert main(["deploy", str(f), "--port", "COM9"]) == 2
+
+
+def test_deploy_yes_without_confirm_flag_still_aborts(tmp_path: Path, monkeypatch):
+    from silico import deploy as deploy_mod
+    from silico.ports import PortInfo
+
+    f = tmp_path / "main.py"
+    f.write_text("x=1\n", encoding="utf-8")
+    monkeypatch.setattr(deploy_mod, "mpremote_available", lambda: True)
+    monkeypatch.setattr(
+        deploy_mod,
+        "pick_best_port",
+        lambda explicit=None: PortInfo(
+            device="COM9",
+            vid=0x2E8A,
+            pid=0x0005,
+            description="test",
+            manufacturer="test",
+            score=100,
+            label="test board",
+        ),
+    )
+    wrote = {"n": 0}
+
+    def boom(*_a, **_k):
+        wrote["n"] += 1
+        raise AssertionError("cp_to_device must not run without yes=True")
+
+    monkeypatch.setattr(deploy_mod, "cp_to_device", boom)
+    result = deploy_mod.deploy([f], port="COM9", yes=False)
+    assert result.ok is False
+    assert wrote["n"] == 0
+    assert any("ABORTED" in line or "--yes" in line for line in result.lines)

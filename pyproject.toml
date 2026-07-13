@@ -1,0 +1,44 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "silico"
+version = "0.1.0"
+description = "Prompt for metal: host spine for agent-authored edge products (GCUs)"
+readme = "README.md"
+license = { text = "Apache-2.0" }
+requires-python = ">=3.11"
+authors = [{ name = "Tig Kindel" }]
+dependencies = [
+  "pyserial>=3.5",
+]
+classifiers = [
+  "License :: OSI Approved :: Apache Software License",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8"]
+device = ["mpremote>=1.24"]
+
+[project.scripts]
+silico = "silico.cli:main"
+
+[project.urls]
+Homepage = "https://github.com/tig/silico"
+Issues = "https://github.com/tig/silico/issues"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["silico*"]
+
+[tool.setuptools.package-data]
+silico = ["plates/**/*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"

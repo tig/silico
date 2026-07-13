@@ -1,0 +1,11 @@
+[product]
+name = "GCU"
+fw_name = "GCU"
+fw_version = "0.0.1"
+
+[runtime]
+mpy_cross = "1.22.2"
+board = "xiao-rp2040"
+
+[host]
+gate = "pytest -q"

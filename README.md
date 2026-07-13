@@ -1,8 +1,4 @@
-# silico
-
-<p align="center">
-  <img src="docs/hero.jpg" alt="Silico: host spine to edge metal" width="100%" />
-</p>
+![Silico - Prompt for metal](docs/hero.jpg)
 
 **Prompt for metal.**
 

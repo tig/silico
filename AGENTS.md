@@ -337,6 +337,18 @@ Enforce with `silico gate` (deploy-set CPython import + machine allowlist). Do n
 
 Never treat "I flashed something" or "pytest green" as metal/vehicle done.
 
+### Product path (shipped defaults, not test-local substitutes)
+
+A host suite that injects convenient gains/plants while the metal build runs different constants can be green while the product is unusable. That is a **harness** failure.
+
+1. Put shipped parameters in `firmware/defaults.py` (or `[host].product_defaults` in `silico.toml`) and deploy that module.
+2. Domain code (`main`, control law) must **read** those defaults — not hard-code a parallel table.
+3. At least one sim scenario must **actually load** the defaults module and drive the product path with those values **unmodified**. The check is AST-based: an import, an attribute access, or a dynamic load (`_load("defaults")`). Naming a test `product_path` or mentioning it in a docstring does **not** satisfy it — a gate a comment can pass is the same green-but-broken gate this rule exists to prevent.
+4. Extra scenarios may override gains to explore edges — but zero scenarios on shipped defaults is a gate fail.
+5. Control loops: include a closed-loop scenario on shipped defaults against the plant; **fail if the loop cannot reach setpoint**.
+
+Check: `silico product-path` (also run from plate tests). Anti-pattern: "14 host tests green" where every test constructs the controller with literals absent from the config table.
+
 ## Repository layout (this repo: silico)
 
 | Path | Role |

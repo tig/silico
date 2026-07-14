@@ -11,6 +11,8 @@ board = "xiao-rp2040"
 
 [host]
 gate = "pytest -q"
+# Shipped parameter table the metal build runs. Host scenarios must exercise it.
+product_defaults = "firmware/defaults.py"
 
 # Modules (stems) allowed to import machine — device HAL backends only.
 # Domain modules and main must stay host-importable under CPython.
@@ -22,6 +24,7 @@ allow_machine = ["hal_board"]
 [deploy]
 core = [
   "firmware/version.py",
+  "firmware/defaults.py",
   "firmware/hal.py",
   "firmware/hal_board.py",
   "firmware/main.py",

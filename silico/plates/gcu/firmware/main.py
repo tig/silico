@@ -4,9 +4,8 @@ Device starts the loop only when executed as ``__main__`` (MicroPython boot).
 Host tests import ``init`` / ``tick`` and inject a fake HAL.
 """
 
+from defaults import TICK_SLEEP_MS
 from version import FW_NAME, FW_VERSION
-
-_TICK_SLEEP_MS = 250
 
 
 def init(hal=None):
@@ -16,6 +15,7 @@ def init(hal=None):
         "fw_version": FW_VERSION,
         "tick_count": 0,
         "led_on": False,
+        "tick_sleep_ms": TICK_SLEEP_MS,
     }
 
 
@@ -35,14 +35,16 @@ def main():
     state = init(hal=make_board_hal())
     while True:
         tick(state)
+        # Cadence comes from the shipped defaults, never a literal in this module.
+        sleep_ms = state.get("tick_sleep_ms", TICK_SLEEP_MS)
         hal = state.get("hal")
         if hal is not None and hasattr(hal, "sleep_ms"):
-            hal.sleep_ms(_TICK_SLEEP_MS)
+            hal.sleep_ms(sleep_ms)
         else:
             try:
                 import time
 
-                time.sleep(_TICK_SLEEP_MS / 1000.0)
+                time.sleep(sleep_ms / 1000.0)
             except ImportError:
                 pass
 

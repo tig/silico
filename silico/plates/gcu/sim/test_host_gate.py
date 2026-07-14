@@ -1,4 +1,4 @@
-"""Host gate: firmware modules load without a board; HAL seam stays honest."""
+"""Host gate: firmware loads without a board; HAL seam honest; product path shipped."""
 
 import importlib.util
 import sys
@@ -64,3 +64,30 @@ def test_host_hygiene_gate():
 
     report = run_hygiene(ROOT)
     assert report.ok, "\n".join(report.lines)
+
+
+def test_product_path_uses_shipped_defaults():
+    """Drive init/tick with *shipped* defaults — not test-local substitutes.
+
+    product_path: this scenario is the plate's honest host proof. It asserts the
+    product reads its cadence from firmware/defaults.py rather than a literal, and
+    deliberately does *not* restate the shipped number — a test that hard-codes
+    250 is just a second copy of the value it claims to be guarding.
+    """
+    defaults = _load("defaults")
+    main = _load("main")
+    fake = _load_sim("hal_double").FakeHal()
+
+    state = main.init(hal=fake)
+    assert state["tick_sleep_ms"] == defaults.TICK_SLEEP_MS
+    main.tick(state)
+    assert fake.led is True
+    assert state["fw_name"] and state["fw_version"]
+
+
+def test_product_path_check():
+    from silico.product_path import run_product_path_check
+
+    report = run_product_path_check(ROOT)
+    assert report.ok, "\n".join(report.lines)
+    assert report.sim_refs >= 1

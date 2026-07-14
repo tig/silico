@@ -30,7 +30,8 @@ Never treat "I flashed something" as done.
 
 ```text
 python -m pytest -q
-silico gate   # deploy-set host-importable; only [hal].allow_machine may import machine
+silico gate           # deploy-set host-importable; only [hal].allow_machine may import machine
+silico product-path   # sim must exercise firmware/defaults.py, not only injects
 ```
 
 ## HAL seam (do not reinvent)
@@ -46,12 +47,18 @@ Silico owns the shape that makes the host gate meaningful:
 
 Domain modules must not import `machine`. Extend the HAL with product reads/writes; keep the split.
 
+## Product path
+
+Shipped gains/setpoints/timings live in `firmware/defaults.py` and are what the board runs. At least one sim test must import that module and drive `init`/`tick` (or the control law) with those values. Test-local gains that only work on a synthetic plant are not vehicle-tuned gains — see silico AGENTS **Product path**.
+
+The two rules meet in `firmware/hal_board.py`: it is the one module that may touch `machine`, and it takes its pin numbers from `defaults.py` rather than carrying its own. A shipped value with two copies has two values.
+
 ## Layout
 
 | Path | Role |
 |------|------|
-| `firmware/` | On-device application only |
+| `firmware/` | On-device application only (`defaults.py` = shipped params) |
 | `sim/` | Host tests; never deploy |
 | `scripts/` | Thin wrappers around silico CLI |
 | `install/` | End-customer update docs |
-| `silico.toml` | Product config (`[deploy].core`, `[hal].allow_machine`) |
+| `silico.toml` | Product config (`[deploy].core`, `[hal].allow_machine`, `[host].product_defaults`) |

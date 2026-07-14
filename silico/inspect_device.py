@@ -6,7 +6,12 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 from silico.config_toml import read_deploy_core
-from silico.mpy_pin import pin_advice_lines, read_toml_mpy_cross
+from silico.mpy_pin import (
+    apply_mpy_cross_pin,
+    parse_micropython_version,
+    pin_advice_lines,
+    read_toml_mpy_cross,
+)
 from silico.mpremote_util import exec_on_device, ls_device, mpremote_available
 from silico.ports import IDENTITY_HINT, pick_best_port, port_is_listed
 from silico.pull_device import _parse_ls_names
@@ -17,10 +22,35 @@ class InspectReport:
     ok: bool
     port: str | None
     lines: list[str] = field(default_factory=list)
+    device_mpy: str | None = None
 
 
-def inspect(port: str | None = None) -> InspectReport:
+def inspect(
+    port: str | None = None,
+    *,
+    apply_mpy_pin: bool = False,
+    root: Path | None = None,
+) -> InspectReport:
     lines: list[str] = []
+
+    # --apply-mpy-pin mutates the product repo (silico.toml, requirements-dev.txt).
+    # Auto-selection scores ports by preference; a high score is a hint, not an
+    # identification. On a bench with two RP2040s that hint can pin the repo to
+    # the wrong board's ABI. Reading is allowed to guess; writing is not.
+    # Checked before mpremote so it is argument validation, not a tooling probe.
+    if apply_mpy_pin and not port:
+        return InspectReport(
+            False,
+            None,
+            [
+                "FAIL: --apply-mpy-pin requires an explicit --port.",
+                "It writes silico.toml and requirements-dev.txt, so the board must be",
+                "identified by the operator, not guessed from port scoring.",
+                "Run `silico inspect` (read-only) first to see candidates, then:",
+                "  silico inspect --port COMx --apply-mpy-pin",
+            ],
+        )
+
     if not mpremote_available():
         return InspectReport(False, None, ["FAIL: mpremote not available"])
 
@@ -89,11 +119,29 @@ def inspect(port: str | None = None) -> InspectReport:
         lines.append("Version probe: " + (ver.stdout or "").strip())
 
     # mpy-cross pin vs device MicroPython (host gate ABI)
-    toml_pin = read_toml_mpy_cross()
+    device_mpy = parse_micropython_version(repl_out)
+    toml_pin = read_toml_mpy_cross(root)
     lines.append("mpy-cross pin check:")
     for line in pin_advice_lines(repl_out, toml_pin):
         lines.append("  " + line)
 
-    lines.append("Read-only inspect complete. No files were written.")
+    if apply_mpy_pin:
+        if not device_mpy:
+            lines.append(
+                "FAIL: --apply-mpy-pin needs a parseable MicroPython version from REPL"
+            )
+            lines.append(IDENTITY_HINT)
+            return InspectReport(False, p, lines, device_mpy=None)
+        lines.append("Applying mpy-cross pin on host (device not written):")
+        for line in apply_mpy_cross_pin(device_mpy, root=root):
+            lines.append("  " + line)
+        lines.append("Inspect complete. Host pin files updated; device unchanged.")
+    else:
+        lines.append("Read-only inspect complete. No files were written.")
+        if device_mpy:
+            lines.append(
+                "To own the ABI pin (toml + requirements-dev): "
+                "silico inspect --port … --apply-mpy-pin"
+            )
     lines.append(IDENTITY_HINT)
-    return InspectReport(True, p, lines)
+    return InspectReport(True, p, lines, device_mpy=device_mpy)

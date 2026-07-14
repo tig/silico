@@ -1,8 +1,12 @@
+from pathlib import Path
+
 from silico.mpy_pin import (
     PLATE_DEFAULT_MPY_CROSS,
+    apply_mpy_cross_pin,
     parse_micropython_version,
     parse_mpy_cross_pin,
     pin_advice_lines,
+    read_toml_mpy_cross,
     same_minor,
     suggest_mpy_cross_pin,
 )
@@ -44,3 +48,82 @@ def test_advice_warns_on_mismatch():
     text = "\n".join(lines)
     assert "WARN" in text
     assert "1.28" in text
+
+
+def test_apply_mpy_cross_pin_updates_toml_and_req(tmp_path: Path):
+    (tmp_path / "silico.toml").write_text(
+        '[runtime]\nmpy_cross = "1.22.2"\nboard = "xiao-rp2040"\n',
+        encoding="utf-8",
+    )
+    (tmp_path / "requirements-dev.txt").write_text(
+        "pytest>=8\nmpy-cross==1.22.2\n",
+        encoding="utf-8",
+    )
+    lines = apply_mpy_cross_pin("MicroPython v1.28.0", root=tmp_path)
+    text = "\n".join(lines)
+    assert "1.28.0rc0.post2" in text
+    assert read_toml_mpy_cross(tmp_path) == "1.28.0rc0.post2"
+    req = (tmp_path / "requirements-dev.txt").read_text(encoding="utf-8")
+    assert "mpy-cross==1.28.0rc0.post2" in req
+    assert "1.22.2" not in req
+
+
+def test_apply_creates_files_when_missing(tmp_path: Path):
+    apply_mpy_cross_pin("1.27.0", root=tmp_path)
+    assert read_toml_mpy_cross(tmp_path) == "1.27.0.post2"
+    assert "mpy-cross==1.27.0.post2" in (tmp_path / "requirements-dev.txt").read_text(
+        encoding="utf-8"
+    )
+
+
+def test_apply_ignores_mpy_cross_key_in_another_table(tmp_path: Path):
+    """A foreign mpy_cross key must not be rewritten in place of [runtime]'s.
+
+    An unscoped search/replace rewrites the *first* matching line in the file and
+    reports it wrote [runtime].mpy_cross — leaving the real runtime pin stale.
+    """
+    (tmp_path / "silico.toml").write_text(
+        '[tool.other]\n'
+        'mpy_cross = "0.0.1"\n'
+        '\n'
+        '[runtime]\n'
+        'mpy_cross = "1.22.2"\n'
+        'board = "xiao-rp2040"\n',
+        encoding="utf-8",
+    )
+    apply_mpy_cross_pin("MicroPython v1.28.0", root=tmp_path)
+
+    text = (tmp_path / "silico.toml").read_text(encoding="utf-8")
+    # The foreign table is untouched...
+    assert '[tool.other]\nmpy_cross = "0.0.1"' in text
+    # ...and the runtime pin is the one that moved.
+    assert read_toml_mpy_cross(tmp_path) == "1.28.0rc0.post2"
+    assert "1.22.2" not in text
+
+
+def test_read_ignores_mpy_cross_key_in_another_table(tmp_path: Path):
+    (tmp_path / "silico.toml").write_text(
+        '[tool.other]\nmpy_cross = "0.0.1"\n\n[runtime]\nmpy_cross = "1.27.0.post2"\n',
+        encoding="utf-8",
+    )
+    assert read_toml_mpy_cross(tmp_path) == "1.27.0.post2"
+
+
+def test_read_returns_none_without_runtime_table(tmp_path: Path):
+    (tmp_path / "silico.toml").write_text(
+        '[tool.other]\nmpy_cross = "0.0.1"\n', encoding="utf-8"
+    )
+    assert read_toml_mpy_cross(tmp_path) is None
+
+
+def test_apply_inserts_pin_into_existing_runtime_table(tmp_path: Path):
+    (tmp_path / "silico.toml").write_text(
+        '[runtime]\nboard = "xiao-rp2040"\n\n[host]\ngate = "pytest -q"\n',
+        encoding="utf-8",
+    )
+    apply_mpy_cross_pin("1.27.0", root=tmp_path)
+
+    text = (tmp_path / "silico.toml").read_text(encoding="utf-8")
+    assert read_toml_mpy_cross(tmp_path) == "1.27.0.post2"
+    # Inserted into [runtime], not appended into [host].
+    assert text.index("mpy_cross") < text.index("[host]")

@@ -77,7 +77,10 @@ def cmd_wait_device(args: argparse.Namespace) -> int:
 
 
 def cmd_inspect(args: argparse.Namespace) -> int:
-    report = inspect(port=args.port)
+    report = inspect(
+        port=args.port,
+        apply_mpy_pin=bool(getattr(args, "apply_mpy_pin", False)),
+    )
     _print_lines(report.lines)
     return 0 if report.ok else 1
 
@@ -169,8 +172,16 @@ def build_parser() -> argparse.ArgumentParser:
     w.add_argument("--poll", type=float, default=2.0, help="poll interval seconds")
     w.set_defaults(func=cmd_wait_device)
 
-    i = sub.add_parser("inspect", help="non-destructive device inspect (no writes)")
+    i = sub.add_parser(
+        "inspect",
+        help="device inspect (no device writes; optional host mpy-cross pin apply)",
+    )
     i.add_argument("--port", default=None, help="explicit COMx / device path")
+    i.add_argument(
+        "--apply-mpy-pin",
+        action="store_true",
+        help="write silico.toml + requirements-dev mpy-cross pin from device MicroPython",
+    )
     i.set_defaults(func=cmd_inspect)
 
     dep = sub.add_parser(

@@ -63,9 +63,9 @@ def pin_advice_lines(device_version: str | None, toml_pin: str | None) -> list[s
     lines: list[str] = []
     if not device_version:
         lines.append(
-            "INFO: no device MicroPython version yet. After inspect, set "
-            f"silico.toml [runtime].mpy_cross and requirements-dev mpy-cross==… "
-            f"(plate default is {PLATE_DEFAULT_MPY_CROSS}; re-pin to the board)."
+            "INFO: no device MicroPython version yet. After inspect, run "
+            f"`silico inspect --port COMx --apply-mpy-pin` "
+            f"(plate default is {PLATE_DEFAULT_MPY_CROSS}; Silico owns the pin)."
         )
         return lines
 
@@ -77,7 +77,7 @@ def pin_advice_lines(device_version: str | None, toml_pin: str | None) -> list[s
     if dev in KNOWN_DEVICE_TO_PIN and KNOWN_DEVICE_TO_PIN[dev] != dev:
         lines.append(
             f"NOTE: stable mpy-cross=={dev} may be missing on PyPI; "
-            f"use matching-minor pin {suggest} (same .mpy ABI line as the device). "
+            f"Silico maps to matching-minor pin {suggest} (same .mpy ABI line). "
             "Do not leave a stale plate default."
         )
 
@@ -87,15 +87,34 @@ def pin_advice_lines(device_version: str | None, toml_pin: str | None) -> list[s
         else:
             lines.append(
                 f"WARN: silico.toml mpy_cross={toml_pin} does not match device "
-                f"MicroPython {dev} (major.minor). Update toml + requirements-dev.txt "
-                f"to {suggest}."
+                f"MicroPython {dev} (major.minor). Run: "
+                f"silico inspect --port COMx --apply-mpy-pin  (writes {suggest})."
             )
     else:
         lines.append(
-            f"INFO: no mpy_cross in silico.toml; set [runtime].mpy_cross = \"{suggest}\" "
-            "and pin requirements-dev.txt the same way."
+            f"INFO: no mpy_cross in silico.toml; run "
+            f"silico inspect --port COMx --apply-mpy-pin  (writes {suggest})."
         )
     return lines
+
+
+# A TOML table header: [runtime], [tool.foo], or [[array.of.tables]].
+_TABLE_HEADER = re.compile(r"(?m)^[ \t]*\[\[?[^\]\n]+\]\]?[ \t]*(?:#.*)?$")
+_MPY_CROSS_KEY = re.compile(r'(?m)^([ \t]*mpy_cross[ \t]*=[ \t]*)(["\'])([^"\']*)\2')
+
+
+def _runtime_body_span(text: str) -> tuple[int, int] | None:
+    """Char span of the [runtime] table's body, or None if the table is absent.
+
+    Keys must be resolved inside their own table: a bare search for `mpy_cross`
+    will happily match (and rewrite) a key belonging to some other table.
+    """
+    header = re.search(r"(?m)^[ \t]*\[runtime\][ \t]*(?:#.*)?$", text)
+    if not header:
+        return None
+    start = header.end()
+    nxt = _TABLE_HEADER.search(text, start)
+    return start, (nxt.start() if nxt else len(text))
 
 
 def read_toml_mpy_cross(root: Path | None = None) -> str | None:
@@ -105,6 +124,106 @@ def read_toml_mpy_cross(root: Path | None = None) -> str | None:
     if not path.is_file():
         return None
     text = path.read_text(encoding="utf-8")
-    # simple scan: mpy_cross = "..."
-    m = re.search(r'(?m)^\s*mpy_cross\s*=\s*["\']([^"\']+)["\']', text)
-    return m.group(1) if m else None
+    span = _runtime_body_span(text)
+    if span is None:
+        return None
+    m = _MPY_CROSS_KEY.search(text, *span)
+    return m.group(3) if m else None
+
+
+def apply_mpy_cross_pin(
+    device_version: str,
+    *,
+    root: Path | None = None,
+) -> list[str]:
+    """Write suggested mpy-cross pin into silico.toml and requirements-dev.txt.
+
+    Silico owns the ABI chain: product repos should not hand-comment how to
+    derive the pin. Returns human-readable action lines.
+    """
+    root = (root or Path.cwd()).resolve()
+    dev = parse_micropython_version(device_version) or device_version.strip()
+    pin = suggest_mpy_cross_pin(dev)
+    lines: list[str] = [
+        f"Device MicroPython: {dev}",
+        f"Applying mpy-cross pin: {pin}",
+    ]
+    if dev in KNOWN_DEVICE_TO_PIN and KNOWN_DEVICE_TO_PIN[dev] != dev:
+        lines.append(
+            f"NOTE: stable mpy-cross=={dev} may be missing on PyPI; "
+            f"wrote matching-minor pin {pin}."
+        )
+
+    toml_path = root / "silico.toml"
+    if toml_path.is_file():
+        text = toml_path.read_text(encoding="utf-8")
+        span = _runtime_body_span(text)
+        if span is None:
+            # No [runtime] table at all — append one.
+            sep = "" if text.endswith("\n") or not text else "\n"
+            toml_path.write_text(
+                f'{text}{sep}\n[runtime]\nmpy_cross = "{pin}"\n', encoding="utf-8"
+            )
+            lines.append(f"wrote {toml_path.name} [runtime] section with mpy_cross")
+        else:
+            existing = _MPY_CROSS_KEY.search(text, *span)
+            if existing:
+                new_text = (
+                    text[: existing.start()]
+                    + f'{existing.group(1)}"{pin}"'
+                    + text[existing.end() :]
+                )
+                toml_path.write_text(new_text, encoding="utf-8")
+                lines.append(f'wrote {toml_path.name} [runtime].mpy_cross = "{pin}"')
+            else:
+                # [runtime] exists but has no pin — insert at the top of its body.
+                body_start = span[0]
+                new_text = (
+                    text[:body_start] + f'\nmpy_cross = "{pin}"' + text[body_start:]
+                )
+                toml_path.write_text(new_text, encoding="utf-8")
+                lines.append(
+                    f'wrote {toml_path.name} [runtime].mpy_cross = "{pin}" (inserted)'
+                )
+    else:
+        toml_path.write_text(
+            f'[runtime]\nmpy_cross = "{pin}"\n',
+            encoding="utf-8",
+        )
+        lines.append(f'created {toml_path.name} with mpy_cross = "{pin}"')
+
+    req = root / "requirements-dev.txt"
+    req_line = f"mpy-cross=={pin}"
+    if req.is_file():
+        rtext = req.read_text(encoding="utf-8")
+        if re.search(r"(?m)^\s*mpy-cross\s*==", rtext):
+            new_r, n = re.subn(
+                r"(?m)^\s*mpy-cross\s*==\s*\S+",
+                req_line,
+                rtext,
+                count=1,
+            )
+            if n:
+                req.write_text(new_r, encoding="utf-8")
+                lines.append(f"wrote {req.name} {req_line}")
+            else:
+                lines.append(f"WARN: could not rewrite mpy-cross in {req.name}")
+        else:
+            with req.open("a", encoding="utf-8") as f:
+                if rtext and not rtext.endswith("\n"):
+                    f.write("\n")
+                f.write(req_line + "\n")
+            lines.append(f"appended {req.name} {req_line}")
+    else:
+        req.write_text(
+            "# Host-only. Distribution is tig-silico (never: pip install silico).\n"
+            f"{req_line}\n",
+            encoding="utf-8",
+        )
+        lines.append(f"created {req.name} with {req_line}")
+
+    lines.append(
+        f"Next: python -m pip install -U \"mpy-cross=={pin}\"  "
+        "(host only; then re-run host compile gate)."
+    )
+    return lines

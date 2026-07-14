@@ -159,3 +159,20 @@ def test_deploy_yes_without_confirm_flag_still_aborts(tmp_path: Path, monkeypatc
     result = deploy_mod.deploy([f], port="COM9", yes=False)
     assert result.ok is False
     assert wrote["n"] == 0
+
+
+def test_apply_mpy_pin_requires_explicit_port(tmp_path):
+    """The mutating path may not act on a guessed board.
+
+    Port scoring is a hint, not an identification; on a bench with two RP2040s it
+    can pin the product repo to the wrong board's ABI.
+    """
+    from silico.inspect_device import inspect
+
+    report = inspect(port=None, apply_mpy_pin=True, root=tmp_path)
+
+    assert report.ok is False
+    assert any("requires an explicit --port" in line for line in report.lines)
+    # And it wrote nothing.
+    assert not (tmp_path / "silico.toml").exists()
+    assert not (tmp_path / "requirements-dev.txt").exists()

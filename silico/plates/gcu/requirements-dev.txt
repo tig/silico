@@ -6,6 +6,7 @@
 # After release, prefer an immutable tag (e.g. v0.1.4+) over @main.
 tig-silico @ git+https://github.com/tig/silico.git@main
 pytest>=8
-# Pin mpy-cross to the board MicroPython major.minor (ABI). Plate default is
-# latest stable on PyPI; after `silico inspect`, re-pin (rc OK if stable missing).
+# mpy-cross ABI: Silico owns the pin. After the board talks:
+#   silico inspect --port COMx --apply-mpy-pin
+# Plate default is a starting point only.
 mpy-cross==1.27.0.post2

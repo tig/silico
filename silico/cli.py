@@ -12,6 +12,7 @@ from silico.doctor import run_doctor
 from silico.host_hygiene import run_hygiene
 from silico.inspect_device import inspect
 from silico.monitor import monitor_port
+from silico.product_path import run_product_path_check
 from silico.pull_device import pull_device
 from silico.scaffold import scaffold
 from silico.wait_device import TIMEOUT_SOP, format_port_snapshot, wait_for_board
@@ -31,6 +32,13 @@ def cmd_doctor(_args: argparse.Namespace) -> int:
 def cmd_gate(_args: argparse.Namespace) -> int:
     """Host hygiene: deploy-set importable under CPython; machine allowlist."""
     report = run_hygiene()
+    _print_lines(report.lines)
+    return 0 if report.ok else 1
+
+
+def cmd_product_path(_args: argparse.Namespace) -> int:
+    """Report whether sim exercises shipped defaults (product path)."""
+    report = run_product_path_check()
     _print_lines(report.lines)
     return 0 if report.ok else 1
 
@@ -149,6 +157,12 @@ def build_parser() -> argparse.ArgumentParser:
         help="host hygiene: deploy-set CPython import + machine allowlist (HAL seam)",
     )
     g.set_defaults(func=cmd_gate)
+
+    pp = sub.add_parser(
+        "product-path",
+        help="check sim exercises shipped defaults (not only test-local injects)",
+    )
+    pp.set_defaults(func=cmd_product_path)
 
     w = sub.add_parser("wait-device", help="poll USB until preferred board appears")
     w.add_argument("--timeout", type=float, default=180.0, help="seconds (default 180)")

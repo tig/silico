@@ -6,8 +6,10 @@ module; they inject ``sim.hal_double.FakeHal`` (or a plant) into ``main.init``.
 
 from __future__ import annotations
 
-# Seeed XIAO RP2040 user green LED (USER_LED_G). Active-low.
-_LED_PIN = 16
+# Pin comes from the shipped defaults, not a literal here. Two copies of a
+# shipped value are two values: they drift, and the gate cannot tell which one
+# the product runs.
+from defaults import LED_PIN
 
 
 def make_board_hal():
@@ -15,7 +17,7 @@ def make_board_hal():
     from machine import Pin  # type: ignore
     import time
 
-    pin = Pin(_LED_PIN, Pin.OUT)
+    pin = Pin(LED_PIN, Pin.OUT)
     pin.value(1)  # off when active-low
 
     class BoardHal:

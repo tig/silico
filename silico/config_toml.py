@@ -88,3 +88,21 @@ def read_hal_allow_machine(root: Path | None = None) -> list[str]:
             if stem:
                 out.append(stem)
     return out
+
+
+def read_product_defaults_path(root: Path | None = None) -> str | None:
+    """Optional path to shipped defaults module from [host].product_defaults.
+
+    Example::
+
+        [host]
+        product_defaults = "firmware/defaults.py"
+    """
+    data = _load(root)
+    host = data.get("host")
+    if not isinstance(host, dict):
+        return None
+    raw = host.get("product_defaults")
+    if isinstance(raw, str) and raw.strip():
+        return raw.strip()
+    return None

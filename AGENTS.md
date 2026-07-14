@@ -316,6 +316,17 @@ Host-first is **not** host-only. Claims must name the layer they prove:
 | **Deployed** | Board runs this build | Device `FW_VERSION` matches host; optional harness OK. |
 | **Issue fixed** | Ticket closed | Proof matching the issue's **stated layer**. CI green alone is not enough for a metal/vehicle claim. |
 
+### HAL seam (Silico-owned pattern)
+
+The host gate is only honest if domain firmware is host-importable and hardware stays behind a seam:
+
+1. **Contract** (`firmware/hal.py`) — method surface; no `machine`.
+2. **Device backend** (`firmware/hal_board.py` or product equivalent) — only modules listed in `silico.toml` `[hal].allow_machine` may import `machine`.
+3. **Host double** (`sim/hal_double.py`) — same method names for pytest.
+4. **main** — `init(hal=…)` / `tick`; no top-level hardware; boot only as `__main__`.
+
+Enforce with `silico gate` (deploy-set CPython import + machine allowlist). Do not re-derive a private HAL shape per GCU when the plate already ships one.
+
 ### Forbidden closes
 
 - Do **not** close a **P0 sensing/actuation** issue as done with only host/sim code if the device path is still a stub (`pass`, empty IRQ, no feed into the estimator). Either:

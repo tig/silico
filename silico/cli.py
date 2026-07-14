@@ -9,6 +9,7 @@ from pathlib import Path
 from silico import __version__
 from silico.deploy import DeployResult, deploy, plan_deploy
 from silico.doctor import run_doctor
+from silico.host_hygiene import run_hygiene
 from silico.inspect_device import inspect
 from silico.monitor import monitor_port
 from silico.pull_device import pull_device
@@ -23,6 +24,13 @@ def _print_lines(lines: list[str]) -> None:
 
 def cmd_doctor(_args: argparse.Namespace) -> int:
     report = run_doctor()
+    _print_lines(report.lines)
+    return 0 if report.ok else 1
+
+
+def cmd_gate(_args: argparse.Namespace) -> int:
+    """Host hygiene: deploy-set importable under CPython; machine allowlist."""
+    report = run_hygiene()
     _print_lines(report.lines)
     return 0 if report.ok else 1
 
@@ -135,6 +143,12 @@ def build_parser() -> argparse.ArgumentParser:
 
     d = sub.add_parser("doctor", help="host environment + scored serial ports (read-only)")
     d.set_defaults(func=cmd_doctor)
+
+    g = sub.add_parser(
+        "gate",
+        help="host hygiene: deploy-set CPython import + machine allowlist (HAL seam)",
+    )
+    g.set_defaults(func=cmd_gate)
 
     w = sub.add_parser("wait-device", help="poll USB until preferred board appears")
     w.add_argument("--timeout", type=float, default=180.0, help="seconds (default 180)")

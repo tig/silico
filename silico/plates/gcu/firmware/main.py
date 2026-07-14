@@ -1,10 +1,12 @@
-"""Boot entry: init + tick. No hardware at import time on the host."""
+"""Boot entry: init + tick. Host-import safe — no ``machine`` in this module.
+
+Device starts the loop only when executed as ``__main__`` (MicroPython boot).
+Host tests import ``init`` / ``tick`` and inject a fake HAL.
+"""
 
 from version import FW_NAME, FW_VERSION
 
-# Seeed XIAO RP2040 user green LED (USER_LED_G). Active-low.
-_LED_PIN = 16
-_TICK_SLEEP_S = 0.25
+_TICK_SLEEP_MS = 250
 
 
 def init(hal=None):
@@ -26,39 +28,25 @@ def tick(state):
     return state
 
 
-def _board_hal():
-    try:
-        from machine import Pin  # type: ignore
-    except ImportError:
-        return None
-
-    pin = Pin(_LED_PIN, Pin.OUT)
-    pin.value(1)  # off when active-low
-
-    class BoardHal:
-        def set_led(self, on):
-            pin.value(0 if on else 1)
-
-    return BoardHal()
-
-
 def main():
-    state = init(hal=_board_hal())
-    try:
-        import time
+    # Import device backend only on the metal boot path (not at host import).
+    from hal_board import make_board_hal
 
-        sleep = time.sleep
-    except ImportError:
-        sleep = lambda _s: None
+    state = init(hal=make_board_hal())
     while True:
         tick(state)
-        sleep(_TICK_SLEEP_S)
+        hal = state.get("hal")
+        if hal is not None and hasattr(hal, "sleep_ms"):
+            hal.sleep_ms(_TICK_SLEEP_MS)
+        else:
+            try:
+                import time
+
+                time.sleep(_TICK_SLEEP_MS / 1000.0)
+            except ImportError:
+                pass
 
 
-# Device boot: start loop. Host imports must not hang (no bare main()).
-try:
-    import machine  # type: ignore  # noqa: F401
-
+# MicroPython executes main.py as __main__. Host importlib load uses name "main".
+if __name__ == "__main__":
     main()
-except ImportError:
-    pass

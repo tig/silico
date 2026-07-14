@@ -30,7 +30,21 @@ Never treat "I flashed something" as done.
 
 ```text
 python -m pytest -q
+silico gate   # deploy-set host-importable; only [hal].allow_machine may import machine
 ```
+
+## HAL seam (do not reinvent)
+
+Silico owns the shape that makes the host gate meaningful:
+
+| Path | Role |
+|------|------|
+| `firmware/hal.py` | Contract only — no `machine` |
+| `firmware/hal_board.py` | Device backend — only module allowlisted for `machine` |
+| `sim/hal_double.py` | Host double with the same method names |
+| `firmware/main.py` | `init(hal=…)` / `tick` — host-import safe; boots only as `__main__` |
+
+Domain modules must not import `machine`. Extend the HAL with product reads/writes; keep the split.
 
 ## Layout
 
@@ -40,4 +54,4 @@ python -m pytest -q
 | `sim/` | Host tests; never deploy |
 | `scripts/` | Thin wrappers around silico CLI |
 | `install/` | End-customer update docs |
-| `silico.toml` | Product config |
+| `silico.toml` | Product config (`[deploy].core`, `[hal].allow_machine`) |

@@ -63,3 +63,28 @@ def read_product_identity(root: Path | None = None) -> tuple[str | None, str | N
         name if isinstance(name, str) else None,
         ver if isinstance(ver, str) else None,
     )
+
+
+def read_hal_allow_machine(root: Path | None = None) -> list[str]:
+    """Module stems allowed to import ``machine`` (device HAL backends only).
+
+    Example silico.toml::
+
+        [hal]
+        allow_machine = ["hal_board"]
+    """
+    data = _load(root)
+    hal = data.get("hal")
+    if not isinstance(hal, dict):
+        return []
+    raw = hal.get("allow_machine")
+    if not isinstance(raw, list):
+        return []
+    out: list[str] = []
+    for item in raw:
+        if isinstance(item, str) and item.strip():
+            # accept "hal_board" or "firmware/hal_board.py"
+            stem = Path(item.strip()).stem
+            if stem:
+                out.append(stem)
+    return out

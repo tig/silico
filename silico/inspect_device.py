@@ -32,6 +32,25 @@ def inspect(
     root: Path | None = None,
 ) -> InspectReport:
     lines: list[str] = []
+
+    # --apply-mpy-pin mutates the product repo (silico.toml, requirements-dev.txt).
+    # Auto-selection scores ports by preference; a high score is a hint, not an
+    # identification. On a bench with two RP2040s that hint can pin the repo to
+    # the wrong board's ABI. Reading is allowed to guess; writing is not.
+    # Checked before mpremote so it is argument validation, not a tooling probe.
+    if apply_mpy_pin and not port:
+        return InspectReport(
+            False,
+            None,
+            [
+                "FAIL: --apply-mpy-pin requires an explicit --port.",
+                "It writes silico.toml and requirements-dev.txt, so the board must be",
+                "identified by the operator, not guessed from port scoring.",
+                "Run `silico inspect` (read-only) first to see candidates, then:",
+                "  silico inspect --port COMx --apply-mpy-pin",
+            ],
+        )
+
     if not mpremote_available():
         return InspectReport(False, None, ["FAIL: mpremote not available"])
 

@@ -98,6 +98,25 @@ def pin_advice_lines(device_version: str | None, toml_pin: str | None) -> list[s
     return lines
 
 
+# A TOML table header: [runtime], [tool.foo], or [[array.of.tables]].
+_TABLE_HEADER = re.compile(r"(?m)^[ \t]*\[\[?[^\]\n]+\]\]?[ \t]*(?:#.*)?$")
+_MPY_CROSS_KEY = re.compile(r'(?m)^([ \t]*mpy_cross[ \t]*=[ \t]*)(["\'])([^"\']*)\2')
+
+
+def _runtime_body_span(text: str) -> tuple[int, int] | None:
+    """Char span of the [runtime] table's body, or None if the table is absent.
+
+    Keys must be resolved inside their own table: a bare search for `mpy_cross`
+    will happily match (and rewrite) a key belonging to some other table.
+    """
+    header = re.search(r"(?m)^[ \t]*\[runtime\][ \t]*(?:#.*)?$", text)
+    if not header:
+        return None
+    start = header.end()
+    nxt = _TABLE_HEADER.search(text, start)
+    return start, (nxt.start() if nxt else len(text))
+
+
 def read_toml_mpy_cross(root: Path | None = None) -> str | None:
     """Read [runtime].mpy_cross from silico.toml if present (stdlib, no tomli required)."""
     root = root or Path.cwd()
@@ -105,9 +124,11 @@ def read_toml_mpy_cross(root: Path | None = None) -> str | None:
     if not path.is_file():
         return None
     text = path.read_text(encoding="utf-8")
-    # simple scan: mpy_cross = "..."
-    m = re.search(r'(?m)^\s*mpy_cross\s*=\s*["\']([^"\']+)["\']', text)
-    return m.group(1) if m else None
+    span = _runtime_body_span(text)
+    if span is None:
+        return None
+    m = _MPY_CROSS_KEY.search(text, *span)
+    return m.group(3) if m else None
 
 
 def apply_mpy_cross_pin(
@@ -136,37 +157,40 @@ def apply_mpy_cross_pin(
     toml_path = root / "silico.toml"
     if toml_path.is_file():
         text = toml_path.read_text(encoding="utf-8")
-        if re.search(r'(?m)^\s*mpy_cross\s*=', text):
-            new_text, n = re.subn(
-                r'(?m)^(\s*mpy_cross\s*=\s*)["\'][^"\']*["\']',
-                rf'\1"{pin}"',
-                text,
-                count=1,
+        span = _runtime_body_span(text)
+        if span is None:
+            # No [runtime] table at all — append one.
+            sep = "" if text.endswith("\n") or not text else "\n"
+            toml_path.write_text(
+                f'{text}{sep}\n[runtime]\nmpy_cross = "{pin}"\n', encoding="utf-8"
             )
-            if n:
-                toml_path.write_text(new_text, encoding="utf-8")
-                lines.append(f"wrote {toml_path.name} [runtime].mpy_cross = \"{pin}\"")
-            else:
-                lines.append(f"WARN: could not rewrite mpy_cross in {toml_path.name}")
-        elif re.search(r"(?m)^\s*\[runtime\]\s*$", text):
-            new_text = re.sub(
-                r"(?m)^(\s*\[runtime\]\s*\n)",
-                rf'\1mpy_cross = "{pin}"\n',
-                text,
-                count=1,
-            )
-            toml_path.write_text(new_text, encoding="utf-8")
-            lines.append(f"wrote {toml_path.name} [runtime].mpy_cross = \"{pin}\" (inserted)")
-        else:
-            with toml_path.open("a", encoding="utf-8") as f:
-                f.write(f'\n[runtime]\nmpy_cross = "{pin}"\n')
             lines.append(f"wrote {toml_path.name} [runtime] section with mpy_cross")
+        else:
+            existing = _MPY_CROSS_KEY.search(text, *span)
+            if existing:
+                new_text = (
+                    text[: existing.start()]
+                    + f'{existing.group(1)}"{pin}"'
+                    + text[existing.end() :]
+                )
+                toml_path.write_text(new_text, encoding="utf-8")
+                lines.append(f'wrote {toml_path.name} [runtime].mpy_cross = "{pin}"')
+            else:
+                # [runtime] exists but has no pin — insert at the top of its body.
+                body_start = span[0]
+                new_text = (
+                    text[:body_start] + f'\nmpy_cross = "{pin}"' + text[body_start:]
+                )
+                toml_path.write_text(new_text, encoding="utf-8")
+                lines.append(
+                    f'wrote {toml_path.name} [runtime].mpy_cross = "{pin}" (inserted)'
+                )
     else:
         toml_path.write_text(
             f'[runtime]\nmpy_cross = "{pin}"\n',
             encoding="utf-8",
         )
-        lines.append(f"created {toml_path.name} with mpy_cross = \"{pin}\"")
+        lines.append(f'created {toml_path.name} with mpy_cross = "{pin}"')
 
     req = root / "requirements-dev.txt"
     req_line = f"mpy-cross=={pin}"

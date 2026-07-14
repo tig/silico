@@ -1,12 +1,8 @@
-# silico
-
-<p align="center">
-  <img src="docs/hero.jpg" alt="Silico: host spine to edge metal" width="100%" />
-</p>
+![Silico - Prompt for metal](docs/hero.jpg)
 
 **Prompt for metal.**
 
-Silico is an open host-side spine for edge products built by AI agents. It scaffolds a testable firmware repository, proves changes on the host, identifies the intended device, refuses unsafe writes, deploys the application, and verifies what is actually running on the device.
+Silico is an open dev experience for edge products built by AI agents. It scaffolds a testable firmware repository, proves changes on the host, identifies the intended device, refuses unsafe writes, deploys the application, and verifies what is actually running on the device.
 
 The human interface is a coding agent; not an installation guide or shell tutorial. To start, open your coding agent and say:
 
@@ -17,7 +13,7 @@ See https://github.com/tig/silico. Follow the getting started instructions for a
 The agent owns the host path: prerequisites, GitHub setup, scaffolding, testing, device discovery, deployment, and verification. You own the
 product judgment and confirm physical or irreversible actions. 
 
-Silico v1 targets RP2040-class devices running MicroPython. The spine is designed to add other GCU platforms and runtimes—including Arduino-class plates—when real products force them.
+Silico v1 targets RP2040-class devices running MicroPython. The spine is designed to add other GCU platforms and runtimes (including Arduino-class plates) when real products force them.
 
 Agents write the firmware. You own the judgment.
 

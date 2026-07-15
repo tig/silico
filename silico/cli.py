@@ -136,7 +136,7 @@ def cmd_scaffold(args: argparse.Namespace) -> int:
         print(f"FAIL: {e}")
         return 1
     _print_lines(lines)
-    return 0
+    return 1 if any(l.startswith("WARN:") for l in lines) else 0
 
 
 def cmd_version(_args: argparse.Namespace) -> int:

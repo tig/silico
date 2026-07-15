@@ -47,6 +47,23 @@ Silico owns the shape that makes the host gate meaningful:
 
 Domain modules must not import `machine`. Extend the HAL with product reads/writes; keep the split.
 
+## Serial lifecycle door (hardened consoles)
+
+If your GCU's spec requires hostile-input robustness (Ctrl-C treated as data,
+`except BaseException` around the loop), the board becomes unreachable by
+mpremote/silico while the app runs. **Any GCU that hardens its console MUST
+ship a lifecycle door**: a `repl` protocol verb (park/coast every actuator,
+restore the interrupt character, exit cleanly to the interpreter) and a
+`reboot` verb (park/coast, then hard reset). Silico's host verbs knock with
+`repl\n` automatically when raw-REPL entry fails — but only if your app
+answers.
+
+Boot-window warning: after `deploy --reset`, the interrupt char stays enabled
+until the app's init runs, so a deploy's own `--verify` can succeed against a
+build that is unreachable afterward. Verify-after-reset is not proof of
+reachability; the door is. (tig/silico#49, found the hard way on a bench
+board that needed a physical replug.)
+
 ## Product path
 
 Shipped gains/setpoints/timings live in `firmware/defaults.py` and are what the board runs. At least one sim test must import that module and drive `init`/`tick` (or the control law) with those values. Test-local gains that only work on a synthetic plant are not vehicle-tuned gains — see silico AGENTS **Product path**.

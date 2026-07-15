@@ -4,7 +4,9 @@ Listed in silico.toml ``[hal].allow_machine``. Host tests never import this
 module; they inject ``sim.hal_double.FakeHal`` (or a plant) into ``main.init``.
 """
 
-from __future__ import annotations
+# No `from __future__` here: MicroPython has no __future__ module and this
+# file runs on-device (tig/silico#46). The silico gate now enforces this for
+# every deploy-set file.
 
 # Pin comes from the shipped defaults, not a literal here. Two copies of a
 # shipped value are two values: they drift, and the gate cannot tell which one

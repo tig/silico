@@ -251,3 +251,26 @@ def test_run_mpremote_explains_when_door_stays_shut(monkeypatch):
     r = mu.run_mpremote("COM6", "ls", ":")
     assert r.returncode == 1
     assert "owns the console" in r.stderr and "#49" in r.stderr
+
+
+def test_gate_fails_on_future_import_in_deploy_set(tmp_path):
+    """Regression for #46: a deploy-set file importing __future__ verifies on
+    the host and dies on device before the loop starts. The gate must catch
+    the class, not just the plate instance."""
+    (tmp_path / "firmware").mkdir()
+    (tmp_path / "firmware" / "version.py").write_text(
+        'FW_NAME = "X"\nFW_VERSION = "0.0.1"\n', encoding="utf-8"
+    )
+    (tmp_path / "firmware" / "bad.py").write_text(
+        "from __future__ import annotations\nX = 1\n", encoding="utf-8"
+    )
+    (tmp_path / "silico.toml").write_text(
+        '[deploy]\ncore = ["firmware/version.py", "firmware/bad.py"]\n',
+        encoding="utf-8",
+    )
+
+    from silico.host_hygiene import run_hygiene
+
+    report = run_hygiene(tmp_path)
+    assert report.ok is False
+    assert any("__future__" in l and "bad.py" in l for l in report.lines)

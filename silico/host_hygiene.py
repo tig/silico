@@ -92,6 +92,28 @@ def run_hygiene(root: Path | None = None) -> HygieneReport:
         return HygieneReport(True, lines)
 
     allow = set(read_hal_allow_machine(root))
+
+    # Device-fatal constructs the host can't catch by importing (CPython has
+    # __future__; MicroPython does not). A deploy-set file with this import
+    # verifies fine and then dies on first boot before the loop starts
+    # (tig/silico#46) — exactly the "verifies but doesn't run" class.
+    for rel in core:
+        p = root / rel
+        if not p.is_file():
+            continue
+        try:
+            text = p.read_text(encoding="utf-8")
+        except OSError:
+            continue
+        for n, line in enumerate(text.splitlines(), 1):
+            if line.strip().startswith("from __future__ import"):
+                ok = False
+                lines.append(
+                    f"FAIL: {rel}:{n} imports __future__ — MicroPython has no "
+                    "__future__ module; this deploy-set file will die on device "
+                    "before the loop starts (tig/silico#46)."
+                )
+
     firmware_dirs: set[Path] = set()
     for rel in core:
         p = root / rel

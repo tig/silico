@@ -7,5 +7,5 @@ silico doctor
 silico wait-device
 silico inspect --port COMx
 # only after operator confirms overwrite:
-silico deploy firmware/version.py firmware/main.py --port COMx --yes --verify
+silico deploy --port COMx --yes --verify   # no file args: uses silico.toml [deploy].core, cannot drift from the manifest (tig/silico#47)
 ```

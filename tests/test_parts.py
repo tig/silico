@@ -93,3 +93,32 @@ def test_plate_parts_toml_is_valid():
     report = load_parts(plate_root())
     assert report.ok, "\n".join(report.lines)
     assert any(p.id == "rp2040" for p in report.parts)
+
+
+def test_traversal_id_rejected(tmp_path):
+    """Regression: an id with path separators must fail validation, never
+    become a cache path. id="../../firmware" would write fetched documents
+    into the repo tree while reporting success."""
+    evil = '[[part]]\nid = "../../firmware"\nname = "Evil"\ndocs = "https://e.com/d"\n'
+    report = load_parts(_write(tmp_path, evil))
+    assert not report.ok
+    assert any("safe slug" in l for l in report.lines)
+
+    # And fetch refuses to run on an invalid file at all.
+    fetched = fetch_parts(tmp_path, fetcher=lambda u: b"x")
+    assert not fetched.ok
+    assert not (tmp_path / "firmware").exists()
+
+
+def test_uppercase_id_rejected(tmp_path):
+    report = load_parts(_write(tmp_path, '[[part]]\nid = "RP2040"\nname = "X"\ndocs = "https://e.com/d"\n'))
+    assert not report.ok
+
+
+def test_cache_ignores_itself(tmp_path):
+    """The cache must be uncommittable on every repo, including GCUs whose
+    .gitignore predates the .silico/ entry: a dir-local gitignore of "*"."""
+    root = _write(tmp_path, VALID)
+    fetch_parts(root, fetcher=lambda u: b"doc")
+    keep_out = root / CACHE_DIR / ".gitignore"
+    assert keep_out.read_text(encoding="utf-8").strip() == "*"

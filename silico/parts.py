@@ -15,6 +15,7 @@ community-patched ones carry errata the vendor PDFs do not.
 
 from __future__ import annotations
 
+import re
 import tomllib
 import urllib.request
 from dataclasses import dataclass, field
@@ -26,6 +27,11 @@ from urllib.parse import urlparse
 POINTER_FIELDS = ("datasheet", "svd", "dt_binding", "docs", "driver", "errata")
 
 CACHE_DIR = Path(".silico") / "parts"
+
+# Part ids become cache path components and protocol keys: safe slugs only.
+# Anything else (.., separators, spaces) is a path-traversal hole -- an id of
+# "../../firmware" would write fetched documents into the repo tree.
+_ID_RE = re.compile(r"^[a-z0-9][a-z0-9_-]*$")
 
 
 @dataclass
@@ -85,6 +91,13 @@ def load_parts(root: Path | None = None) -> PartsReport:
         if not pid or not name:
             ok = False
             lines.append(f"FAIL: [[part]] #{n}: `id` and `name` are required.")
+            continue
+        if not _ID_RE.match(pid):
+            ok = False
+            lines.append(
+                f"FAIL: [[part]] #{n}: id {pid!r} is not a safe slug "
+                "(lowercase letters, digits, `-`, `_`; ids become cache paths)."
+            )
             continue
         if pid in seen:
             ok = False
@@ -156,6 +169,14 @@ def fetch_parts(
                 return resp.read()
 
     cache = root / CACHE_DIR
+    # The cache ignores itself (the .pytest_cache trick): a dir-local
+    # .gitignore of "*" keeps fetched documents uncommittable on every repo,
+    # including GCUs scaffolded before this file existed, without touching
+    # the user's own .gitignore.
+    cache.mkdir(parents=True, exist_ok=True)
+    keep_out = cache / ".gitignore"
+    if not keep_out.exists():
+        keep_out.write_text("*\n", encoding="utf-8")
     for part in report.parts:
         pdir = cache / part.id
         for fieldname, url in part.pointers.items():

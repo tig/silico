@@ -176,3 +176,78 @@ def test_apply_mpy_pin_requires_explicit_port(tmp_path):
     # And it wrote nothing.
     assert not (tmp_path / "silico.toml").exists()
     assert not (tmp_path / "requirements-dev.txt").exists()
+
+
+def test_scaffold_writes_when_plate_lives_under_a_venv_path(tmp_path, monkeypatch):
+    """Regression for #48: skip names must be tested against the path relative
+    to the plate root, not the absolute source path. A venv inside the
+    destination repo (the Day 1 layout) puts ".venv" in every absolute plate
+    path and silently skipped the entire plate."""
+    from silico import scaffold as sc
+
+    fake_plate = tmp_path / ".venv" / "Lib" / "site-packages" / "silico" / "plates" / "gcu"
+    (fake_plate / "firmware").mkdir(parents=True)
+    (fake_plate / "firmware" / "main.py").write_text("# plate\n", encoding="utf-8")
+    (fake_plate / "silico.toml").write_text("[deploy]\ncore = []\n", encoding="utf-8")
+
+    monkeypatch.setattr(sc, "plate_root", lambda: fake_plate)
+    dest = tmp_path / "gcu"
+    lines = sc.scaffold(dest)
+
+    assert (dest / "firmware" / "main.py").exists()
+    assert not any(l.startswith("WARN:") for l in lines)
+
+
+def test_scaffold_zero_writes_on_fresh_dest_warns(tmp_path, monkeypatch):
+    """A fresh scaffold that writes nothing is never what the operator meant."""
+    from silico import scaffold as sc
+
+    fake_plate = tmp_path / "plate"
+    (fake_plate / "__pycache__").mkdir(parents=True)
+    (fake_plate / "__pycache__" / "junk.py").write_text("x", encoding="utf-8")
+
+    monkeypatch.setattr(sc, "plate_root", lambda: fake_plate)
+    lines = sc.scaffold(tmp_path / "fresh")
+
+    assert any(l.startswith("WARN:") for l in lines)
+
+
+def test_run_mpremote_knocks_protocol_door_on_raw_repl_failure(monkeypatch):
+    """Regression for #49: on 'could not enter raw repl', knock with `repl`
+    and retry once; if still failing, explain the hardened console."""
+    import subprocess as sp
+    from silico import mpremote_util as mu
+
+    calls = {"run": 0, "knock": 0}
+
+    def fake_run(cmd, **kw):
+        calls["run"] += 1
+        if calls["run"] == 1:
+            return sp.CompletedProcess(cmd, 1, stdout="", stderr="could not enter raw repl\n")
+        return sp.CompletedProcess(cmd, 0, stdout="ok\n", stderr="")
+
+    def fake_knock(port, wait_s=2.5):
+        calls["knock"] += 1
+        return True
+
+    monkeypatch.setattr(mu.subprocess, "run", fake_run)
+    monkeypatch.setattr(mu, "knock_protocol_door", fake_knock)
+
+    r = mu.run_mpremote("COM6", "ls", ":")
+    assert r.returncode == 0
+    assert calls == {"run": 2, "knock": 1}
+
+
+def test_run_mpremote_explains_when_door_stays_shut(monkeypatch):
+    import subprocess as sp
+    from silico import mpremote_util as mu
+
+    def fake_run(cmd, **kw):
+        return sp.CompletedProcess(cmd, 1, stdout="", stderr="could not enter raw repl\n")
+
+    monkeypatch.setattr(mu.subprocess, "run", fake_run)
+    monkeypatch.setattr(mu, "knock_protocol_door", lambda port, wait_s=2.5: True)
+
+    r = mu.run_mpremote("COM6", "ls", ":")
+    assert r.returncode == 1
+    assert "owns the console" in r.stderr and "#49" in r.stderr

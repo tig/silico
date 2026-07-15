@@ -35,10 +35,17 @@ def plate_root() -> Path:
     raise FileNotFoundError("silico plate tree not found (plates/gcu)")
 
 
-def _should_skip_source(path: Path) -> bool:
-    if any(part in SKIP_DIR_NAMES for part in path.parts):
+def _should_skip_source(rel: Path) -> bool:
+    """Skip decision on the path RELATIVE to the plate root.
+
+    Never test the absolute source path: when silico is pip-installed into a
+    venv that lives inside the destination repo (the layout the Day 1 playbook
+    itself produces), every plate file's absolute path contains ".venv" as a
+    part and the whole plate is silently skipped (tig/silico#48).
+    """
+    if any(part in SKIP_DIR_NAMES for part in rel.parts):
         return True
-    if path.suffix in SKIP_SUFFIXES:
+    if rel.suffix in SKIP_SUFFIXES:
         return True
     return False
 
@@ -52,6 +59,7 @@ def scaffold(dest: Path, *, force: bool = False) -> list[str]:
     """
     dest = dest.resolve()
     src = plate_root()
+    fresh = not (dest / "silico.toml").exists()
     lines: list[str] = [
         f"Plate source: {src}",
         f"Destination: {dest}",
@@ -67,9 +75,11 @@ def scaffold(dest: Path, *, force: bool = False) -> list[str]:
     skipped = 0
     protected = 0
     for path in sorted(src.rglob("*")):
-        if path.is_dir() or _should_skip_source(path):
+        if path.is_dir():
             continue
         rel = path.relative_to(src)
+        if _should_skip_source(rel):
+            continue
         target = dest / rel
         name = path.name
 
@@ -91,5 +101,11 @@ def scaffold(dest: Path, *, force: bool = False) -> list[str]:
     lines.append(
         f"Done. {copied} written, {skipped} skipped (existing), {protected} protected."
     )
+    if copied == 0 and fresh:
+        lines.append(
+            "WARN: wrote nothing on a fresh destination (no silico.toml) — a "
+            "fresh scaffold that writes zero files is never what the operator "
+            "meant. See tig/silico#48."
+        )
     lines.append("Next: set firmware/version.py + silico.toml product names, then: pytest -q")
     return lines

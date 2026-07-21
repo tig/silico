@@ -230,13 +230,17 @@ Replace "import deploy-set under CPython" with:
 
 ### 4.6 Product path (C)
 
-Shipped defaults live in **one** C table (header or `.c` with `const` structs — xuss-c already has config defaults in protocol/config). Host tests must reference that table unmodified in at least one scenario.
+Shipped defaults live in **one** C table (header or `.c` with `const` structs — xuss-c already has config defaults in protocol/config). Host tests must **drive the product path with that table unmodified** in at least one scenario — not merely mention it.
+
+Mirror the Python honesty rule in AGENTS.md (product path): a gate a comment or bare `#include` can pass is the same green-but-broken gate this rule exists to prevent.
 
 Implementation sketch:
 
-- `[host].product_defaults` points at the defaults file.
-- Scanner looks under `host/` test sources for `#include` of that header, or symbol references to known default identifiers, or a conventional `product_path` test file that includes the real defaults.
-- Fail if zero host tests touch the shipped table (same honesty rule as Python AST gate).
+- `[host].product_defaults` points at the defaults translation unit / header that ships on metal.
+- Domain/host product code under test must **read** those defaults (e.g. call into config/protocol that uses the shipped `const` table), not construct a parallel table of literals in the test.
+- `silico product-path` for C must require **compiled use**: at least one host test that (1) includes or links the shipped defaults TU and (2) **passes a field or whole-table pointer from that table into the product path** (init, controller, edge math, protocol defaults apply — whatever the GCU's product entry is). Prefer a lightweight compile-time or AST/parse check on test + product sources for real identifier uses (e.g. `GCU_DEFAULTS.rpm` / `defaults_table` / plate's conventional symbol), **not** "file named `product_path`" or "header name appears in a comment."
+- Fail if zero host scenarios invoke the product path with shipped defaults unmodified. Extra scenarios may override gains for edges — zero on shipped is a gate fail.
+- Plate fixture: `host/test_defaults.c` (or equivalent) is the canonical example: load shipped table → exercise product path → assert a shipped value is what the path saw.
 
 Do **not** require Python pytest for a pure C GCU. CTest is enough when `language = c`.
 
@@ -352,9 +356,9 @@ No hardware required.
 - [ ] Hello-metal main: identity + blink or serial-only heartbeat
 - [ ] Package data includes plate in wheel/sdist
 
-### Phase 6 — First consumer: xuss-c Day 1 on silico
+### Phase 6 — First consumer: xuss-c Day 1 on silico (**required for #53**)
 
-**Done when:** checklist in §6 is green on real M5GO hardware for xuss-c (or honest partial with open follow-ups).
+**Done when:** checklist in §6 is green on real M5GO hardware for **xuss-c** (or honest partial with open follow-ups that still name metal-TODO). Hello-metal / `plates/gcu-c` is a **prerequisite** (Phases 1–5); it does **not** by itself close #53.
 
 Work primarily **in tig/xuss-c**, consuming a silico pin (editable install or tag):
 
@@ -366,7 +370,7 @@ Work primarily **in tig/xuss-c**, consuming a silico pin (editable install or ta
 - [ ] Pin `tig-silico` in docs/requirements once tag cuts
 - [ ] Record ambiguity log in PRs; do not invent a parallel host spine
 
-**Silico-side acceptance for this phase:** issues/PR notes that xuss-c is the proof; fix spine bugs found on the bench (Make it better than you found it).
+**Silico-side acceptance for this phase:** issues/PR notes that **xuss-c is the mandatory first consumer** that validates the architecture; fix spine bugs found on the bench (Make it better than you found it).
 
 ### Phase 7 — Docs, doctrine, and Grady S3 readiness
 
@@ -374,7 +378,7 @@ Work primarily **in tig/xuss-c**, consuming a silico pin (editable install or ta
 - [ ] BEDSIDE.md: esptool image flash as scary surface; after-flash re-enumerate
 - [ ] lexicon: "C plate" / "runtime backend" short entries if needed
 - [ ] silicov1.md: note ESP-IDF backend as forced by real GCU (xuss-c / Quilan-class), not abstract multi-runtime
-- [ ] Cross-link #53, #57; close #53 only when §6 done-when is met
+- [ ] Cross-link #53, #57; **close #53 only when §6 is met on xuss-c** (not hello-metal alone)
 - [ ] S3 chip variant: same deploy verb, different `chip` / idf target — document once proven on S3 or leave open issue if only classic ESP32 was proven
 
 ### Phase 8 — Measurement rig (out of critical path for "C backend exists")
@@ -385,22 +389,32 @@ Per #53: power measurement on real hardware settles language choice for solar GC
 
 ## 6. Done when (issue #53 acceptance)
 
-A C hello-metal (or xuss-c) GCU on **ESP32-class** hardware passes the full Day 1 path with silico:
+**#53 closes only when xuss-c** (the designated first consumer) completes the full Day 1 path on **ESP32-class** hardware with silico. A standalone `plates/gcu-c` hello-metal run is a **required prerequisite** (proves the plate + spine), not a substitute for xuss-c integration.
+
+### 6.1 Prerequisite — hello-metal / `plates/gcu-c`
+
+| Check | Proof |
+|-------|--------|
+| Scaffold | `silico scaffold --plate gcu-c` (or equivalent) yields a buildable tree |
+| Day 1 verbs on plate | doctor → wait-device → inspect → deploy plan/write → gate → product-path green on the plate |
+| Escape hatch | Minimal product speaks `repl`/`reboot` (or documents deferral with open metal follow-up) |
+
+### 6.2 Required — xuss-c (closes #53)
 
 | Check | Proof |
 |-------|--------|
 | `silico doctor` | Reports language=c, IDF/chip status, ports without Python-only lies |
 | `silico wait-device` | Preferred/explicit ESP port appears |
-| `silico inspect --port COMx` | Identity verified against `[product]` (no mpremote REPL required) |
+| `silico inspect --port COMx` | Identity verified against xuss-c `[product]` (no mpremote REPL required) |
 | Operator gates | confirm-board + confirm-deploy still required |
-| `silico deploy --port COMx` | Dry plan shows IDF build + flash |
+| `silico deploy --port COMx` | Dry plan shows IDF build + flash for xuss-c firmware |
 | `silico deploy --port COMx --yes --verify` | Image written; identity/version matches host |
-| `silico gate` | Host-compiled tests green (CTest) |
-| `silico product-path` | At least one host test drives shipped defaults unmodified |
+| `silico gate` | Host-compiled tests green (CTest) on xuss-c |
+| `silico product-path` | At least one host test **invokes the product path with shipped defaults unmodified** (compiled use; see §4.6) |
 | Escape hatch | Product `repl`/`reboot` works (product acceptance; silico redeploy without hands when possible) |
-| Plate | `plates/gcu-c` scaffoldable; xuss-c is first real consumer, not the only forever template |
+| Consumer | xuss-c is the proof that validates the architecture; plate remains the forever template |
 
-**Same operator experience, different toolchain.** Closing #53 without xuss-c (or plate hello-metal) on a real board is not done.
+**Same operator experience, different toolchain.** Closing #53 with only hello-metal (no xuss-c on a real board) is **not** done.
 
 ---
 

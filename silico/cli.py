@@ -12,6 +12,7 @@ from silico.doctor import run_doctor
 from silico.host_hygiene import run_hygiene
 from silico.inspect_device import inspect
 from silico.monitor import monitor_port
+from silico.parts import fetch_parts, load_parts
 from silico.product_path import run_product_path_check
 from silico.pull_device import pull_device
 from silico.scaffold import scaffold
@@ -32,6 +33,13 @@ def cmd_doctor(_args: argparse.Namespace) -> int:
 def cmd_gate(_args: argparse.Namespace) -> int:
     """Host hygiene: deploy-set importable under CPython; machine allowlist."""
     report = run_hygiene()
+    _print_lines(report.lines)
+    return 0 if report.ok else 1
+
+
+def cmd_parts(args: argparse.Namespace) -> int:
+    """Part truth: validate parts.toml; --fetch pulls local grounding copies."""
+    report = fetch_parts() if args.fetch else load_parts()
     _print_lines(report.lines)
     return 0 if report.ok else 1
 
@@ -160,6 +168,13 @@ def build_parser() -> argparse.ArgumentParser:
         help="host hygiene: deploy-set CPython import + machine allowlist (HAL seam)",
     )
     g.set_defaults(func=cmd_gate)
+
+    pt = sub.add_parser(
+        "parts",
+        help="part truth: validate parts.toml pointers; --fetch caches local copies",
+    )
+    pt.add_argument("--fetch", action="store_true", help="download pointers into .silico/parts/ (git-ignored)")
+    pt.set_defaults(func=cmd_parts)
 
     pp = sub.add_parser(
         "product-path",

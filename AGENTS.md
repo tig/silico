@@ -108,6 +108,15 @@ Non-interactive / CI: `--answer` on `ask`, `--confirm` / `--decline` / `--no-wai
 
 Violating Bedside on the operator path violates **Agents operate the host path**.
 
+## Part truth: pointers, not documents
+
+Datasheets are free to download and not free to republish, so silico ships **pointers and parsers, never the documents**. Each GCU carries a `parts.toml`: every part the product is built from, and URLs to where its truth lives (datasheet, SVD, devicetree binding, reference driver, errata).
+
+- `silico parts` validates the file (offline, gate-safe).
+- `silico parts --fetch` pulls local grounding copies into `.silico/parts/` (git-ignored, per-checkout, disposable). Ground in those before writing hardware-facing code.
+- Prefer machine-readable truth when a part has it: an SVD or DT binding beats a 400-page PDF, and community-patched SVDs carry errata the vendor PDFs do not.
+- Never commit fetched documents. The licensing problem evaporates only because the user's own tools fetch the user's own copies.
+
 ## Make it better than you found it (non-negotiable)
 
 Anytime the path is rough and you had to **guess, correct, reverse, or research** something that a better doc, plate, script, error message, or small infra fix would have prevented for the **next** agent: do not leave that knowledge only in chat.

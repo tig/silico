@@ -8,9 +8,11 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 from silico import __version__
+from silico.deploy_idf import idf_py_available
 from silico.mpy_pin import PLATE_DEFAULT_MPY_CROSS, pin_advice_lines, read_toml_mpy_cross
 from silico.mpremote_util import mpremote_available
 from silico.ports import IDENTITY_HINT, list_scored_ports
+from silico.runtime import runtime_summary_lines, resolve_runtime
 from silico.workspace import detect_workspace
 
 
@@ -57,26 +59,45 @@ def run_doctor(*, root: Path | None = None) -> DoctorReport:
     else:
         lines.append("WARN: git not on PATH")
 
-    if mpremote_available():
-        lines.append("OK: mpremote available (device ops)")
-    else:
-        lines.append("WARN: mpremote not found - install for deploy/inspect (pip install mpremote)")
+    cfg = resolve_runtime(root)
+    lines.extend(runtime_summary_lines(cfg))
+    if any(e.startswith("FAIL:") for e in cfg.errors):
+        ok = False
 
-    toml_pin = read_toml_mpy_cross()
-    if toml_pin:
-        lines.append(f"silico.toml mpy_cross={toml_pin}")
-        if toml_pin == "1.22.2":
+    if cfg.is_c:
+        if idf_py_available():
+            lines.append("OK: ESP-IDF tools available (idf.py or IDF_PATH)")
+        else:
             lines.append(
-                f"WARN: mpy_cross still at ancient plate value 1.22.2; "
-                f"re-pin after inspect (plate default is now {PLATE_DEFAULT_MPY_CROSS})."
+                "WARN: ESP-IDF tools not found — language=c deploy needs idf.py / IDF_PATH"
             )
-        for line in pin_advice_lines(None, toml_pin):
-            lines.append(line)
+        if shutil.which("cmake"):
+            lines.append("OK: cmake on PATH (C host gate)")
+        else:
+            lines.append("WARN: cmake not on PATH (needed for C host gate)")
     else:
-        lines.append(
-            f"INFO: no silico.toml mpy_cross yet (scaffold plate default {PLATE_DEFAULT_MPY_CROSS}; "
-            "re-pin to device MicroPython after inspect)."
-        )
+        if mpremote_available():
+            lines.append("OK: mpremote available (device ops)")
+        else:
+            lines.append(
+                "WARN: mpremote not found - install for deploy/inspect (pip install mpremote)"
+            )
+
+        toml_pin = read_toml_mpy_cross(root)
+        if toml_pin:
+            lines.append(f"silico.toml mpy_cross={toml_pin}")
+            if toml_pin == "1.22.2":
+                lines.append(
+                    f"WARN: mpy_cross still at ancient plate value 1.22.2; "
+                    f"re-pin after inspect (plate default is now {PLATE_DEFAULT_MPY_CROSS})."
+                )
+            for line in pin_advice_lines(None, toml_pin):
+                lines.append(line)
+        else:
+            lines.append(
+                f"INFO: no silico.toml mpy_cross yet (scaffold plate default {PLATE_DEFAULT_MPY_CROSS}; "
+                "re-pin to device MicroPython after inspect)."
+            )
 
     ports = list_scored_ports()
     preferred = [p for p in ports if p.score >= 50]

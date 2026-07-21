@@ -15,6 +15,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 from silico.config_toml import read_product_defaults_path
+from silico.runtime import resolve_runtime
 
 
 @dataclass
@@ -32,9 +33,18 @@ def resolve_defaults_path(root: Path | None = None) -> Path | None:
     if configured:
         p = (root / configured).resolve()
         return p if p.is_file() else None
-    # Convention: firmware/defaults.py
+    # Convention: firmware/defaults.py (MicroPython plate)
     cand = root / "firmware" / "defaults.py"
-    return cand if cand.is_file() else None
+    if cand.is_file():
+        return cand
+    # C plate convention
+    for alt in (
+        root / "include" / "gcu" / "defaults.h",
+        root / "src" / "defaults.c",
+    ):
+        if alt.is_file():
+            return alt
+    return None
 
 
 def load_shipped_defaults(root: Path | None = None) -> dict[str, object]:
@@ -173,10 +183,73 @@ def scan_literal_controller_overrides(sim_path: Path) -> list[str]:
     return smells
 
 
+def _host_c_files(root: Path) -> list[Path]:
+    host = root / "host"
+    if not host.is_dir():
+        return []
+    out: list[Path] = []
+    for pat in ("**/*.c", "**/*.h", "**/*.cpp"):
+        out.extend(p for p in host.glob(pat) if p.is_file())
+    return sorted(set(out))
+
+
+def _c_file_uses_defaults(text: str, defaults_path: Path) -> bool:
+    """True if source shows compiled use of the shipped defaults table.
+
+    Accepts #include of the defaults header, or identifier tokens from common
+    plate symbols (GCU_DEFAULTS, TICK_SLEEP_MS, defaults table names).
+    Bare comments alone do not count (no #include / no identifier).
+    """
+    stem = defaults_path.stem
+    name = defaults_path.name
+    # Must include the header or the .c that defines the table
+    include_hit = (
+        f'#include "{name}"' in text
+        or f'#include <{name}>' in text
+        or f'#include "gcu/{name}"' in text
+        or f'#include <gcu/{name}>' in text
+        or f'#include "{stem}.h"' in text
+        or f'#include "gcu/{stem}.h"' in text
+    )
+    if not include_hit and defaults_path.suffix == ".c":
+        # linking the .c is enough if tests call into symbols from defaults.c
+        include_hit = stem in text and (
+            "GCU_DEFAULTS" in text
+            or "TICK_SLEEP_MS" in text
+            or "defaults" in text.lower()
+        )
+    if not include_hit:
+        return False
+    # Compiled use: reference a known shipped symbol (not only include for side effects)
+    symbols = (
+        "GCU_DEFAULTS",
+        "TICK_SLEEP_MS",
+        "gcu_defaults",
+        "defaults_table",
+        stem.upper() if stem.isidentifier() else "",
+    )
+    return any(s and s in text for s in symbols)
+
+
+def count_c_defaults_references(root: Path, defaults_path: Path) -> tuple[int, list[str]]:
+    hits = 0
+    details: list[str] = []
+    for path in _host_c_files(root):
+        try:
+            text = path.read_text(encoding="utf-8")
+        except OSError:
+            continue
+        if _c_file_uses_defaults(text, defaults_path):
+            hits += 1
+            details.append(str(path.relative_to(root)))
+    return hits, details
+
+
 def run_product_path_check(root: Path | None = None) -> ProductPathReport:
-    """Report whether sim exercises shipped defaults when a defaults module exists."""
+    """Report whether host tests exercise shipped defaults when a defaults module exists."""
     root = (root or Path.cwd()).resolve()
     lines: list[str] = []
+    cfg = resolve_runtime(root)
     declared = read_product_defaults_path(root)
     path = resolve_defaults_path(root)
 
@@ -196,13 +269,34 @@ def run_product_path_check(root: Path | None = None) -> ProductPathReport:
 
     if path is None:
         lines.append(
-            "INFO: no firmware/defaults.py (and no [host].product_defaults) — "
-            "product-path check skipped. For control loops, add a defaults module "
-            "with shipped gains/setpoints and at least one sim scenario that loads it."
+            "INFO: no shipped defaults file (and no [host].product_defaults) — "
+            "product-path check skipped. Add firmware/defaults.py (mpy) or "
+            "include/.../defaults.h (C) and at least one host test that uses it."
         )
         return ProductPathReport(ok=True, lines=lines, defaults_path=None, sim_refs=0)
 
     lines.append(f"Shipped defaults: {path.relative_to(root)}")
+
+    # --- C / language=c path ---
+    if cfg.is_c or path.suffix.lower() in {".h", ".c", ".hpp", ".cpp"}:
+        refs, detail = count_c_defaults_references(root, path)
+        lines.append(f"Host C files using shipped defaults (compiled use): {refs}")
+        for d in detail:
+            lines.append(f"  ref: {d}")
+        ok = True
+        if refs == 0:
+            ok = False
+            lines.append(
+                "FAIL: defaults file exists but no host C test uses it. "
+                "At least one host test must #include the defaults header and "
+                "reference a shipped symbol (e.g. GCU_DEFAULTS / TICK_SLEEP_MS). "
+                "A comment alone does not count."
+            )
+        else:
+            lines.append(f"OK: {refs} host C file(s) exercise shipped defaults.")
+        return ProductPathReport(ok=ok, lines=lines, defaults_path=path, sim_refs=refs)
+
+    # --- MicroPython / pytest path ---
     defaults = load_shipped_defaults(root)
     if defaults:
         preview = ", ".join(f"{k}={v!r}" for k, v in list(defaults.items())[:8])

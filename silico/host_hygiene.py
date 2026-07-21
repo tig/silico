@@ -14,6 +14,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 from silico.config_toml import read_deploy_core, read_hal_allow_machine
+from silico.runtime import resolve_runtime
 
 
 @dataclass
@@ -78,8 +79,39 @@ def try_host_import(path: Path, module_name: str, *, firmware_dir: Path) -> str 
 
 
 def run_hygiene(root: Path | None = None) -> HygieneReport:
-    """Check deploy-core host-importability and machine-import allowlist."""
+    """Check deploy-core host-importability and machine-import allowlist.
+
+    For ``language = c``, delegates to :func:`silico.gate_c.run_c_gate`.
+    """
     root = (root or Path.cwd()).resolve()
+    cfg = resolve_runtime(root)
+    if cfg.is_c:
+        import os
+
+        from silico.gate_c import run_c_gate
+
+        # Always run include hygiene. Subprocess host gate when build/host exists
+        # or SILICO_C_GATE_RUN_CMD=1; skip when SILICO_C_GATE_SKIP_CMD=1 (tests).
+        skip = os.environ.get("SILICO_C_GATE_SKIP_CMD", "").strip().lower() in (
+            "1",
+            "true",
+            "yes",
+        )
+        force = os.environ.get("SILICO_C_GATE_RUN_CMD", "").strip().lower() in (
+            "1",
+            "true",
+            "yes",
+        )
+        build_ready = (root / "build" / "host").is_dir()
+        run_cmd = (not skip) and (force or build_ready)
+        report = run_c_gate(root, run_command=run_cmd)
+        if not run_cmd and not skip:
+            report.lines.append(
+                "INFO: skipped [host].gate subprocess (no build/host yet). "
+                "Configure with cmake -S host -B build/host, or set SILICO_C_GATE_RUN_CMD=1."
+            )
+        return HygieneReport(report.ok, report.lines)
+
     lines: list[str] = []
     ok = True
 

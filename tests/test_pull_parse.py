@@ -19,8 +19,22 @@ def test_parse_ls_skips_banner_noise():
     out = _parse_ls_names(
         """
 MPY: soft reboot
->>> 
+>>>
    120 version.py
 """
     )
     assert out == ["version.py"]
+
+
+def test_parse_ls_keeps_extensionless_files():
+    out = _parse_ls_names(
+        """
+ls :
+          42 config
+         100 README
+         200 boot.py
+"""
+    )
+    assert "config" in out
+    assert "README" in out
+    assert "boot.py" in out

@@ -15,46 +15,91 @@ class PullResult:
     lines: list[str] = field(default_factory=list)
 
 
+# Banner / REPL noise (case-insensitive start or substring).
+_NOISE_PREFIXES = (
+    "ls ",
+    "ls:",
+    ">>>",
+    "...",
+    "mpy:",
+    "micropython ",
+    "type \"help",
+    "type 'help",
+    "traceback",
+    "file \"",
+    "  file \"",
+)
+
+
+def _is_noise_line(line: str) -> bool:
+    low = line.lower().strip()
+    if not low:
+        return True
+    for p in _NOISE_PREFIXES:
+        if low.startswith(p) or p in low and low.startswith("mpy"):
+            return True
+    if low.startswith("mpy:") or "soft reboot" in low:
+        return True
+    if "traceback (most recent" in low:
+        return True
+    # Bare prompt crumbs
+    if low in {">>>", "...", "soft reboot"}:
+        return True
+    return False
+
+
 def _parse_ls_names(ls_stdout: str) -> list[str]:
     """Parse mpremote ls output into remote basenames (skip dirs).
 
-    Tolerates banners, ``ls :`` headers, and size-prefixed rows.
+    Tolerates banners and size-prefixed rows. Keeps extensionless files
+    (e.g. ``config``, ``README``) while dropping pure noise tokens.
     """
     names: list[str] = []
     for raw in (ls_stdout or "").splitlines():
         line = raw.strip()
-        if not line:
+        if not line or _is_noise_line(line):
             continue
-        # Headers / noise
-        low = line.lower()
-        if low.startswith("ls ") or low.startswith("ls:"):
-            continue
-        if "traceback" in low or line.startswith(">>>"):
-            continue
-        # Boot banners rarely look like filenames; skip lines without a token
-        # that resembles a file/dir name.
         parts = line.split()
         if not parts:
             continue
-        name = parts[-1]
-        # strip optional leading colon remote form
+        # Size-prefixed: "   182 boot.py" or bare "boot.py"
+        if len(parts) >= 2 and parts[0].lstrip("-").isdigit():
+            name = parts[-1]
+        elif len(parts) == 1:
+            name = parts[0]
+        else:
+            # Multi-token non-size lines are usually banners
+            if any(w.lower() in {"reboot", "exception", "error"} for w in parts[:-1]):
+                continue
+            name = parts[-1]
         if name.startswith(":"):
             name = name[1:]
         if name.endswith("/"):
             continue
         if name in (".", ".."):
             continue
-        # Prefer real basenames: require an extension (boot.py, riff.u8.raw).
-        # Bare words from banners ("reboot", ">>>") are not files.
-        if "." not in name:
-            continue
-        if name.startswith("."):
-            continue
-        # Skip pure integers (size-only misparses)
         if name.isdigit():
             continue
+        # Reject tokens that are only punctuation
+        if not any(c.isalnum() or c in "._-" for c in name):
+            continue
+        # Single all-lowercase English noise words without digits/ext
+        if "." not in name and name.lower() in {
+            "reboot",
+            "reset",
+            "soft",
+            "hard",
+            "ok",
+            "fail",
+            "error",
+            "help",
+            "type",
+            "for",
+            "more",
+            "information",
+        }:
+            continue
         names.append(name)
-    # de-dupe preserve order
     seen: set[str] = set()
     out: list[str] = []
     for n in names:

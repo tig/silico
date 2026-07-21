@@ -5,11 +5,13 @@ from __future__ import annotations
 import shutil
 import sys
 from dataclasses import dataclass, field
+from pathlib import Path
 
 from silico import __version__
 from silico.mpy_pin import PLATE_DEFAULT_MPY_CROSS, pin_advice_lines, read_toml_mpy_cross
 from silico.mpremote_util import mpremote_available
 from silico.ports import IDENTITY_HINT, list_scored_ports
+from silico.workspace import detect_workspace
 
 
 @dataclass
@@ -18,13 +20,32 @@ class DoctorReport:
     lines: list[str] = field(default_factory=list)
 
 
-def run_doctor() -> DoctorReport:
+def run_doctor(*, root: Path | None = None) -> DoctorReport:
     lines: list[str] = []
     ok = True
 
     lines.append(f"silico {__version__}")
     py = sys.version.split()[0]
     lines.append(f"Python {py} ({sys.executable})")
+
+    ws = detect_workspace(root)
+    lines.append(f"Workspace mode: {ws.mode} ({ws.root})")
+    for r in ws.reasons:
+        lines.append(f"  - {r}")
+    if ws.mode == "silico-package":
+        lines.append(
+            "INFO: this tree is the silico package. Product Day 1 work belongs in a GCU repo "
+            "(do not scaffold a GCU into the silico checkout)."
+        )
+    elif ws.mode == "gcu":
+        lines.append(
+            "INFO: this tree looks like a GCU product root — scaffold/merge plate here (silico scaffold .)."
+        )
+    else:
+        lines.append(
+            "INFO: workspace unknown — if the operator started you inside a product checkout, "
+            "cd there; if empty, scaffold into a new product directory (not named silico)."
+        )
     if sys.version_info < (3, 11):
         lines.append("FAIL: need Python 3.11+")
         ok = False
@@ -73,7 +94,14 @@ def run_doctor() -> DoctorReport:
             lines.append(IDENTITY_HINT)
         else:
             lines.append(
-                "INFO: no preferred board (score>=50). Do not assume CH340 is the product board."
+                "INFO: no preferred board (score>=50). Pass --port after operator confirms. "
+                "Do not assume a demoted adapter is the product board."
             )
+
+    # Point agents at growing host knowledge (board caps, audio, first-flash).
+    lines.append(
+        "Host knowledge: silico/knowledge/ (ESP32 audio, first-flash notes). "
+        "When Day 1 friction is board/host-generic, add a note there (Make it better)."
+    )
 
     return DoctorReport(ok=ok, lines=lines)

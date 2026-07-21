@@ -22,14 +22,50 @@ KNOWN_DEVICE_TO_PIN: dict[str, str] = {
 
 
 def parse_micropython_version(text: str) -> str | None:
-    """Extract X.Y.Z from sys.version / inspect output."""
+    """Extract MicroPython X.Y.Z from inspect / sys output.
+
+    Prefer explicit MicroPython banners and ``sys.implementation`` tuples.
+    Never treat a bare language version (e.g. ``3.4.0`` on ancient ports) as
+    the MicroPython release — that led to nonsense mpy-cross pins.
+    """
     if not text:
         return None
     m = re.search(r"MicroPython\s+v?(\d+\.\d+\.\d+)", text, re.I)
     if m:
         return m.group(1)
-    m = re.search(r"\bv?(\d+\.\d+\.\d+)\b", text)
-    return m.group(1) if m else None
+    # sys.implementation repr: (name='micropython', version=(1, 28, 0), ...)
+    m = re.search(
+        r"name\s*=\s*['\"]micropython['\"][^\n]*version\s*=\s*\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)",
+        text,
+        re.I,
+    )
+    if m:
+        return f"{m.group(1)}.{m.group(2)}.{m.group(3)}"
+    m = re.search(r"version\s*=\s*\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*\)", text)
+    if m:
+        maj = int(m.group(1))
+        # Language versions are 3.x; MicroPython releases are 1.x today.
+        if maj == 1:
+            return f"{m.group(1)}.{m.group(2)}.{m.group(3)}"
+    # Last resort: first X.Y.Z that is not a 3.x language version
+    for m in re.finditer(r"\bv?(\d+)\.(\d+)\.(\d+)\b", text):
+        maj, minor, patch = int(m.group(1)), int(m.group(2)), int(m.group(3))
+        if maj == 3 and minor <= 14:
+            continue
+        return f"{maj}.{minor}.{patch}"
+    return None
+
+
+def is_ancient_micropython(device_version: str | None, *, minor_floor: int = 20) -> bool:
+    """True if device MicroPython is older than 1.<minor_floor> (upgrade before pin)."""
+    if not device_version:
+        return False
+    ver = parse_micropython_version(device_version) or device_version.strip()
+    parsed = parse_mpy_cross_pin(ver)
+    if not parsed:
+        return False
+    maj, minor, _patch = parsed
+    return maj == 1 and minor < minor_floor
 
 
 def parse_mpy_cross_pin(pin: str) -> tuple[int, int, int] | None:
@@ -73,6 +109,13 @@ def pin_advice_lines(device_version: str | None, toml_pin: str | None) -> list[s
     suggest = suggest_mpy_cross_pin(dev)
     lines.append(f"Device MicroPython: {dev}")
     lines.append(f"Suggested mpy-cross pin: {suggest}")
+
+    if is_ancient_micropython(dev):
+        lines.append(
+            "WARN: device MicroPython looks ancient (< 1.20). "
+            "Prefer a first-flash of a current port build (UF2 or esptool) before "
+            "`--apply-mpy-pin` — old UIFlow-era images mislead ABI pins."
+        )
 
     if dev in KNOWN_DEVICE_TO_PIN and KNOWN_DEVICE_TO_PIN[dev] != dev:
         lines.append(

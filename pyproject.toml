@@ -50,6 +50,7 @@ silico = [
   "plates/**/*.yml",
   "plates/**/*.yaml",
   "plates/**/.gitignore",
+  "knowledge/**/*.md",
 ]
 
 [tool.pytest.ini_options]

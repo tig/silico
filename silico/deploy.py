@@ -287,4 +287,17 @@ def deploy(
             return DeployResult(False, lines)
         lines.append(f"OK: {mode} verify {mod}")
 
+    # Verify uses the raw REPL and parks a running app loop. Agents must leave
+    # the device running the product boot entry for "hello metal" proof.
+    lines.append(
+        "INFO: deploy verify talks over the REPL and parks the app loop. "
+        "Soft-reset once more (or power cycle) so main.py runs as the product. "
+        "Prefer including --reset on write, then soft-reset again after verify if the face is dead."
+    )
+    lines.append(
+        "If cp/inspect failed with 'could not enter raw repl': the app owns CDC "
+        "(Ctrl-C is data). Open the product protocol door (`repl`) or catch the "
+        "boot window, then redeploy."
+    )
+
     return DeployResult(True, lines)

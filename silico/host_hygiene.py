@@ -99,11 +99,11 @@ def run_hygiene(root: Path | None = None) -> HygieneReport:
     # (tig/silico#46) — exactly the "verifies but doesn't run" class.
     for rel in core:
         p = root / rel
-        if not p.is_file():
+        if not p.is_file() or p.suffix.lower() != ".py":
             continue
         try:
             text = p.read_text(encoding="utf-8")
-        except OSError:
+        except (OSError, UnicodeDecodeError):
             continue
         for n, line in enumerate(text.splitlines(), 1):
             if line.strip().startswith("from __future__ import"):
@@ -145,7 +145,20 @@ def run_hygiene(root: Path | None = None) -> HygieneReport:
             ok = False
             continue
 
-        src = path.read_text(encoding="utf-8")
+        # Binary / non-Python deploy assets are copy-only (audio riffs, etc.).
+        if path.suffix.lower() not in {".py"}:
+            lines.append(
+                "  OK: non-Python deploy asset (copy-only; skip host import / machine scan)"
+            )
+            continue
+
+        try:
+            src = path.read_text(encoding="utf-8")
+        except UnicodeDecodeError:
+            lines.append(
+                "  OK: non-UTF-8 deploy asset (copy-only; skip host import / machine scan)"
+            )
+            continue
         machine_hits = scan_machine_imports(src)
         if machine_hits and stem not in allow:
             ok = False

@@ -16,23 +16,52 @@ class PullResult:
 
 
 def _parse_ls_names(ls_stdout: str) -> list[str]:
-    """Parse mpremote ls output into remote basenames (skip dirs)."""
+    """Parse mpremote ls output into remote basenames (skip dirs).
+
+    Tolerates banners, ``ls :`` headers, and size-prefixed rows.
+    """
     names: list[str] = []
-    for line in (ls_stdout or "").splitlines():
-        line = line.strip()
-        if not line or line.startswith("ls "):
+    for raw in (ls_stdout or "").splitlines():
+        line = raw.strip()
+        if not line:
             continue
-        # formats: "   1234 name.py" or "name.py"
+        # Headers / noise
+        low = line.lower()
+        if low.startswith("ls ") or low.startswith("ls:"):
+            continue
+        if "traceback" in low or line.startswith(">>>"):
+            continue
+        # Boot banners rarely look like filenames; skip lines without a token
+        # that resembles a file/dir name.
         parts = line.split()
         if not parts:
             continue
         name = parts[-1]
+        # strip optional leading colon remote form
+        if name.startswith(":"):
+            name = name[1:]
         if name.endswith("/"):
             continue
         if name in (".", ".."):
             continue
+        # Prefer real basenames: require an extension (boot.py, riff.u8.raw).
+        # Bare words from banners ("reboot", ">>>") are not files.
+        if "." not in name:
+            continue
+        if name.startswith("."):
+            continue
+        # Skip pure integers (size-only misparses)
+        if name.isdigit():
+            continue
         names.append(name)
-    return names
+    # de-dupe preserve order
+    seen: set[str] = set()
+    out: list[str] = []
+    for n in names:
+        if n not in seen:
+            seen.add(n)
+            out.append(n)
+    return out
 
 
 def pull_device(

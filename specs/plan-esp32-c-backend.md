@@ -68,15 +68,23 @@ Scaffold knows one plate. Deploy assumes mpremote. Inspect assumes a REPL. Gate 
 
 ## First consumer: xuss-c
 
-[tig/xuss-c](https://github.com/tig/xuss-c) is already half of the architecture I want: portable C under `include/` and `src/`, host CTest under `host/`, product contract in `spec.md`, firmware folder not yet a full IDF project.
+[tig/xuss-c](https://github.com/tig/xuss-c) is the designated first consumer. It is **far thinner than this plan reads if you skim the headings.** That is intentional.
 
-```text
-cmake -S host -B build/host
-cmake --build build/host
-ctest --test-dir build/host --output-on-failure
-```
+Today it is **spec only** (plus AGENTS, README, and a boot-riff asset). No `src/`, no `host/` CTest suite, no IDF `firmware/` tree, no `silico.toml`. The contract lives in `spec.md`. Firmware and host gates get built from that contract by an agent, on a branch, with an ambiguity log. I am not pretending the C twin of Xuss is half-implemented so silico can claim a free ride.
 
-Their spec calls the silico bridge optional for L1. This plan is that bridge. They can flash by hand with `idf.py` first. Silico Day 1 exit for C requires the bridge.
+What xuss-c already gives this plan:
+
+1. A real product contract (edge engine, protocol, rails, acceptance rows) that must stay language-agnostic at the port.
+2. Hardware fix: M5GO / classic ESP32 (same class as the Python twin).
+3. An explicit first consumer so #53 cannot close on hello-metal alone.
+
+What it does **not** give (yet), on purpose:
+
+1. Portable C sources or a host CTest layout to "reuse as-is."
+2. An IDF project ready for `silico deploy`.
+3. A silico pin or Day 1 leave-behind.
+
+The silico bridge in their spec is optional for product L1 by hand. This plan is still that bridge. Silico Day 1 exit for C requires it. Building domain and metal **in xuss-c** is consumer work, not evidence that the consumer already exists in code.
 
 #53's done-when names ESP32-S3 (Grady). Xuss-C is classic ESP32 on M5GO. One backend: ESP32-class under ESP-IDF. Prove on M5GO first. Re-pin `chip` for S3 later. Do not invent a second deploy story.
 
@@ -100,7 +108,7 @@ They do not need to know whether the image was five MicroPython files or one IDF
 3. "C" is the spine default, not a C++ ban. See above.
 4. Deploy still needs explicit `--port` and operator yes. Plan text names the flash in plain words.
 5. Hygiene is the allowlist, spelled differently. Python: `machine` imports. C: device headers only in allowlisted board TUs (`.c` or `.cpp`).
-6. Extract, then open. Make xuss-c Day 1 honest first. Promote into `plates/gcu-c` after that, not the reverse.
+6. Extract, then open. Grow the plate from what xuss-c forces, once xuss-c has real code. Do not invent a rich xuss-c tree inside this plan and call it done.
 7. Do not dual-maintain product domain in silico. The plate is hello-metal and a HAL skeleton only.
 
 ## Architecture
@@ -125,7 +133,7 @@ chip = "esp32"                    # esptool: esp32 | esp32s3 | …
 
 [host]
 gate = "cmake --build build/host --target test"
-product_defaults = "include/xuss/config.h"
+product_defaults = "include/xuss/config.h"   # example shape once xuss-c has sources; not present today
 
 [hal]
 allow_device_headers = ["board_m5go", "hal_board"]
@@ -251,7 +259,7 @@ Done when unit tests select mpy versus c from toml and unknown pairs fail in pla
 
 ### Phase 2: C gate, product-path, hygiene
 
-Done when `silico gate` and `silico product-path` pass on a fixture that mirrors xuss-c's host layout, and deliberate violations fail. Doctor reports IDF, language, gate, chip.
+Done when `silico gate` and `silico product-path` pass on a **fixture** that looks like the host layout a C GCU will grow into (not a claim that xuss-c already has that tree), and deliberate violations fail. Doctor reports IDF, language, gate, chip.
 
 ### Phase 3: Serial identity inspect
 
@@ -269,15 +277,15 @@ Done when `silico scaffold … --plate gcu-c` yields a host-green tree with a C 
 
 Hello-metal is a prerequisite. It does not close #53.
 
-Work in `tig/xuss-c` against a silico pin:
+xuss-c starts from **spec only**. This phase builds the product and wires silico; it does not "hook up" code that is already there.
 
-1. `silico.toml` with `language = c`, chip, project, identity.
-2. Full IDF project under `firmware/`.
-3. Host gate string wired to existing CMake/CTest.
-4. Boot identity before boot riff (their spec already requires that).
-5. Escape hatch present.
-6. Pin `tig-silico` when a tag exists.
-7. Ambiguity log in every PR. No parallel host spine.
+Work in `tig/xuss-c` against a silico pin (editable install or tag):
+
+1. Implement host L0 from `spec.md` (portable C, CMake, CTest, shipped defaults, product-path honesty).
+2. Implement metal from `spec.md` (ESP-IDF under `firmware/`, identity first, escape hatch, rails).
+3. Add `silico.toml` (`language = c`, chip, project, identity).
+4. Wire `[host].gate` to the new CTest path; pin `tig-silico` when a tag exists.
+5. Ambiguity log in every PR. No parallel host spine invented to avoid silico.
 
 Fix every spine bug found on the bench. Make it better than you found it.
 
@@ -322,9 +330,14 @@ Default silico CI must not require ESP-IDF. Host C compiler for plate fixtures i
 
 ## xuss-c notes
 
-Reuse portable domain, host CTest, identity macros, and product rails as-is. Align the identity string form with silico's parser.
+**Honest state:** spec-first skeleton on purpose. Do not update this plan as if host sources, IDF firmware, or CTest already exist. When those land, they land in `tig/xuss-c` PRs with an ambiguity log, not by rewriting history here into "already half done."
 
-Add the IDF project, `silico.toml`, boot identity before audio, and a host test that actually uses shipped defaults if one is missing.
+What the agent must still build (from `spec.md`):
+
+1. Portable domain and protocol under something like `include/` + `src/`.
+2. Host gate (`host/` + CMake + CTest) with product-path on shipped defaults.
+3. ESP-IDF `firmware/` with identity before boot riff, escape hatch, rails.
+4. `silico.toml` and a silico pin once deploy works.
 
 Keep out of silico: ESP32-Synth investigation, face/PIR/ANGLE/tach domain, L2 fixture versus Zakalwe.
 

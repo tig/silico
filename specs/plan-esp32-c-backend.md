@@ -31,15 +31,30 @@ The contracts are already language-agnostic. Only the plumbing is Python today:
 
 A C GCU that prints its identity line and answers the protocol is **indistinguishable at the port** from a Python one. That is the design working as intended.
 
-### 1.2 Not goals
+### 1.2 C vs C++ (what "C" means here)
 
-- Arduino core, PlatformIO, or C++ frameworks (one C path: **ESP-IDF** for ESP32-class; Pico SDK only later if an RP2040 GCU forces it).
+ESP32 / ESP-IDF fully supports modern C++ (STL, threads on FreeRTOS, optional exceptions/RTTI). Naming this backend and the first consumer **C** (xuss-c, `language = c`, `plates/gcu-c`) is a **product and spine choice**, not a claim that the chip is C-only. See also the same framing on [issue #53](https://github.com/tig/silico/issues/53).
+
+| Layer | Intent |
+|-------|--------|
+| **Host L0 domain** | Portable **C** behind the HAL seam — `cmake` + `ctest` with no IDF, no Arduino. Gate and product-path honesty stay simple. |
+| **Metal** | **ESP-IDF**. Prefer C for the hello-metal plate and for domain that must stay host-testable. **C++ is allowed** in board/UI/driver translation units when a product needs it (`extern "C" app_main`, same identity/protocol). |
+| **Silico runtime key** | One dual-runtime story first: `micropython` vs `c` (ESP-IDF). **Not** a third peer runtime called `cpp` / "C++." |
+
+A mostly-C++ product (Arduino-style FSMs, etc.) can still target ESP32; that does **not** mean silico's first non-Python backend is a C/C++ kitchen sink. Keep the matrix small: **one non-Python backend path (ESP-IDF)**, domain host-gated in C by default, C++ optional where the **product** owns the metal.
+
+### 1.3 Not goals
+
+- **Arduino core / PlatformIO as silico's official dual-runtime path.** One non-Python backend: **ESP-IDF** for ESP32-class (Pico SDK later only if an RP2040 GCU forces it).
+- **C++ as a separate silico language peer** (no `language = cpp` matrix; no requirement that every plate ship as C++).
 - Domain Xuss voice/edge/face code living in silico (stays in `tig/xuss` / `tig/xuss-c`).
 - Claiming C is required for battery life without a measured draw on the product build.
 - Soft-forking Bedside principles into a second essay; metal notes stay in `BEDSIDE.md`.
 - Making every existing GCU dual-language. Default plate remains MicroPython; C is opt-in plate + `silico.toml` runtime.
 
-### 1.3 Relationship to #57 (do first)
+**Not out of scope:** a GCU using **C++ inside its ESP-IDF `firmware/`** board backends while keeping host domain C and the silico verb path (`language = c`).
+
+### 1.4 Relationship to #57 (do first)
 
 #53 itself sequences **MicroPython-on-ESP gaps before the C backend**. #57 is that track for M5GO / classic ESP32:
 
@@ -112,10 +127,11 @@ They do **not** need to know whether the image was MicroPython sources or an IDF
 
 1. **Backend, not rewrite.** Runtime selected by `silico.toml`; product contracts stay language-agnostic.
 2. **Host first still means host first.** Domain logic compiles and tests on the host (CTest for C; pytest for Python). Flash confirms; it does not invent truth.
-3. **One scary surface language.** Deploy still needs explicit `--port` + operator yes; plan output names the flash target in plain words.
-4. **Hygiene is the allowlist, spelled differently.** Python: `machine` imports. C: device headers / ESP-IDF includes only in the board backend translation unit(s).
-5. **Extract, then open.** Build the minimum spine that makes xuss-c's Day 1 honest; promote patterns from xuss-c into `plates/gcu-c` once proven, not the reverse.
-6. **Do not dual-maintain product domain in silico.** Plate ships hello-metal + HAL skeleton only.
+3. **"C" is the spine default, not a C++ ban.** Host-gated domain is portable C; metal is ESP-IDF (C preferred; C++ allowed in board TUs). No third `language = cpp` peer (§1.2).
+4. **One scary surface language.** Deploy still needs explicit `--port` + operator yes; plan output names the flash target in plain words.
+5. **Hygiene is the allowlist, spelled differently.** Python: `machine` imports. C: device headers / ESP-IDF includes only in the board backend translation unit(s). Board TUs may be `.c` or `.cpp`.
+6. **Extract, then open.** Build the minimum spine that makes xuss-c's Day 1 honest; promote patterns from xuss-c into `plates/gcu-c` once proven, not the reverse.
+7. **Do not dual-maintain product domain in silico.** Plate ships hello-metal + HAL skeleton only.
 
 ---
 
@@ -134,6 +150,7 @@ fw_version = "0.0.1"
 [runtime]
 # Existing MicroPython plate keeps language default micropython / board pin.
 language = "c"                    # "micropython" | "c"  (default: micropython)
+                                  # "c" means ESP-IDF backend; not "C only, no C++ in firmware"
 toolchain = "esp-idf"             # only valid pairing for language = c in this plan
 # Pin the IDF release the GCU builds against (string; agent + doctor check).
 esp_idf = "v5.3.2"                # example; exact pin decided when plate ships
@@ -264,11 +281,11 @@ plates/gcu-c/
     CMakeLists.txt
     test_defaults.c         # product-path: uses shipped defaults unmodified
     test_hal_double.c
-  firmware/                 # ESP-IDF project
+  firmware/                 # ESP-IDF project (C by default; product may add .cpp board TUs)
     CMakeLists.txt
     main/
-      main.c                # boot: identity line, then app
-      hal_board.c           # only TU that may include device headers
+      main.c                # boot: identity line, then app (or main.cpp + extern "C" app_main)
+      hal_board.c           # only TU(s) that may include device headers (.c or .cpp)
   install/README.md         # Day-2 one-liner (idf path via silico deploy)
 ```
 
@@ -468,10 +485,11 @@ Xuss (MicroPython) and Xuss-C share **acceptance rows**, not firmware trees. Sil
 | Port re-enumerates after flash; COM changes | deploy verify re-runs wait/list; never reuse stale COM without re-discover (BEDSIDE) |
 | Identity grammar drifts between GCU products | single parser; plate documents the line format; tests lock examples |
 | C hygiene false positives on third_party | scan only product `src/` + `include/` + non-allowlisted firmware TUs; allowlist board files |
-| Scope creep into Arduino/PlatformIO | refuse in review; one toolchain in toml enum |
-| Closing #53 on fixtures alone | §6 requires real board for metal rows |
+| Scope creep into Arduino/PlatformIO as silico backends | refuse in review; one non-Python toolchain in toml enum (`esp-idf`) |
+| Scope creep into `language = cpp` as a third peer | refuse; C++ stays a product choice inside IDF firmware, not a silico runtime key (§1.2) |
+| Closing #53 on fixtures alone | §6 requires real board for metal rows; xuss-c mandatory |
 | Grady S3 vs M5GO classic ESP32 differences | chip/target in toml; prove classic first; open S3 checklist item if needed |
-| Product-path scanner too weak (comments pass) | require include or symbol use, same spirit as Python AST gate |
+| Product-path scanner too weak (comments / bare `#include` pass) | require **compiled use** into the product path (§4.6), same spirit as Python AST gate |
 
 ---
 
@@ -526,7 +544,8 @@ Docs + close #53; S3 pin as follow-up if unproven
 3. **Build invocation** — always `idf.py -C firmware build flash` vs cmake+esptool direct; prefer `idf.py` for one documented path.  
 4. **Whether `silico flash` exists** as a synonym for first-image write vs only `deploy` for C (lean: **deploy only**, plan text covers first and update).  
 5. **Baud and USB-JTAG** — S3 native USB vs UART bridge; document per board in product silico.toml, not hard-coded forever to 115200-only without override.  
-6. **CI IDF** — none in default silico CI until cost is justified; xuss-c may add its own IDF workflow later.
+6. **CI IDF** — none in default silico CI until cost is justified; xuss-c may add its own IDF workflow later.  
+7. **C++ in plate metal** — plate hello-metal stays C; document that product `firmware/` may add `.cpp` board TUs without changing `language = c` (hygiene allowlist still applies).
 
 ---
 

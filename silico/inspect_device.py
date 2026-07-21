@@ -80,11 +80,22 @@ def inspect(
         )
 
     lines.append(f"Port: {p} ({chosen.label})")
-    r = exec_on_device(p, "import sys; print(sys.platform); print(sys.version)")
+    # Prefer implementation.version for ABI; language version alone misleads (UIFlow).
+    r = exec_on_device(
+        p,
+        "import sys\n"
+        "print(sys.platform)\n"
+        "print(sys.implementation)\n"
+        "print(sys.version)\n",
+    )
     if r.returncode != 0:
         lines.append("FAIL: could not talk to device (unplugged, wrong port, or held by another program)")
         if r.stderr:
             lines.append(r.stderr.strip())
+        lines.append(
+            "If an app owns the CDC (Ctrl-C is data), open the product protocol door "
+            "(`repl`) or soft-reset into the boot window, then re-inspect."
+        )
         return InspectReport(False, p, lines)
     repl_out = (r.stdout or "").strip() or "(no output)"
     lines.append("REPL:")
@@ -132,6 +143,15 @@ def inspect(
             )
             lines.append(IDENTITY_HINT)
             return InspectReport(False, p, lines, device_mpy=None)
+        from silico.mpy_pin import is_ancient_micropython
+
+        if is_ancient_micropython(device_mpy):
+            lines.append(
+                "FAIL: refusing --apply-mpy-pin on ancient MicroPython "
+                f"({device_mpy}). First-flash a current port build, then re-inspect."
+            )
+            lines.append(IDENTITY_HINT)
+            return InspectReport(False, p, lines, device_mpy=device_mpy)
         lines.append("Applying mpy-cross pin on host (device not written):")
         for line in apply_mpy_cross_pin(device_mpy, root=root):
             lines.append("  " + line)

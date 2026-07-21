@@ -50,3 +50,31 @@ def test_cli_gate_on_plate(tmp_path: Path, monkeypatch):
     scaffold(dest)
     monkeypatch.chdir(dest)
     assert main(["gate"]) == 0
+
+def test_hygiene_skips_binary_deploy_assets(tmp_path: Path):
+    (tmp_path / "firmware").mkdir()
+    (tmp_path / "firmware" / "version.py").write_text(
+        'FW_NAME = "X"\nFW_VERSION = "0.0.1"\n', encoding="utf-8"
+    )
+    (tmp_path / "firmware" / "main.py").write_text(
+        "def init(hal=None):\n    return {}\n\ndef tick(state):\n    return state\n",
+        encoding="utf-8",
+    )
+    (tmp_path / "assets").mkdir()
+    (tmp_path / "assets" / "riff.u8.raw").write_bytes(bytes([128, 200, 50, 0]))
+    (tmp_path / "silico.toml").write_text(
+        """
+[hal]
+allow_machine = []
+[deploy]
+core = [
+  "firmware/version.py",
+  "firmware/main.py",
+  "assets/riff.u8.raw",
+]
+""",
+        encoding="utf-8",
+    )
+    report = run_hygiene(tmp_path)
+    assert report.ok, "\n".join(report.lines)
+    assert any("non-Python deploy asset" in line for line in report.lines)

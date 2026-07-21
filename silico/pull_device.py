@@ -15,24 +15,98 @@ class PullResult:
     lines: list[str] = field(default_factory=list)
 
 
+# Banner / REPL noise (case-insensitive start or substring).
+_NOISE_PREFIXES = (
+    "ls ",
+    "ls:",
+    ">>>",
+    "...",
+    "mpy:",
+    "micropython ",
+    "type \"help",
+    "type 'help",
+    "traceback",
+    "file \"",
+    "  file \"",
+)
+
+
+def _is_noise_line(line: str) -> bool:
+    low = line.lower().strip()
+    if not low:
+        return True
+    for p in _NOISE_PREFIXES:
+        if low.startswith(p) or p in low and low.startswith("mpy"):
+            return True
+    if low.startswith("mpy:") or "soft reboot" in low:
+        return True
+    if "traceback (most recent" in low:
+        return True
+    # Bare prompt crumbs
+    if low in {">>>", "...", "soft reboot"}:
+        return True
+    return False
+
+
 def _parse_ls_names(ls_stdout: str) -> list[str]:
-    """Parse mpremote ls output into remote basenames (skip dirs)."""
+    """Parse mpremote ls output into remote basenames (skip dirs).
+
+    Tolerates banners and size-prefixed rows. Keeps extensionless files
+    (e.g. ``config``, ``README``) while dropping pure noise tokens.
+    """
     names: list[str] = []
-    for line in (ls_stdout or "").splitlines():
-        line = line.strip()
-        if not line or line.startswith("ls "):
+    for raw in (ls_stdout or "").splitlines():
+        line = raw.strip()
+        if not line or _is_noise_line(line):
             continue
-        # formats: "   1234 name.py" or "name.py"
         parts = line.split()
         if not parts:
             continue
-        name = parts[-1]
+        # Size-prefixed: "   182 boot.py" or bare "boot.py"
+        if len(parts) >= 2 and parts[0].lstrip("-").isdigit():
+            name = parts[-1]
+        elif len(parts) == 1:
+            name = parts[0]
+        else:
+            # Multi-token non-size lines are usually banners
+            if any(w.lower() in {"reboot", "exception", "error"} for w in parts[:-1]):
+                continue
+            name = parts[-1]
+        if name.startswith(":"):
+            name = name[1:]
         if name.endswith("/"):
             continue
         if name in (".", ".."):
             continue
+        if name.isdigit():
+            continue
+        # Reject tokens that are only punctuation
+        if not any(c.isalnum() or c in "._-" for c in name):
+            continue
+        # Single all-lowercase English noise words without digits/ext
+        if "." not in name and name.lower() in {
+            "reboot",
+            "reset",
+            "soft",
+            "hard",
+            "ok",
+            "fail",
+            "error",
+            "help",
+            "type",
+            "for",
+            "more",
+            "information",
+        }:
+            continue
         names.append(name)
-    return names
+    seen: set[str] = set()
+    out: list[str] = []
+    for n in names:
+        if n not in seen:
+            seen.add(n)
+            out.append(n)
+    return out
 
 
 def pull_device(

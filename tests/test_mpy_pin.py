@@ -17,6 +17,25 @@ def test_parse_micropython_from_sys_version():
     assert parse_micropython_version(text) == "1.28.0"
 
 
+def test_parse_prefers_implementation_not_language():
+    # Ancient UIFlow-style: language 3.4.0 must not win over implementation 1.12.0
+    text = (
+        "esp32\n"
+        "(name='micropython', version=(1, 12, 0), mpy=10757)\n"
+        "3.4.0\n"
+    )
+    from silico.mpy_pin import parse_micropython_version
+
+    assert parse_micropython_version(text) == "1.12.0"
+
+
+def test_ancient_micropython_detected():
+    from silico.mpy_pin import is_ancient_micropython
+
+    assert is_ancient_micropython("1.12.0") is True
+    assert is_ancient_micropython("1.28.0") is False
+
+
 def test_parse_mpy_cross_pin_rc():
     assert parse_mpy_cross_pin("1.28.0rc0.post2") == (1, 28, 0)
     assert parse_mpy_cross_pin("1.27.0.post2") == (1, 27, 0)

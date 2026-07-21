@@ -13,7 +13,8 @@ Context is finite. **Do not** open every manners file into the active window.
 |----------|------|-----|-----------|
 | 1 | This file (`AGENTS.md`) | Silico spine: Day 1 phases, silico CLI, plate, host/metal DoD | — |
 | 2 | `bedside.toml` + contract path it names | Normative portable manners (nine principles) | Already summarized below and you are not changing manners |
-| 3 | `BEDSIDE.md` | **Metal domain pack only** (COM, UF2, deploy identity) | Already in Day 1 metal sections of this file for the current step |
+| 3 | `BEDSIDE.md` | **Metal domain pack only** (COM, first-flash, deploy identity) | Already in Day 1 metal sections of this file for the current step |
+| 4 | One topic under `silico/knowledge/` | Board/host caps (ESP32 audio, first-flash notes) | Open **only** the topic you need; never dump the whole tree |
 | — | `third_party/bedside/README.md`, vendored stub `AGENTS.md`/`BEDSIDE.md`, full `eval/` docs | Upstream product / scoring | Almost always — use `bedside doctor|eval|ask|step` instead of loading prose |
 | — | Full FAQ / tenets | Strategy | Only when the task is doctrine, not a metal slice |
 
@@ -24,9 +25,10 @@ Context is finite. **Do not** open every manners file into the active window.
 | Nine principles, anti-patterns, portable persona | **tig/bedside** `contract/` | One short summary + pin (no kinder soft-fork) |
 | Operator gates (`ask` / `step`) | **tig/bedside** surface + CLI | One short pointer here; agent host pickers OK if same contract |
 | Day 1 phases, silico verbs, plate, mpy-cross, deploy manifest | **silico AGENTS** + code | Not bedside |
-| COM / UF2 / board identity / metal deploy confirm | **silico BEDSIDE.md** domain pack + silico CLI | AGENTS Day 1 may point here; avoid full restatement |
+| COM / first-flash (UF2 **or** esptool) / board identity / metal deploy | **silico BEDSIDE.md** + `silico/knowledge/first-flash.md` + CLI | AGENTS Day 1 may point here; avoid full restatement |
+| Board/host capability notes (audio, bridges, …) | **silico/knowledge/** (self-improving) | Product must not soft-fork; agents **append** host truths here |
 | Eval rubric / fixtures | **tig/bedside** `eval/` | Run CLI; do not paste rubric into context |
-| Product domain (idle, vehicle, …) | **GCU repo** | Never silico or bedside |
+| Product domain (idle, vehicle, tunes-as-product, …) | **GCU repo** | Never silico or bedside |
 
 ### Context budget rule
 
@@ -114,7 +116,8 @@ Anytime the path is rough and you had to **guess, correct, reverse, or research*
 2. **Prefer a durable fix in the right repo.**
    - **Portable operator manners** (contract, surface patterns, CLI init/doctor/eval/ask/step, fixtures, rubric): file and/or fix on **tig/bedside**. Silico is customer 0.
    - **Metal host spine** (ports, deploy, GCU plate, Day 1 playbook specifics): fix in **tig/silico**.
-   - **Product domain** (idle control, vehicle): fix in the **GCU** repo.
+   - **Board/host capability knowledge** (ESP32 audio, first-flash, CDC bridges): extend **`silico/knowledge/`** in the same PR when the truth is reusable (see that tree’s README).
+   - **Product domain** (idle control, vehicle, product songs): fix in the **GCU** repo.
 3. **If you cannot land the fix now, file an issue.**
    - Bedside: gh issue create -R tig/bedside ...
    - Silico: gh issue create -R tig/silico ...
@@ -130,6 +133,8 @@ When a human says: *See https://github.com/tig/silico. Follow the getting starte
 
 Run this playbook under **Help the operator**. Confirm each phase with them before advancing.
 
+**One-shot intent:** if the operator already opened the agent **inside the GCU checkout**, stay there. Do not create a second product repo or scaffold into a silico package tree. Silico never encodes a specific product codename; product truth is `spec.md` / product `AGENTS.md` / `README.md`.
+
 ### Phase 0 - Welcome the operator (proactive, safe)
 
 Be **proactive in a safe way.** Before the start gate, **do** read-only discovery so your welcome is grounded - do **not** wait for the human to ask whether Git exists.
@@ -138,8 +143,7 @@ Be **proactive in a safe way.** Before the start gate, **do** read-only discover
 
 - Detect OS; run `git --version`, Python version (`py -3` / `python3`), `gh --version`, `pip` check
 - `gh auth status` (do not start `gh auth login` until after go, unless they already asked)
-- Read product `README` / `spec.md` / workspace layout
-- If silico is already installed: `silico version` / `silico doctor` (read-only port list is fine)
+- Read product `README` / `spec.md` / workspace layout; run `silico doctor` if installed (**workspace mode** line)
 - List serial ports only as information - **do not** inspect/deploy metal or assume a board identity
 
 **Not allowed before start gate:**
@@ -152,7 +156,7 @@ Then speak in plain language. Structure (tone may vary; skeleton may not):
 
 1. **Welcome** to Silico.
 2. **Role:** you are here to get their GCU shipped and will step them through it.
-3. **What you know now** - product intent **and** machine readiness (what is already OK vs what will need install after go), including **whether a preferred USB board is already talking**.
+3. **What you know now** - product intent **and** machine readiness (what is already OK vs what will need install after go), including **workspace mode** (GCU root vs silico package vs unknown) and **whether a preferred USB board is already talking**.
 4. **Next step** in one short sentence (the first *mutating* step after go). Frame Day 1 as **host plate + device talk** - not host-only.
 5. **Start gate:** ask whether to start or adjust something. Prefer the agent product's **structured question UI** when available (not a multi-option free-text paragraph).
 
@@ -160,8 +164,8 @@ Example shape:
 
 > Welcome to Silico. I'm here to get your GCU shipped and will step you through it all.
 > Here's what I know now about what you want: …
-> On this machine I already checked: Git OK, Python 3.12 OK, gh logged in; preferred board not on USB yet (only a CH340).
-> The next step is scaffold the plate, get host tests green, then get the board talking over USB (REPL) before we write anything.
+> On this machine I already checked: Git OK, Python 3.12 OK, gh logged in; workspace mode=gcu; preferred board not on USB yet (only a demoted adapter).
+> The next step is pin silico, scaffold/merge the plate here, get host tests green, then get the board talking over USB before we write anything.
 > Do you want me to start? Or should I adjust something?
 
 Only after a clear **go** (or after applying their adjustments and re-confirming) may you begin **mutating** Phase A work (installs, scaffold, repo create, device paths).
@@ -177,19 +181,25 @@ Only after a clear **go** (or after applying their adjustments and re-confirming
 5. Ensure **pip** works for that same Python.
 6. Summarize ready vs needs a human click. Stop cleanly if an installer UI requires them.
 
-### Phase B - GitHub identity and GCU repo
+### Phase B - Workspace lock (GCU root) and GitHub identity
 
-1. Check `gh auth status`. If not logged in, walk them through `gh auth login` **one prompt at a time** (browser/device code). Do not assume they have used `gh` before.
-2. Ask: use an existing private GCU repo URL, or create new? Offer defaults; do not require Git vocabulary.
-3. If create new:
-  - Confirm a product or codename for the repo name (not `silico`).
-  - Create private repo with `gh` and clone, or create empty then push after scaffold.
-4. If existing: clone or open that repo as the **workspace root for product work**.
-5. Remind them: silico stays `github.com/tig/silico`; **their product** is the private GCU repo.
+**B0 — Lock the product workspace (do this before inventing a repo):**
+
+1. Run `silico doctor` (or detect markers): `spec.md`, `silico.toml`, `firmware/`, product `AGENTS.md`.
+2. **`Workspace mode: gcu`** → **cwd is the product root.** Do **not** ask “create a new repo?” Do **not** clone elsewhere. All scaffold/deploy work stays here.
+3. **`Workspace mode: silico-package`** → you are inside **tig/silico**. Do **not** scaffold a customer GCU into this tree. Ask the operator to open/create the product checkout, or only work on silico itself if that is the task.
+4. **`unknown`** → empty dir or unrelated tree: then Phase B1 (create/clone product).
+
+**B1 — GitHub identity (when a remote product repo is needed):**
+
+1. Check `gh auth status`. If not logged in, walk them through `gh auth login` **one prompt at a time**.
+2. If cwd is already a git GCU with `origin`, use it.
+3. If create new: confirm a product or codename (**not** `silico`); `gh` create private; clone **or** init in the empty cwd.
+4. Remind them: silico stays `github.com/tig/silico`; **their product** is the GCU repo.
 
 ### Phase C - Pin silico and scaffold the GCU
 
-**Do not hand-invent a parallel spine.** Use the package + plate.
+**Do not hand-invent a parallel spine.** Use the package + plate. **Always `silico scaffold .` from the product root** (Phase B0), never from a silico package checkout.
 
 1. Install silico on the host (prefer **tag**, not `@main`):
 
@@ -215,11 +225,10 @@ If install fails, **stop**, say the pin is broken, and file/fix on `tig/silico`.
 Product specs must **not** name a MicroPython version or hand-derive the PyPI pin. That is board/toolchain knowledge.
 
 1. Plate defaults ship a **recent stable** PyPI `mpy-cross` as a starting point only.
-2. After the board talks: `silico inspect --port COMx --apply-mpy-pin` — Silico reads device MicroPython, maps to an installable pin (including matching-minor rc when stable is missing on PyPI), and writes **both** `silico.toml` `[runtime].mpy_cross` and `requirements-dev.txt`.
-3. Do **not** leave multi-line ABI essays in the product repo; re-run apply if the board firmware changes.
-4. Packaging: install **`tig-silico`**, never bare `pip install silico` (unrelated PyPI package). Prefer tag `v0.1.4+` (name=`tig-silico`); `v0.1.3` and earlier declare `name=silico` and fail as `tig-silico@v0.1.3`.
+2. After the board talks: `silico inspect --port COMx --apply-mpy-pin` — Silico reads device MicroPython **from `sys.implementation`**, maps to an installable pin, and writes **both** `silico.toml` `[runtime].mpy_cross` and `requirements-dev.txt`.
+3. Refuse/warn on **ancient** device images; first-flash a current port before applying pins.
+4. Packaging: install **`tig-silico`**, never bare `pip install silico`. Prefer tag `v0.1.4+`.
 5. `silico doctor` warns on ancient plate pins. Fix before claiming the host compile gate is honest.
-
 
 2. Scaffold the plate (merge into existing GCU is OK; product `README.md` / `spec.md` are never overwritten):
 
@@ -229,47 +238,53 @@ silico scaffold .
 # --force overwrites non-protected plate files only (not README/spec)
 ```
 
-3. Set product identity in `firmware/version.py` and `silico.toml` (plate defaults are generic).
-4. Run host gate until green: `python -m pytest -q` (or `silico doctor` then pytest).
-5. Commit and push. Confirm CI/Actions is on. If the human must enable Actions, give exact clicks.
-6. **Do not stop here.** Host gate green is a checkpoint. **Immediately continue into Phase D** (device USB talk + prep). Do not treat "I'll come back before the board" as the plan after scaffold unless the operator explicitly said to defer metal.
+3. Set product identity in `firmware/version.py` and `silico.toml` from **product files** when present (README title, `spec.md` identity lines); plate defaults are generic only.
+4. If `spec.md` exists: host gate proves the **plate + product path** first; domain behavior comes from the **product** spec/AGENTS (not invented in silico). Open host knowledge topics only when the product needs board caps (e.g. `silico/knowledge/esp32-audio.md` for DAC/speaker work).
+5. Run host gate until green: `python -m pytest -q` (or `silico doctor` then pytest / `silico gate` / `silico product-path`).
+6. Commit and push. Confirm CI/Actions is on.
+7. **Do not stop here.** Host gate green is a checkpoint. **Immediately continue into Phase D**.
 
 ### Phase D - Talk to real hardware (hello metal)
 
 **Required for Day 1 exit** (not optional polish). Goal: board **talks over USB**, is **prepped** (REPL when that is the runtime), then a **distinct, documented** blink/app; reconnect is **repeatable**.
 
-Metal COM/UF2/identity/deploy rules live once in **[BEDSIDE.md](BEDSIDE.md)** (domain pack). Do not re-open the full Bedside contract README for this phase. Prefer tools: `silico wait-device`, `inspect`, `pull`, `deploy`, `monitor`, and `bedside ask` / `bedside step` for human gates.
+Metal COM / first-flash / identity / deploy rules: **[BEDSIDE.md](BEDSIDE.md)** + **[silico/knowledge/first-flash.md](silico/knowledge/first-flash.md)**. Prefer tools: `silico wait-device`, `inspect`, `pull`, `deploy`, `monitor`, and `bedside ask` / `bedside step`.
 
 #### Phase D0 - Device talks (prep) before any deploy plan
 
-Until true, device is **not** prepped (details: BEDSIDE.md metal first-run + scary surfaces):
+Until true, device is **not** prepped:
 
-1. Preferred port appears after a **real** poll (`silico wait-device`, often `--timeout 300`) — or operator confirmed a named port after inspect.
-2. `silico inspect --port COMx` proves REPL **or** you are walking UF2 first-flash once.
-3. Operator confirmed **this port is the product board** this session (`bedside ask --id confirm-board …` or host structured UI; default **no** if unsure).
-4. Only then: deploy plan → operator gate (`bedside ask --id confirm-deploy …`) → `--yes` write → `--verify` (optional `--verify-import main` is compile-not-import for boot modules; `--prune` / `--reset` as needed).
+1. A real poll shows a candidate (`silico wait-device`, often `--timeout 300`) **or** operator names a port after `silico doctor` (ESP-class CDC may score as preferred; still confirm identity).
+2. `silico inspect --port COMx` proves modern REPL **or** you walk **first-flash once** (UF2 **or** esptool — see knowledge/first-flash).
+3. Operator confirmed **this port is the product board** (`bedside ask --id confirm-board …` or host UI; default **no** if unsure).
+4. Only then: dry deploy → `bedside ask --id confirm-deploy …` → `--yes --verify --reset` → **soft-reset again if the app loop is not running** (verify parks the REPL).
 
-**If the board was missing at Phase 0:** after host gate, ask only for the data cable plug, then **immediately** run a long `wait-device` poll. Do not end the turn with "plug it in whenever" and no poll.
+**If the board was missing at Phase 0:** after host gate, ask only for the data cable plug, then **immediately** run a long `wait-device` poll.
 
 **Anti-pattern:** host gate green + "hardware later" with no wait-device/inspect/REPL proof.
 
-**Phase D steps (order only — rules in BEDSIDE.md):**
+**Phase D steps (order only — details in BEDSIDE + knowledge/first-flash):**
 
-1. Data cable (`bedside step --id plug-usb …` if they must act) → long `silico wait-device`.
-2. `silico doctor` / `silico inspect --port COMx` → `bedside ask --id confirm-board …`.
-3. No REPL → UF2 once (BOOT+RESET → `RPI-RP2`) → re-inspect until talk.
+1. Data cable (`bedside step --id plug-usb …` if needed) → long `silico wait-device`.
+2. `silico doctor` / `silico inspect --port COMx` → confirm-board gate.
+3. No modern REPL → **first-flash once**:
+   - RP2040-class: UF2 (BOOT+RESET → `RPI-RP2`).
+   - ESP32-class: esptool erase + `ESP32_GENERIC` (or board variant) at `0x1000` (see knowledge/first-flash).
+   - Re-inspect until talk; then `--apply-mpy-pin` only on non-ancient MP.
 4. Optional backup: `silico pull <dir> --port COMx`.
-5. Dry plan: `silico deploy --port COMx` (manifest / files) **without** `--yes` → `bedside ask --id confirm-deploy …` (recommended **no** until they mean it) → `--yes --verify` (and friends).
-6. Optional: `silico monitor --port COMx --duration 10`.
-7. Document `install/` leave-behind (BEDSIDE Day-2 one-liner + LED "good").
+5. Dry plan: `silico deploy --port COMx` → confirm-deploy → `silico deploy --port COMx --yes --verify --reset`.
+6. Soft-reset so **main.py runs as the app** (deploy verify uses REPL and parks the loop). If raw REPL fails: product `repl` door or boot window (Ctrl-C may be data).
+7. Optional: `silico monitor --port COMx --duration 10`.
+8. Document `install/` leave-behind (Day-2 one-liner + LED/face “good”).
 
+Non-Python deploy assets (e.g. audio riffs) may appear in `[deploy].core`; host hygiene skips them as copy-only.
 
 ### Phase E - CI proves metal change
 
-1. Ask the human to open a GitHub Issue on the **GCU** repo. Give them the exact title to paste, e.g. `Change the firmware blink pattern (distinct A vs B)`. If they do not know how to open an issue, give the UI path or create it with `gh` after they approve.
-2. When the issue exists, implement it: firmware behavior change **and** host tests/CI green.
-3. Push or PR. You watch CI; you fix red builds.
-4. Deploy to the board **only after operator confirmation** again if overwriting; ask them only to confirm the blink pattern matches the issue.
+1. Ask the human to open a GitHub Issue on the **GCU** repo (or create with `gh` after approve). Title example: `Change the firmware blink pattern (distinct A vs B)`.
+2. Implement: firmware behavior change **and** host tests/CI green. Domain follows product `spec.md` when present.
+3. Push or PR. Watch CI; fix red builds.
+4. Deploy only after operator confirmation again if overwriting; confirm the visible/audible acceptance matches the issue.
 5. Close the issue with a short note linking the commit/PR.
 
 Closed loop: **issue → agent → host gate → CI → metal**.

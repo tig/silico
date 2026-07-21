@@ -2,7 +2,7 @@
 
 **Prompt for metal.**
 
-Silico is an open dev experience for edge products built by AI agents. It scaffolds a testable firmware repository, proves changes on the host, identifies the intended device, refuses unsafe writes, deploys the application, and verifies what is actually running on the device.
+Silico makes building maintainable firmware for embedded devices simple. Given a device spec, it first guides AI agents to scaffold a Github repository setup for long-term maintainability. Agents then loop to engineer robust firmware, unit and smoke tests, a simulator, ci/cd using both real devices and the simulator, and an end-user installer/ugrader.
 
 The human interface is a coding agent; not an installation guide or shell tutorial. To start, open your coding agent and say:
 

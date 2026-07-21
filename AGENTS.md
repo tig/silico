@@ -25,6 +25,7 @@ Context is finite. **Do not** open every manners file into the active window.
 | Nine principles, anti-patterns, portable persona | **tig/bedside** `contract/` | One short summary + pin (no kinder soft-fork) |
 | Operator gates (`ask` / `step`) | **tig/bedside** surface + CLI | One short pointer here; agent host pickers OK if same contract |
 | Day 1 phases, silico verbs, plate, mpy-cross, deploy manifest | **silico AGENTS** + code | Not bedside |
+| Operator language (first prompt orient, first-use term defs, big-step why/where) | **silico AGENTS** + [lexicon](specs/lexicon.md) | Not bedside principles; domain on top of contract |
 | COM / first-flash (UF2 **or** esptool) / board identity / metal deploy | **silico BEDSIDE.md** + `silico/knowledge/first-flash.md` + CLI | AGENTS Day 1 may point here; avoid full restatement |
 | Board/host capability notes (audio, bridges, …) | **silico/knowledge/** (self-improving) | Product must not soft-fork; agents **append** host truths here |
 | Eval rubric / fixtures | **tig/bedside** `eval/` | Run CLI; do not paste rubric into context |
@@ -83,6 +84,72 @@ Summary (full contract is normative; do not soft-fork):
 Silico domain (metal / host path) details: **BEDSIDE.md** and Day 1 phases below. Host tools that encode manners: `silico doctor`, `wait-device`, `inspect`, `deploy --yes`, plus Bedside operator gates below.
 
 Prove manners: `bedside doctor` and `bedside eval` (vendored fixtures include `operator-gate-ask` / `operator-gate-step`).
+
+### Operator language (silico domain — not a second contract)
+
+These rules sit **on top of** Bedside for this product. They do not soften or replace the nine principles. Phrase book: [specs/lexicon.md](specs/lexicon.md).
+
+#### First prompt orients the operator
+
+The **first operator-facing message** of a Day 1 (or “getting started”) session must help them understand **what they started**, not only what you will do next. Required shape (tone may vary; skeleton may not):
+
+1. **What Silico is** — one or two plain sentences (open host-first spine / “prompt for metal”: agents build and maintain shippable edge products on real boards; Silico is the host tooling and plate, not the product brand).
+2. **What a GCU is** — define on first use, then **summarize this GCU** from product truth (`README.md`, `spec.md`, product `AGENTS.md`, workspace markers). Name intent, not codename theater. If product docs are thin, say what is known and what you will clarify after go.
+3. **Your role** — you will step them through host setup, plate, proof on the computer, then the board talking over USB.
+4. **What you know now** — machine readiness + workspace mode + whether a board is already talking (read-only discovery only).
+5. **Where Day 1 is headed** — one short map (host tools → product workspace → plate/host tests → board talk → optional domain loop).
+6. **Next mutating step** + **start gate** (structured yes/adjust when available).
+
+Do **not** open with unexplained jargon (“scaffold the plate, pin the spine, green the host gate”) before those words have been defined.
+
+#### Define silico terms on first use
+
+Anytime you use a **silico term** for the **first time in the session**, define it inline in plain language (parenthetical or short clause). After that, the short form is fine for the rest of the session.
+
+| Term (define on first use) | Operator-facing sense (from lexicon; do not invent softer meanings) |
+|----------------------------|----------------------------------------------------------------------|
+| **GCU** | General Contact Unit — Silico’s name for one shippable edge product (app + board), not Silico itself |
+| **host** | This developer/CI computer (not the board) |
+| **plate** | The standard GCU repo template Silico lays down (layout, pin, host tests, HAL/sim stubs) |
+| **scaffold** | Running `silico scaffold` / laying that plate into the product checkout |
+| **gate** | A named checkpoint: usually the **host gate** (automated tests on the host) or an **operator gate** (yes/no or physical confirm before a scary step) |
+| **host gate** | The named host command (typically `pytest -q` / `silico gate`) that must be green before claiming host-done |
+| **metal** | The real board / hardware path (confirms; does not alone define done) |
+| **pin** | Locking Silico (or another package) to a known version in the product’s host deps |
+| **deploy** | Writing product files to the board (only after identity + write confirmation) |
+
+If you need a fuller definition, open [specs/lexicon.md](specs/lexicon.md) for that term only — do not dump the whole lexicon into chat.
+
+**Anti-pattern:** “The GCU will get the plate scaffolded and the host gate will go green” with no definitions.  
+**Better:** “Your GCU (GCU stands for General Contact Unit — Silico’s term for this shippable edge product) will get a **plate** (the standard project template) via **scaffold**, then we run the **host gate** (automated tests on this computer) until green.”
+
+#### Big steps: why + where in the process
+
+Whenever you prompt the operator for a **big** step (install tools, log into GitHub, create/open the product repo, scaffold/overwrite plate files, plug USB, first-flash, confirm board identity, confirm deploy overwrite, open a metal-proving issue), always include **both**:
+
+1. **Why** — one crisp sentence on what fails or stays blocked without this step.
+2. **Where we are** — phase letter/name + one line of done vs next on the Day 1 map (below). Do not assume they track phase letters; restate in plain words.
+
+Keep it short. Do not re-teach the whole playbook every time — only the local map.
+
+**Day 1 map** (use when saying “where we are”):
+
+| Phase | Plain name | Done looks like |
+|-------|------------|-----------------|
+| 0 | Welcome / start gate | Operator understands Silico + this GCU; clear go |
+| A | Machine tools | Git, Python 3.11+, gh, pip ready on this host |
+| B | Product workspace | GCU root locked; GitHub identity if needed |
+| C | Plate + host gate | Silico pinned; plate scaffolded; `pytest -q` (host gate) green |
+| D | Hello metal | Board talks over USB; prepped; confirmed deploy; app face visible |
+| E | CI proves a metal change | Issue → change → CI green → confirmed flash |
+| F | Domain work | Product behavior under test-first / host-first |
+
+Example big-step shape:
+
+> **Where we are:** Day 1 Phase D (hello metal). Host tools, workspace, and the host gate (automated tests on this computer) are done. We still need the board talking over USB before any firmware write.  
+> **Why this step:** Without a data USB cable I cannot discover or talk to the board.  
+> **Your step:** Plug a data USB cable into the product board.  
+> **What I will do next:** Poll for a new serial port, then inspect it with you confirming identity.
 
 ### Operator gates: `bedside ask` / `bedside step` (not multi-choice free text)
 
@@ -146,7 +213,7 @@ Run this playbook under **Help the operator**. Confirm each phase with them befo
 
 ### Phase 0 - Welcome the operator (proactive, safe)
 
-Be **proactive in a safe way.** Before the start gate, **do** read-only discovery so your welcome is grounded - do **not** wait for the human to ask whether Git exists.
+Be **proactive in a safe way.** Before the start gate, **do** read-only discovery so your welcome is grounded - do **not** wait for the human to ask whether Git exists. Follow **Operator language** above: orient first, define jargon on first use, never open with an unexplained term soup.
 
 **Allowed before start gate** (read-only / non-destructive):
 
@@ -161,27 +228,41 @@ Be **proactive in a safe way.** Before the start gate, **do** read-only discover
 - Destructive git (reset --hard, force-push) unless the operator already ordered that work
 - Walls of shell for the human to paste when you could run the check yourself
 
-Then speak in plain language. Structure (tone may vary; skeleton may not):
+Then speak in plain language. Structure (tone may vary; **skeleton may not** — see **First prompt orients the operator**):
 
-1. **Welcome** to Silico.
-2. **Role:** you are here to get their GCU shipped and will step them through it.
-3. **What you know now** - product intent **and** machine readiness (what is already OK vs what will need install after go), including **workspace mode** (GCU root vs silico package vs unknown) and **whether a preferred USB board is already talking**.
-4. **Next step** in one short sentence (the first *mutating* step after go). Frame Day 1 as **host plate + device talk** - not host-only.
-5. **Start gate:** ask whether to start or adjust something. Prefer the agent product's **structured question UI** when available (not a multi-option free-text paragraph).
+1. **What Silico is** (remind them what they started).
+2. **GCU defined + this product summarized** from product docs (or honest “thin docs” note).
+3. **Role:** you step them through shipping it on this host and then on the board.
+4. **What you know now** — machine readiness **and** workspace mode (GCU root vs silico package vs unknown) **and** whether a preferred USB board is already talking.
+5. **Where Day 1 is headed** — short map: machine tools → product workspace → plate + host tests → board talk over USB (then domain work). Frame Day 1 as **host plate + device talk**, not host-only.
+6. **Next mutating step** in one short sentence (first step after go), with **why** if it is a big step.
+7. **Start gate:** ask whether to start or adjust something. Prefer the agent product's **structured question UI** when available (not a multi-option free-text paragraph).
 
 Example shape:
 
-> Welcome to Silico. I'm here to get your GCU shipped and will step you through it all.
-> Here's what I know now about what you want: …
-> On this machine I already checked: Git OK, Python 3.12 OK, gh logged in; workspace mode=gcu; preferred board not on USB yet (only a demoted adapter).
-> The next step is pin silico, scaffold/merge the plate here, get host tests green, then get the board talking over USB before we write anything.
+> Welcome. **Silico** is the open host-first spine for building shippable edge products: I (the agent) own setup, tests, and deploy on this computer; you own product judgment and confirm physical or irreversible steps.
+>
+> You are building a **GCU** (GCU stands for General Contact Unit — Silico’s term for one shippable edge product: app + board). From your product docs, this GCU is: …
+>
+> I'm here to get it shipped and will step you through it.
+>
+> On this machine I already checked: Git OK, Python 3.12 OK, gh logged in; workspace mode=gcu (we stay in this product checkout); preferred board not on USB yet (only a demoted adapter).
+>
+> **Day 1 map:** (A) machine tools → (B) workspace locked → (C) **plate** (standard project template) via **scaffold**, then **host gate** (automated tests on this computer) green → (D) board talks over USB and a confirmed first deploy. We do not stop at host-only.
+>
+> **Next after go:** install/pin Silico on this host and scaffold/merge the plate here — that gives us the maintainable repo layout and a honest host test path before we touch the board.
+>
 > Do you want me to start? Or should I adjust something?
 
 Only after a clear **go** (or after applying their adjustments and re-confirming) may you begin **mutating** Phase A work (installs, scaffold, repo create, device paths).
 
 **Anti-pattern:** promising to stop after host gate and "check back before we go near the board." Host gate is a checkpoint, not Day 1 done. After go, you drive through Phase D prep (USB talk + REPL) unless the operator explicitly defers metal.
 
+**Anti-pattern:** first message that only lists tooling status with no Silico explanation and no GCU summary.
+
 ### Phase A - Machine prerequisites
+
+When a human must install or approve something, use **Big steps: why + where** (Phase A — machine tools on this host; next is locking the product workspace).
 
 1. Detect OS (Windows / macOS / Linux). Tell them what you detected in one sentence.
 2. Ensure **Git** is installed and on PATH. Install if missing; verify with a version command you run.
@@ -191,6 +272,8 @@ Only after a clear **go** (or after applying their adjustments and re-confirming
 6. Summarize ready vs needs a human click. Stop cleanly if an installer UI requires them.
 
 ### Phase B - Workspace lock (GCU root) and GitHub identity
+
+**Where we are:** Phase B — product workspace (after machine tools). Goal: one clear GCU root; no second invented repo.
 
 **B0 — Lock the product workspace (do this before inventing a repo):**
 
@@ -207,6 +290,8 @@ Only after a clear **go** (or after applying their adjustments and re-confirming
 4. Remind them: silico stays `github.com/tig/silico`; **their product** is the GCU repo.
 
 ### Phase C - Pin silico and scaffold the GCU
+
+**Where we are:** Phase C — pin Silico, **scaffold** the **plate**, green the **host gate**. Next after green: Phase D (board talk), not “done.”
 
 **Do not hand-invent a parallel spine.** Use the package + plate. **Always `silico scaffold .` from the product root** (Phase B0), never from a silico package checkout.
 
@@ -255,9 +340,11 @@ silico scaffold .
 
 ### Phase D - Talk to real hardware (hello metal)
 
+**Where we are:** Phase D — hello metal. Host plate and host gate are behind you; Day 1 is not done until the board talks and a confirmed deploy proves the app path.
+
 **Required for Day 1 exit** (not optional polish). Goal: board **talks over USB**, is **prepped** (REPL when that is the runtime), then a **distinct, documented** blink/app; reconnect is **repeatable**.
 
-Metal COM / first-flash / identity / deploy rules: **[BEDSIDE.md](BEDSIDE.md)** + **[silico/knowledge/first-flash.md](silico/knowledge/first-flash.md)**. Prefer tools: `silico wait-device`, `inspect`, `pull`, `deploy`, `monitor`, and `bedside ask` / `bedside step`.
+Metal COM / first-flash / identity / deploy rules: **[BEDSIDE.md](BEDSIDE.md)** + **[silico/knowledge/first-flash.md](silico/knowledge/first-flash.md)**. Prefer tools: `silico wait-device`, `inspect`, `pull`, `deploy`, `monitor`, and `bedside ask` / `bedside step`. Every physical or overwrite prompt uses **Big steps: why + where**.
 
 #### Phase D0 - Device talks (prep) before any deploy plan
 

@@ -8,13 +8,21 @@ Host path comes from **silico** (https://github.com/tig/silico). Pin as host-onl
 
 Start: *See https://github.com/tig/silico. Follow the getting started instructions for agents.*
 
-That playbook begins with **Phase 0** (welcome the operator, recap what you know, name the next step, get a clear go) **before** any tooling. Operator manners follow **Bedside** (pinned in silico; see silico `BEDSIDE.md` / vendored contract).
+That playbook begins with **Phase 0** **before** any tooling. The first message must **orient** the operator: what Silico is, what a **GCU** is, and a short summary of **this** product from `README.md` / `spec.md` / this file. Then recap machine readiness, name the Day 1 map (tools → workspace → plate + host tests → board talk), name the next mutating step, and get a clear go.
+
+Operator manners follow **Bedside** (pinned in silico; see silico `BEDSIDE.md` / vendored contract). Silico-specific operator language (define jargon on first use; big steps need why + where-we-are) lives in silico root `AGENTS.md` → **Operator language**.
 
 Day 1 is **host gate + device USB talk/prep**, not host-only. After scaffold and green pytest, continue into `wait-device` / `inspect` / REPL (or UF2) unless the operator explicitly defers metal.
 
 ## Help the operator
 
-Assume low ops literacy. Prefer doing over dumping shell. **Poll USB** after asking for a data cable - do not ask humans to announce plug-in. **Confirm device identity** every session. **Never write the device without explicit operator confirmation.** Portable manners gaps: file on **tig/bedside**; metal spine gaps: **tig/silico**.
+Assume low ops literacy. Prefer doing over dumping shell. **Poll USB** after asking for a data cable - do not ask humans to announce plug-in. **Confirm device identity** every session. **Never write the device without explicit operator confirmation.**
+
+**First-use terms:** the first time in a session you say GCU, host, plate, scaffold, gate / host gate, metal, pin, or deploy — define it in plain language (parenthetical). Full book: silico `specs/lexicon.md`.
+
+**Big steps:** when asking the human to install, log in, plug hardware, first-flash, or confirm overwrite — one sentence **why**, one line **where we are** on Day 1 (phase + done vs next), then the single act.
+
+Portable manners gaps: file on **tig/bedside**; metal spine gaps: **tig/silico**.
 
 ## Definition of done
 

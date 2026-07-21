@@ -10,6 +10,12 @@ This file is **not** a fork of the Bedside principles.
 | ESP32 audio / DAC / PWM silence | `silico/knowledge/esp32-audio.md` |
 | This file | metal-host glossary only — do **not** also reload the full contract if AGENTS already pinned it |
 
+## Operator language (pointer)
+
+Plain-language orientation, **first-use term definitions**, and **why + where-we-are** on big steps live in root **AGENTS.md** → *Operator language (silico domain)*. This file stays metal glossary only — do not soft-fork Bedside principles here.
+
+When prompting plug-USB, first-flash, confirm-board, or confirm-deploy: always state **why** the step is needed and **where** Day 1 is (host done vs metal still open).
+
 ## Metal first-run (domain pack)
 
 Host tools and Day-1 **phase order** live in **AGENTS.md**. Metal-specific once-only path:

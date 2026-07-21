@@ -106,3 +106,115 @@ def read_product_defaults_path(root: Path | None = None) -> str | None:
     if isinstance(raw, str) and raw.strip():
         return raw.strip()
     return None
+
+
+def read_host_gate(root: Path | None = None) -> str | None:
+    """Optional host gate command from [host].gate (C GCUs use cmake/ctest)."""
+    data = _load(root)
+    host = data.get("host")
+    if not isinstance(host, dict):
+        return None
+    raw = host.get("gate")
+    if isinstance(raw, str) and raw.strip():
+        return raw.strip()
+    return None
+
+
+def _runtime_section(root: Path | None = None) -> dict:
+    data = _load(root)
+    runtime = data.get("runtime")
+    return runtime if isinstance(runtime, dict) else {}
+
+
+def read_runtime_language(root: Path | None = None) -> str:
+    """Return ``micropython`` (default) or ``c`` from [runtime].language."""
+    raw = _runtime_section(root).get("language")
+    if isinstance(raw, str) and raw.strip():
+        return raw.strip().lower()
+    return "micropython"
+
+
+def read_runtime_toolchain(root: Path | None = None) -> str | None:
+    raw = _runtime_section(root).get("toolchain")
+    if isinstance(raw, str) and raw.strip():
+        return raw.strip().lower()
+    return None
+
+
+def read_esp_idf_pin(root: Path | None = None) -> str | None:
+    raw = _runtime_section(root).get("esp_idf")
+    if isinstance(raw, str) and raw.strip():
+        return raw.strip()
+    return None
+
+
+def read_runtime_chip(root: Path | None = None) -> str | None:
+    raw = _runtime_section(root).get("chip")
+    if isinstance(raw, str) and raw.strip():
+        return raw.strip().lower()
+    return None
+
+
+def read_runtime_board(root: Path | None = None) -> str | None:
+    raw = _runtime_section(root).get("board")
+    if isinstance(raw, str) and raw.strip():
+        return raw.strip()
+    return None
+
+
+def read_deploy_mode(root: Path | None = None) -> str | None:
+    """Optional [deploy].mode: ``idf-flash`` for C, file-copy default for mpy."""
+    data = _load(root)
+    deploy = data.get("deploy")
+    if not isinstance(deploy, dict):
+        return None
+    raw = deploy.get("mode")
+    if isinstance(raw, str) and raw.strip():
+        return raw.strip().lower()
+    return None
+
+
+def read_deploy_project(root: Path | None = None) -> str | None:
+    """IDF project directory relative to root ([deploy].project)."""
+    data = _load(root)
+    deploy = data.get("deploy")
+    if not isinstance(deploy, dict):
+        return None
+    raw = deploy.get("project")
+    if isinstance(raw, str) and raw.strip():
+        return raw.strip()
+    return None
+
+
+def read_serial_baud(root: Path | None = None) -> int:
+    """Serial baud for C identity inspect ([runtime].baud, default 115200)."""
+    raw = _runtime_section(root).get("baud")
+    if isinstance(raw, int) and raw > 0:
+        return raw
+    if isinstance(raw, str) and raw.strip().isdigit():
+        return int(raw.strip())
+    return 115200
+
+
+def read_hal_allow_device_headers(root: Path | None = None) -> list[str]:
+    """Stems allowed to #include freertos / esp_* / driver (C HAL backends).
+
+    Example::
+
+        [hal]
+        allow_device_headers = ["hal_board", "board_m5go"]
+    """
+    data = _load(root)
+    hal = data.get("hal")
+    if not isinstance(hal, dict):
+        return []
+    raw = hal.get("allow_device_headers")
+    if not isinstance(raw, list):
+        return []
+    out: list[str] = []
+    for item in raw:
+        if isinstance(item, str) and item.strip():
+            stem = Path(item.strip()).stem
+            if stem:
+                out.append(stem)
+    return out

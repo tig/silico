@@ -5,7 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from pathlib import Path
 
-from silico.config_toml import read_deploy_core
+from silico.config_toml import read_deploy_core, read_product_identity
 from silico.mpy_pin import (
     apply_mpy_cross_pin,
     parse_micropython_version,
@@ -15,6 +15,8 @@ from silico.mpy_pin import (
 from silico.mpremote_util import exec_on_device, ls_device, mpremote_available
 from silico.ports import IDENTITY_HINT, pick_best_port, port_is_listed
 from silico.pull_device import _parse_ls_names
+from silico.runtime import resolve_runtime
+from silico.serial_identity import probe_serial_identity
 
 
 @dataclass
@@ -25,6 +27,65 @@ class InspectReport:
     device_mpy: str | None = None
 
 
+def _inspect_c(
+    port: str | None,
+    *,
+    apply_mpy_pin: bool,
+    root: Path | None,
+) -> InspectReport:
+    lines: list[str] = []
+    if apply_mpy_pin:
+        return InspectReport(
+            False,
+            None,
+            [
+                "FAIL: --apply-mpy-pin is MicroPython-only.",
+                "language=c pins ESP-IDF from silico.toml ([runtime].esp_idf), not from the device.",
+            ],
+        )
+
+    cfg = resolve_runtime(root)
+    chosen = pick_best_port(port)
+    if chosen is None:
+        return InspectReport(
+            False,
+            None,
+            [
+                "FAIL: no preferred board port found.",
+                "Plug a data USB cable and run: silico wait-device",
+                "Or pass --port COMx explicitly after operator confirms identity.",
+            ],
+        )
+    p = chosen.device
+    if port and not port_is_listed(p):
+        return InspectReport(
+            False,
+            p,
+            [
+                f"FAIL: --port {p} is not in the current serial inventory.",
+                "Device unplugged, wrong COM, or path changed. Re-run: silico wait-device",
+            ],
+        )
+
+    lines.append(f"Port: {p} ({chosen.label})")
+    lines.append(f"Mode: serial identity (language={cfg.language}, no mpremote REPL)")
+    name, ver = read_product_identity(root)
+    probe = probe_serial_identity(
+        p,
+        baud=cfg.baud,
+        expect_name=name,
+        expect_version=ver,
+    )
+    lines.extend(probe.lines)
+    if not probe.ok:
+        lines.append(IDENTITY_HINT)
+        return InspectReport(False, p, lines)
+
+    lines.append("Read-only inspect complete. No files were written.")
+    lines.append(IDENTITY_HINT)
+    return InspectReport(True, p, lines)
+
+
 def inspect(
     port: str | None = None,
     *,
@@ -32,6 +93,11 @@ def inspect(
     root: Path | None = None,
 ) -> InspectReport:
     lines: list[str] = []
+    root = root or Path.cwd()
+    cfg = resolve_runtime(root)
+
+    if cfg.is_c:
+        return _inspect_c(port, apply_mpy_pin=apply_mpy_pin, root=root)
 
     # --apply-mpy-pin mutates the product repo (silico.toml, requirements-dev.txt).
     # Auto-selection scores ports by preference; a high score is a hint, not an
@@ -105,7 +171,7 @@ def inspect(
     if ls.returncode == 0:
         lines.append("Files on device:")
         lines.append((ls.stdout or "").strip() or "(empty)")
-        core = read_deploy_core()
+        core = read_deploy_core(root)
         if core:
             want = {Path(c).name for c in core}
             on_dev = set(_parse_ls_names(ls.stdout or ""))

@@ -20,19 +20,27 @@ SKIP_DIR_NAMES = frozenset({"__pycache__", ".git", ".pytest_cache", ".venv", "ve
 SKIP_SUFFIXES = frozenset({".pyc", ".pyo"})
 
 
-def plate_root() -> Path:
-    """Return filesystem path to plates/gcu (package data or repo checkout)."""
+KNOWN_PLATES = frozenset({"gcu", "gcu-c"})
+
+
+def plate_root(plate: str = "gcu") -> Path:
+    """Return filesystem path to plates/<plate> (package data or repo checkout)."""
+    name = (plate or "gcu").strip()
+    if name not in KNOWN_PLATES:
+        raise FileNotFoundError(
+            f"unknown plate {name!r}; supported: {', '.join(sorted(KNOWN_PLATES))}"
+        )
     try:
-        root = resources.files("silico").joinpath("plates", "gcu")
+        root = resources.files("silico").joinpath("plates", name)
         if root.is_dir():
             return Path(str(root))
     except Exception:
         pass
     here = Path(__file__).resolve().parent
-    for cand in (here / "plates" / "gcu", here.parent / "plates" / "gcu"):
+    for cand in (here / "plates" / name, here.parent / "plates" / name):
         if cand.is_dir():
             return cand
-    raise FileNotFoundError("silico plate tree not found (plates/gcu)")
+    raise FileNotFoundError(f"silico plate tree not found (plates/{name})")
 
 
 def _should_skip_source(rel: Path) -> bool:
@@ -50,19 +58,21 @@ def _should_skip_source(rel: Path) -> bool:
     return False
 
 
-def scaffold(dest: Path, *, force: bool = False) -> list[str]:
+def scaffold(dest: Path, *, force: bool = False, plate: str = "gcu") -> list[str]:
     """Merge plate into dest.
 
     Default: add missing plate files; skip existing files (safe for product README/spec).
     --force: overwrite non-protected existing plate files.
     Protected (never overwritten): README.md, spec.md, LICENSE.
+    plate: ``gcu`` (MicroPython, default) or ``gcu-c`` (ESP-IDF / C).
     """
     dest = dest.resolve()
-    src = plate_root()
+    src = plate_root(plate)
     fresh = not (dest / "silico.toml").exists()
     lines: list[str] = [
         f"Plate source: {src}",
         f"Destination: {dest}",
+        f"Plate: {plate}",
         "Merge mode: skip existing files"
         + ("; --force overwrites non-protected plate files" if force else ""),
         f"Protected (never overwrite): {', '.join(sorted(PROTECTED_NAMES))}",
@@ -107,5 +117,14 @@ def scaffold(dest: Path, *, force: bool = False) -> list[str]:
             "fresh scaffold that writes zero files is never what the operator "
             "meant. See tig/silico#48."
         )
-    lines.append("Next: set firmware/version.py + silico.toml product names, then: pytest -q")
+    if plate == "gcu-c":
+        lines.append(
+            "Next: set product identity in silico.toml / include/gcu/version.h, "
+            "then: cmake -S host -B build/host && cmake --build build/host --target test"
+        )
+        lines.append("Metal: silico deploy --port COMx (idf-flash) after operator confirm.")
+    else:
+        lines.append(
+            "Next: set firmware/version.py + silico.toml product names, then: pytest -q"
+        )
     return lines

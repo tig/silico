@@ -135,8 +135,9 @@ def cmd_monitor(args: argparse.Namespace) -> int:
 
 def cmd_scaffold(args: argparse.Namespace) -> int:
     dest = Path(args.path)
+    plate = getattr(args, "plate", None) or "gcu"
     try:
-        lines = scaffold(dest, force=args.force)
+        lines = scaffold(dest, force=args.force, plate=plate)
     except FileExistsError as e:
         print(f"FAIL: {e}")
         return 1
@@ -165,7 +166,7 @@ def build_parser() -> argparse.ArgumentParser:
 
     g = sub.add_parser(
         "gate",
-        help="host hygiene: deploy-set CPython import + machine allowlist (HAL seam)",
+        help="host hygiene: mpy import/allowlist, or C include hygiene + [host].gate",
     )
     g.set_defaults(func=cmd_gate)
 
@@ -251,6 +252,12 @@ def build_parser() -> argparse.ArgumentParser:
 
     s = sub.add_parser("scaffold", help="merge GCU plate from versioned template")
     s.add_argument("path", nargs="?", default=".", help="destination directory (default: .)")
+    s.add_argument(
+        "--plate",
+        default="gcu",
+        choices=["gcu", "gcu-c"],
+        help="plate template: gcu (MicroPython, default) or gcu-c (ESP-IDF / C)",
+    )
     s.add_argument(
         "--force",
         action="store_true",

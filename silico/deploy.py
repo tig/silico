@@ -7,9 +7,11 @@ import re
 from pathlib import Path
 
 from silico.config_toml import read_deploy_core
+from silico.deploy_idf import IdfDeployResult, deploy_idf, plan_idf_deploy
 from silico.mpremote_util import cp_to_device, exec_on_device, ls_device, mpremote_available, run_mpremote
 from silico.ports import IDENTITY_HINT, pick_best_port, port_is_listed
 from silico.pull_device import _parse_ls_names
+from silico.runtime import resolve_runtime
 
 
 @dataclass
@@ -94,6 +96,36 @@ def plan_deploy(
     prune: bool = False,
     root: Path | None = None,
 ) -> DeployPlan | DeployResult:
+    root = root or Path.cwd()
+    cfg = resolve_runtime(root)
+    if cfg.is_c or cfg.deploy_mode == "idf-flash":
+        if files:
+            return DeployResult(
+                False,
+                [
+                    "FAIL: language=c / idf-flash deploy does not take file args.",
+                    "Build and flash the IDF project ([deploy].project); omit file paths.",
+                ],
+            )
+        if prune:
+            return DeployResult(
+                False,
+                [
+                    "FAIL: --prune is MicroPython-only (file copy). "
+                    "C deploy overwrites the application image."
+                ],
+            )
+        idf = plan_idf_deploy(port=port, root=root, cfg=cfg)
+        if isinstance(idf, IdfDeployResult):
+            return DeployResult(idf.ok, idf.lines)
+        # IdfDeployPlan → adapt to DeployPlan-shaped result for CLI
+        return DeployPlan(
+            port=idf.port,
+            files=[],
+            lines=idf.lines,
+            prune_remotes=[],
+        )
+
     if not mpremote_available():
         return DeployResult(False, ["FAIL: mpremote not available (pip install mpremote)"])
 
@@ -192,6 +224,32 @@ def deploy(
     prune: bool = False,
     root: Path | None = None,
 ) -> DeployResult:
+    root = root or Path.cwd()
+    cfg = resolve_runtime(root)
+    if cfg.is_c or cfg.deploy_mode == "idf-flash":
+        if verify_import:
+            return DeployResult(
+                False,
+                [
+                    "FAIL: --verify-import is MicroPython-only. "
+                    "Use --verify for serial identity on C images."
+                ],
+            )
+        if prune:
+            return DeployResult(
+                False,
+                ["FAIL: --prune is MicroPython-only for language=c deploys."],
+            )
+        idf = deploy_idf(
+            port=port,
+            yes=yes,
+            verify=verify,
+            expect_name=expect_name,
+            expect_version=expect_version,
+            root=root,
+        )
+        return DeployResult(idf.ok, idf.lines)
+
     planned = plan_deploy(files, port=port, prune=prune, root=root)
     if isinstance(planned, DeployResult):
         return planned

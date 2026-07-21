@@ -49,6 +49,11 @@ silico = [
   "plates/**/*.txt",
   "plates/**/*.yml",
   "plates/**/*.yaml",
+  "plates/**/*.c",
+  "plates/**/*.h",
+  "plates/**/*.cpp",
+  "plates/**/*.hpp",
+  "plates/**/CMakeLists.txt",
   "plates/**/.gitignore",
   "knowledge/**/*.md",
 ]

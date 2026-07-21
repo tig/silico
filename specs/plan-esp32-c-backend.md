@@ -1,103 +1,74 @@
-# Plan: ESP32 C / ESP-IDF backend (issue #53)
+# Plan: ESP32 C / ESP-IDF backend (#53)
 
-**Status:** Implementation plan (not yet built).  
-**Issue:** [tig/silico#53](https://github.com/tig/silico/issues/53) — *Enable ESP32 development in C in addition to the current Python*.  
-**First test case:** [tig/xuss-c](https://github.com/tig/xuss-c) — C twin of [tig/xuss](https://github.com/tig/xuss); M5GO / classic ESP32; host CTest already green on pure `src/` + `include/`.  
-**Related:** [tig/silico#57](https://github.com/tig/silico/issues/57) (MicroPython ESP32 Day 1 gaps — do first), [tig/silico#50](https://github.com/tig/silico/issues/50) (Xuss product), [silicov1.md](./silicov1.md), root `AGENTS.md`, `BEDSIDE.md`.
+Tracks [tig/silico#53](https://github.com/tig/silico/issues/53). First consumer: [tig/xuss-c](https://github.com/tig/xuss-c). Related: [#57](https://github.com/tig/silico/issues/57), [#50](https://github.com/tig/silico/issues/50), [silicov1.md](./silicov1.md), `AGENTS.md`, `BEDSIDE.md`.
 
----
+## Why I am writing this
 
-## 0. One-sentence goal
+Grady read the PRFAQ, leaned in, and asked whether silico can do both C and MicroPython. His board is ESP32-S3, not Pi class. His reason was power: solar, battery, language as a knob.
 
-Make a C/ESP-IDF GCU feel like a MicroPython GCU on the operator path: same verbs (`doctor`, `wait-device`, `inspect`, `deploy`, `gate`, `product-path`), same identity/protocol contracts, different toolchain underneath — proven on **xuss-c** before anyone claims Grady's S3 path is "C-ready."
+I do not buy the power argument yet. Sleep current dominates a duty-cycled device. Language only owns the awake milliseconds. Get it working first. Measure. Then argue.
 
----
+That advice is dishonest if switching languages is a rewrite. So I want the C door open against the same contracts and the same spine. Customer zero's board is ESP32 either way.
 
-## 1. Why this exists (and what it is not)
+> **A backend** is the plumbing that puts a GCU on the metal. The contracts (identity, protocol, host-first gate, product-path honesty, operator gates) stay language-agnostic. Only the tools change.
 
-### 1.1 Motivation (from #53)
+A C GCU that prints its identity line and answers the protocol is indistinguishable from a Python one at the port. That is the design working as intended.
 
-Customer zero (Grady / Quilan-shaped) asked whether silico can do **both C and MicroPython**, driven by a solar/battery power story. Sleep current dominates duty-cycled budgets; language only touches awake milliseconds. The honest advice remains **Python first, measure, then C if the measurement says so** — but that advice is only honest if switching later is a **backend swap**, not a rewrite.
+## What I mean by "C"
 
-The contracts are already language-agnostic. Only the plumbing is Python today:
+ESP-IDF is fine with modern C++. Naming this backend **C** (xuss-c, `language = c`, `plates/gcu-c`) is a product and spine choice, not a claim that the chip is C-only.
 
-| Contract (language-agnostic) | Python plumbing today |
-|------------------------------|------------------------|
-| Identity on the link | mpremote + `version.py` import / print |
-| ASCII protocol, get/set/save/defaults, escape hatch | product firmware (any language can speak it) |
-| Host-first seam + product-path honesty | CPython import + AST `machine` allowlist + pytest defaults scan |
-| Deploy + verify | mpremote file copy; UF2 first-flash story |
+I want host L0 domain in **portable C** behind a HAL seam (`cmake` + `ctest`, no IDF, no Arduino). Metal is **ESP-IDF**. Prefer C for the plate and for anything that must stay host-testable. C++ is allowed in board and driver translation units when a product needs it (`extern "C" app_main`, same identity line).
+
+I do **not** want a third peer runtime called `language = cpp`. One non-Python backend path: ESP-IDF. Domain host-gated in C by default. C++ is a product choice inside `firmware/`, not a silico matrix row.
+
+## Goal
+
+Same operator path as MicroPython. Same verbs: `doctor`, `wait-device`, `inspect`, `deploy`, `gate`, `product-path`. Different toolchain underneath.
+
+Prove it on **xuss-c** before anyone claims Grady's S3 path is "C-ready." Hello-metal on `plates/gcu-c` is a prerequisite. It is not the whole acceptance story.
+
+## What stays out
+
+1. Arduino core or PlatformIO as silico's official dual-runtime path. One non-Python backend: ESP-IDF for ESP32-class. Pico SDK later only if an RP2040 GCU forces it.
+2. C++ as a separate silico language peer.
+3. Xuss voice, edge, or face domain living in silico. That stays in `tig/xuss` and `tig/xuss-c`.
+4. Claiming C is required for battery life without a measured draw on the product build.
+5. Soft-forking Bedside principles into a second essay. Metal notes stay in `BEDSIDE.md`.
+6. Making every GCU dual-language. Default plate stays MicroPython. C is opt-in.
+
+Not out of scope: a GCU that uses C++ inside its ESP-IDF board backends while keeping host domain C and `language = c`.
+
+## Fix Python-on-ESP first (#57)
+
+#53 already sequences MicroPython-on-ESP gaps before the C backend. #57 is that track for M5GO and classic ESP32:
+
+1. Score CH9102 (and known M5 VID/PID) honestly, not as CH340 despair.
+2. Document esptool first-flash next to UF2 in BEDSIDE and AGENTS.
+3. Make `silico pull` survive boot banners.
+4. Pin mpy from `sys.implementation.version`, not language version lies on ancient UIFlow.
+
+Those fixes unblock Day 1 in Python, which is still what I recommend. This plan depends on esptool being a first-class metal path. It adds build-and-flash of an IDF app image as the C deploy path.
+
+Do not call C Day 1 "operator complete" until doctor, wait-device, and esptool notes stop lying on M5GO. Host-only C work can land on fixtures without a board. Metal proof waits on a working ESP serial path.
+
+## What is broken today
+
+The contracts are language-agnostic. The plumbing is not.
+
+| Contract | Python plumbing today |
+|----------|------------------------|
+| Identity on the link | mpremote plus `version.py` |
+| Protocol, escape hatch | product firmware (any language can speak it) |
+| Host-first seam and product-path | CPython import, AST `machine` allowlist, pytest defaults scan |
+| Deploy and verify | mpremote file copy; UF2 first-flash story |
 | Runtime pin | `[runtime].mpy_cross` |
 
-A C GCU that prints its identity line and answers the protocol is **indistinguishable at the port** from a Python one. That is the design working as intended.
+Scaffold knows one plate. Deploy assumes mpremote. Inspect assumes a REPL. Gate assumes Python sources. Doctor prefers RP2040 and still demotes CH9102 like a random CH340 (#57). First-flash docs still think the world is BOOT and `RPI-RP2`.
 
-### 1.2 C vs C++ (what "C" means here)
+## First consumer: xuss-c
 
-ESP32 / ESP-IDF fully supports modern C++ (STL, threads on FreeRTOS, optional exceptions/RTTI). Naming this backend and the first consumer **C** (xuss-c, `language = c`, `plates/gcu-c`) is a **product and spine choice**, not a claim that the chip is C-only. See also the same framing on [issue #53](https://github.com/tig/silico/issues/53).
-
-| Layer | Intent |
-|-------|--------|
-| **Host L0 domain** | Portable **C** behind the HAL seam — `cmake` + `ctest` with no IDF, no Arduino. Gate and product-path honesty stay simple. |
-| **Metal** | **ESP-IDF**. Prefer C for the hello-metal plate and for domain that must stay host-testable. **C++ is allowed** in board/UI/driver translation units when a product needs it (`extern "C" app_main`, same identity/protocol). |
-| **Silico runtime key** | One dual-runtime story first: `micropython` vs `c` (ESP-IDF). **Not** a third peer runtime called `cpp` / "C++." |
-
-A mostly-C++ product (Arduino-style FSMs, etc.) can still target ESP32; that does **not** mean silico's first non-Python backend is a C/C++ kitchen sink. Keep the matrix small: **one non-Python backend path (ESP-IDF)**, domain host-gated in C by default, C++ optional where the **product** owns the metal.
-
-### 1.3 Not goals
-
-- **Arduino core / PlatformIO as silico's official dual-runtime path.** One non-Python backend: **ESP-IDF** for ESP32-class (Pico SDK later only if an RP2040 GCU forces it).
-- **C++ as a separate silico language peer** (no `language = cpp` matrix; no requirement that every plate ship as C++).
-- Domain Xuss voice/edge/face code living in silico (stays in `tig/xuss` / `tig/xuss-c`).
-- Claiming C is required for battery life without a measured draw on the product build.
-- Soft-forking Bedside principles into a second essay; metal notes stay in `BEDSIDE.md`.
-- Making every existing GCU dual-language. Default plate remains MicroPython; C is opt-in plate + `silico.toml` runtime.
-
-**Not out of scope:** a GCU using **C++ inside its ESP-IDF `firmware/`** board backends while keeping host domain C and the silico verb path (`language = c`).
-
-### 1.4 Relationship to #57 (do first)
-
-#53 itself sequences **MicroPython-on-ESP gaps before the C backend**. #57 is that track for M5GO / classic ESP32:
-
-1. CH9102 (and known M5 VID/PID) port scoring.
-2. esptool first-flash documented next to UF2 in BEDSIDE/AGENTS (and/or a thin `silico flash` helper later).
-3. `silico pull` reliability against boot banners.
-4. Honest mpy pin from `sys.implementation.version`.
-
-Those fixes unblock Grady/Xuss Day 1 **in Python**, which is still the recommendation. This plan **depends on** esptool being a first-class metal path (#57) and **adds** build-and-flash of an IDF app image as the C deploy path.
-
-**Rule:** land #57 enough that `silico doctor` / `wait-device` / esptool first-flash notes do not lie on M5GO before declaring C Day 1 "operator complete." C deploy may land in parallel on the host side (fixtures with no board), but metal proof waits on a working ESP serial path.
-
----
-
-## 2. Current state (spine vs first consumer)
-
-### 2.1 Silico today (Python-only plumbing)
-
-| Verb | Implementation | C-blocking assumption |
-|------|----------------|----------------------|
-| `scaffold` | single plate `plates/gcu` | one runtime tree |
-| `deploy` | mpremote `cp` of `[deploy].core` files | file-copy model; requires mpremote |
-| `inspect` | mpremote exec + optional `--apply-mpy-pin` | REPL / MicroPython version |
-| `gate` / host hygiene | CPython import of deploy set + AST `machine` allowlist | Python sources only |
-| `product-path` | AST scan of pytest/sim for defaults module | Python defaults module |
-| `doctor` / ports | RP2040 preferred; CH340 demoted | ESP CH9102 still wrong (#57) |
-| First flash docs | UF2 / BOOT / `RPI-RP2` | no esptool subsection yet (#57) |
-
-### 2.2 xuss-c today (first test case)
-
-Repo shape already matches the **C host-first** half of the target architecture:
-
-```text
-tig/xuss-c/
-  include/xuss/     # config, edge, protocol headers (portable)
-  src/              # pure C domain (edge, config, protocol)
-  host/             # CMake + CTest (L0) — no IDF required
-  firmware/         # placeholder; not yet a full IDF project
-  spec.md           # product contract (twin of tig/xuss)
-  parts.toml
-```
-
-Host gate (already the product's L0):
+[tig/xuss-c](https://github.com/tig/xuss-c) is already half of the architecture I want: portable C under `include/` and `src/`, host CTest under `host/`, product contract in `spec.md`, firmware folder not yet a full IDF project.
 
 ```text
 cmake -S host -B build/host
@@ -105,41 +76,38 @@ cmake --build build/host
 ctest --test-dir build/host --output-on-failure
 ```
 
-Open in their own spec: *"Optional: silico host tooling bridge for C deploys (not required for L1)"* — this plan is that bridge. Xuss-C L1 can flash by hand with `idf.py`/`esptool` first; **silico Day 1 exit for C** requires the bridge.
+Their spec calls the silico bridge optional for L1. This plan is that bridge. They can flash by hand with `idf.py` first. Silico Day 1 exit for C requires the bridge.
 
-**Board note:** #53's "done when" names ESP32-S3 (Grady). Xuss-C's board is **classic ESP32 (M5GO)**. Treat **ESP32-class under ESP-IDF** as the backend; prove on M5GO first, then re-pin target/chip for S3 without inventing a second deploy story.
+#53's done-when names ESP32-S3 (Grady). Xuss-C is classic ESP32 on M5GO. One backend: ESP32-class under ESP-IDF. Prove on M5GO first. Re-pin `chip` for S3 later. Do not invent a second deploy story.
 
-### 2.3 What "same operator experience" means
+## Same operator experience
 
-Operator (and agent) still:
+The human (and the agent helping them) still:
 
-1. Confirms start gate → host gate green.
-2. Plugs data USB → long `wait-device`.
-3. `inspect` → identity verified against manifest.
-4. `bedside ask` confirm-board → deploy plan without write → confirm-deploy → `--yes`.
-5. Verify identity/version after flash; escape hatch (`repl`/`reboot` in product protocol) still required by product specs.
+1. Starts only after a clear go.
+2. Gets host gate green.
+3. Plugs a data USB cable; agent runs a long `wait-device`.
+4. Runs `inspect` and verifies identity against the manifest.
+5. Confirms the port is the product board, then confirms the write, then `--yes`.
+6. Checks identity after flash. Escape hatch (`repl` / `reboot`) stays a product requirement.
 
-They do **not** need to know whether the image was MicroPython sources or an IDF binary once deploy is confirmed.
+They do not need to know whether the image was five MicroPython files or one IDF binary once the write is confirmed.
 
----
+## Design rules
 
-## 3. Design principles
+1. Backend, not rewrite. Runtime from `silico.toml`. Contracts stay language-agnostic.
+2. Host first still means host first. Domain tests on the host. Flash confirms; it does not invent truth.
+3. "C" is the spine default, not a C++ ban. See above.
+4. Deploy still needs explicit `--port` and operator yes. Plan text names the flash in plain words.
+5. Hygiene is the allowlist, spelled differently. Python: `machine` imports. C: device headers only in allowlisted board TUs (`.c` or `.cpp`).
+6. Extract, then open. Make xuss-c Day 1 honest first. Promote into `plates/gcu-c` after that, not the reverse.
+7. Do not dual-maintain product domain in silico. The plate is hello-metal and a HAL skeleton only.
 
-1. **Backend, not rewrite.** Runtime selected by `silico.toml`; product contracts stay language-agnostic.
-2. **Host first still means host first.** Domain logic compiles and tests on the host (CTest for C; pytest for Python). Flash confirms; it does not invent truth.
-3. **"C" is the spine default, not a C++ ban.** Host-gated domain is portable C; metal is ESP-IDF (C preferred; C++ allowed in board TUs). No third `language = cpp` peer (§1.2).
-4. **One scary surface language.** Deploy still needs explicit `--port` + operator yes; plan output names the flash target in plain words.
-5. **Hygiene is the allowlist, spelled differently.** Python: `machine` imports. C: device headers / ESP-IDF includes only in the board backend translation unit(s). Board TUs may be `.c` or `.cpp`.
-6. **Extract, then open.** Build the minimum spine that makes xuss-c's Day 1 honest; promote patterns from xuss-c into `plates/gcu-c` once proven, not the reverse.
-7. **Do not dual-maintain product domain in silico.** Plate ships hello-metal + HAL skeleton only.
+## Architecture
 
----
+### Runtime selection
 
-## 4. Target architecture
-
-### 4.1 Runtime selection (`silico.toml`)
-
-Extend config so tools branch on language/toolchain without guessing from file extensions alone.
+Branch on toml. Do not guess from file extensions.
 
 ```toml
 [product]
@@ -148,413 +116,287 @@ fw_name = "XUSSC"
 fw_version = "0.0.1"
 
 [runtime]
-# Existing MicroPython plate keeps language default micropython / board pin.
 language = "c"                    # "micropython" | "c"  (default: micropython)
-                                  # "c" means ESP-IDF backend; not "C only, no C++ in firmware"
+                                  # "c" means ESP-IDF backend; not "C only forever in firmware"
 toolchain = "esp-idf"             # only valid pairing for language = c in this plan
-# Pin the IDF release the GCU builds against (string; agent + doctor check).
-esp_idf = "v5.3.2"                # example; exact pin decided when plate ships
-board = "m5stack-core-esp32"      # or product-local idf target name
-# chip for esptool: esp32 | esp32s3 | …
-chip = "esp32"
+esp_idf = "v5.3.2"                # example pin; freeze when the plate ships
+board = "m5stack-core-esp32"
+chip = "esp32"                    # esptool: esp32 | esp32s3 | …
 
 [host]
-# Shell or argv form run by `silico gate` when language = c.
 gate = "cmake --build build/host --target test"
-# Or: gate = "ctest --test-dir build/host --output-on-failure"
-product_defaults = "include/xuss/config.h"   # or src/defaults.c — see §5.4
+product_defaults = "include/xuss/config.h"
 
 [hal]
-# C: basenames (or stems) allowed to #include freertos / driver / esp_* / soc
 allow_device_headers = ["board_m5go", "hal_board"]
 
 [deploy]
-# C path: not a file list for mpremote — a build artifact recipe.
-mode = "idf-flash"                # default for language=c; mpy remains file-copy
-# Optional explicit binary after build (relative to repo root):
-# image = "build/firmware/xuss-c.bin"
-# Or rely on idf.py flash with project dir:
+mode = "idf-flash"
 project = "firmware"
 ```
 
-**Compat:** omitting `[runtime].language` (or `language = "micropython"`) preserves today's behavior for all existing GCUs. No silent change of deploy for Python plates.
+Omit `language` (or set `micropython`) and every existing GCU keeps today's behavior. No silent deploy change for Python plates.
 
-### 4.2 Module map (new / extended)
+### Module map
 
-| Piece | Role |
-|-------|------|
-| `silico/config_toml.py` | Read `language`, `toolchain`, IDF pin, chip, deploy mode, allow_device_headers, host gate string |
-| `silico/runtime.py` (new) | Resolve active backend; fail clearly on unknown pairs |
-| `silico/deploy_mpy.py` | Current mpremote deploy extracted from `deploy.py` (behavior-preserving) |
-| `silico/deploy_idf.py` (new) | Plan/build/flash via idf.py / esptool; dry plan without `--yes` |
-| `silico/deploy.py` | Thin dispatcher: plan/deploy → mpy or idf |
-| `silico/inspect_device.py` | Branch: mpy REPL path vs **serial identity-line** path for C images |
-| `silico/host_hygiene.py` or `gate_c.py` | C hygiene: no device headers outside allowlist; optional compile check of host lib |
-| `silico/product_path.py` | C defaults: scan host tests for references to the defaults TU/header |
-| `silico/doctor.py` | Report IDF on PATH / `IDF_PATH`, chip tools, language from toml |
-| `silico/scaffold.py` | `silico scaffold . --plate gcu-c` (or `runtime=c`) |
-| `silico/plates/gcu-c/` | Hello-metal C plate (HAL header, host double, IDF main stub, CMake dual target) |
-| `BEDSIDE.md` / `AGENTS.md` | ESP-IDF flash + C gate notes; point to plate; do not duplicate full IDF install manual |
+| Piece | Job |
+|-------|-----|
+| `config_toml.py` | Read language, toolchain, IDF pin, chip, deploy mode, allowlists, gate string. |
+| `runtime.py` (new) | Resolve backend; fail closed on unknown pairs. |
+| `deploy_mpy.py` | Current mpremote path, extracted without behavior change. |
+| `deploy_idf.py` (new) | Plan, build, flash via `idf.py` / esptool. |
+| `deploy.py` | Thin dispatcher. |
+| `inspect_device.py` | mpy REPL path or serial identity-line path. |
+| host hygiene / `gate_c` | No device headers outside allowlist. |
+| `product_path.py` | C defaults: compiled use of shipped table in host tests. |
+| `doctor.py` | IDF on PATH, language, chip, honest ports. |
+| `scaffold.py` | `silico scaffold . --plate gcu-c`. |
+| `plates/gcu-c/` | Hello-metal C plate. |
+| `BEDSIDE.md` / `AGENTS.md` | Point at the path; do not re-host the full IDF install manual. |
 
-### 4.3 Identity and inspect (C)
+### Inspect (no REPL required)
 
-Inspect must not require a MicroPython REPL.
-
-**Device contract (already product-shaped):** on boot (or on `identity` command), the app prints a stable line, e.g.:
+On boot or on `identity`, the app prints one stable line:
 
 ```text
 fw_name=XUSSC fw_version=0.0.1
 ```
 
-(or the same key/value family the MicroPython plate uses — **one identity grammar** for both backends.)
+One identity grammar for both backends.
 
-**Host behavior for `language = c`:**
+For `language = c`: open the port (default 115200, toml override), knock with newline and `identity`, parse, compare to `[product]`, never write. Refuse `--apply-mpy-pin`. Pin IDF from toml for now; optional device self-report later if we need it.
 
-1. Open the port at the configured baud (default 115200; toml override).
-2. Soft prompt: send newline and/or `identity\n` (product protocol); do not send mpremote raw REPL sequences.
-3. Parse identity line; compare to `[product].fw_name` / `fw_version`.
-4. Report port scoring + identity; never write.
-5. **No `--apply-mpy-pin`.** Instead optional later: `--apply-idf-pin` only if we discover IDF version from a self-report field; v1 of this plan may pin IDF only from toml/docs (agent-owned), not from device probe.
+After deploy, re-parse identity. Port may re-enumerate after flash. Re-discover before claiming success. BEDSIDE already says that.
 
-**Verify after deploy:** same identity parse after reset / re-enumerate; port may change after flash — re-discover before claiming success (BEDSIDE already: after reset, re-discover).
+### Deploy
 
-### 4.4 Deploy (C)
+| Step | Plan (no `--yes`) | Write (`--yes`) |
+|------|-------------------|-----------------|
+| Preconditions | `language=c`, project exists, port listed | same, plus operator yes |
+| Build | Show the `idf.py -C <project> build` that will run | Run it; fail closed |
+| Flash | Show chip, port, image / `idf.py flash` | Flash |
+| Verify | Note identity check | Reset if needed; wait for port; parse identity |
 
-| Step | Plan (`deploy` without `--yes`) | Write (`--yes`) |
-|------|----------------------------------|-----------------|
-| Preconditions | `language=c`, project dir exists, port listed | same + operator yes |
-| Build | Show `idf.py -C <project> build` (or cmake) command that will run | Run build; fail closed on non-zero |
-| Flash | Show chip, port, app image path / `idf.py flash` | Run flash (esptool under idf.py) |
-| Verify | Note identity check will run | Reset if needed; wait for port; parse identity |
+First flash and update flash are the same path: image write. That is better than the MicroPython story (runtime once, then app files forever).
 
-**Improvements over MicroPython story (called out in #53):** first flash and update flash are the **same path** (image write). No UF2 for C; no separate "runtime once then app files" split.
+Operator gates unchanged. Plan text must say this will **overwrite the entire application image**, not "copy these five `.py` files."
 
-**Operator gates unchanged:** confirm-board then confirm-deploy; default **no** on write. Plan text must say "This will OVERWRITE the entire application image," not "copy these five .py files."
+`--prune` and `--verify-import` are MicroPython-only. Refuse them with a clear message on the C path.
 
-**Prune / verify-import:** MicroPython-only. C deploy refuses or no-ops those flags with a clear message.
+ESP-IDF install is a machine prerequisite. Doctor reports ready versus needs install. Agents do not pretend `pip` installs IDF.
 
-**Host dependency:** ESP-IDF install is machine prerequisite for C GCUs (Phase A extension): `IDF_PATH` or `idf.py` on PATH. `silico doctor` reports ready vs needs install; agent does not pretend pip can install the full IDF.
+### Gate
 
-### 4.5 Gate (C)
+1. Run `[host].gate` (configure, build, ctest under `host/`).
+2. Include hygiene: fail if non-allowlisted units pull freertos, `driver/`, `esp_`, `hal/`, `soc/`, `esp32/`, and friends.
+3. Optional later: pedantic host compile flags.
 
-Replace "import deploy-set under CPython" with:
+One verb: `silico gate`. Backend picks the checker.
 
-1. **Host build + test:** run `[host].gate` (default for plate: configure+build+ctest under `host/`).
-2. **Include hygiene:** scan `.c`/`.h` under product sources (exclude `firmware/` board backends named in allowlist). Fail if non-allowlisted units include freertos, `driver/`, `esp_`, `hal/`, `soc/`, `esp32/`, etc. (exact denylist shipped as a table; extendable in toml later).
-3. Optional v1.1: compile host library with `-Werror` / pedantic flags as part of gate.
+### Product path
 
-`silico gate` remains the single verb; backend chooses checker.
+Shipped defaults live in one C table. At least one host test must drive the product path with those values unmodified.
 
-### 4.6 Product path (C)
+A gate a comment or bare `#include` can pass is the same green-but-broken gate I already refuse on the Python side.
 
-Shipped defaults live in **one** C table (header or `.c` with `const` structs — xuss-c already has config defaults in protocol/config). Host tests must **drive the product path with that table unmodified** in at least one scenario — not merely mention it.
+Require compiled use: include or link the shipped defaults, and pass a field or table pointer into the product path. Prefer a real identifier check. Fail if zero host scenarios run on shipped defaults. Extra scenarios may override edges; zero on shipped is a fail.
 
-Mirror the Python honesty rule in AGENTS.md (product path): a gate a comment or bare `#include` can pass is the same green-but-broken gate this rule exists to prevent.
+CTest is enough when `language = c`. Do not force pytest on a pure C GCU.
 
-Implementation sketch:
+### Plate `plates/gcu-c`
 
-- `[host].product_defaults` points at the defaults translation unit / header that ships on metal.
-- Domain/host product code under test must **read** those defaults (e.g. call into config/protocol that uses the shipped `const` table), not construct a parallel table of literals in the test.
-- `silico product-path` for C must require **compiled use**: at least one host test that (1) includes or links the shipped defaults TU and (2) **passes a field or whole-table pointer from that table into the product path** (init, controller, edge math, protocol defaults apply — whatever the GCU's product entry is). Prefer a lightweight compile-time or AST/parse check on test + product sources for real identifier uses (e.g. `GCU_DEFAULTS.rpm` / `defaults_table` / plate's conventional symbol), **not** "file named `product_path`" or "header name appears in a comment."
-- Fail if zero host scenarios invoke the product path with shipped defaults unmodified. Extra scenarios may override gains for edges — zero on shipped is a gate fail.
-- Plate fixture: `host/test_defaults.c` (or equivalent) is the canonical example: load shipped table → exercise product path → assert a shipped value is what the path saw.
-
-Do **not** require Python pytest for a pure C GCU. CTest is enough when `language = c`.
-
-### 4.7 Plate `plates/gcu-c`
-
-Minimal extractable skeleton (hello-metal, not Xuss domain):
+Hello-metal only. Not Xuss domain.
 
 ```text
 plates/gcu-c/
-  AGENTS.md                 # short; points at silico + language=c
-  silico.toml               # language=c, idf-flash, host gate, identity
-  include/gcu/
-    version.h
-    hal.h                   # contract, no device headers
-    defaults.h              # shipped parameter table
-  src/
-    version.c
-    defaults.c
-    domain_stub.c           # portable tick/identity helpers
-  host/
-    CMakeLists.txt
-    test_defaults.c         # product-path: uses shipped defaults unmodified
-    test_hal_double.c
-  firmware/                 # ESP-IDF project (C by default; product may add .cpp board TUs)
-    CMakeLists.txt
-    main/
-      main.c                # boot: identity line, then app (or main.cpp + extern "C" app_main)
-      hal_board.c           # only TU(s) that may include device headers (.c or .cpp)
-  install/README.md         # Day-2 one-liner (idf path via silico deploy)
+  AGENTS.md
+  silico.toml
+  include/gcu/          # version, hal, defaults
+  src/                  # portable domain stubs
+  host/                 # CMake, CTest, product-path test
+  firmware/main/        # IDF: identity first; board TU only for device headers
+  install/README.md
 ```
-
-Scaffold API:
 
 ```text
 silico scaffold . --plate gcu-c
-# or: silico scaffold . --runtime c
 ```
 
-Existing `silico scaffold .` continues to mean `plates/gcu` (MicroPython). Protected names (`README.md`, `spec.md`, LICENSE) unchanged.
+Bare `silico scaffold .` still means MicroPython `plates/gcu`. Protected names unchanged: `README.md`, `spec.md`, LICENSE.
 
-### 4.8 Protocol / escape hatch
+### Protocol
 
-Silico does **not** own the ASCII protocol implementation. Products (xuss-c included) must:
+Silico does not own the ASCII protocol. Products must emit identity first, ship `repl` / `reboot`, and bound serial both directions. Host tools only speak enough of that contract for inspect and verify. Deeper protocol tests stay in the GCU's CTest suite.
 
-- Emit identity first on boot.
-- Implement `repl` / `reboot` (or agreed synonyms) so agents can reclaim the port without a hard reset when possible.
-- Bound serial both directions (product rails).
+## Work order
 
-Silico host tools only need to **speak enough** of that contract for inspect/verify (`identity` line + optional single-line commands). Deeper protocol tests stay in the GCU's host CTest suite.
+### Phase 0: ESP serial path (#57)
 
----
+Not the C backend. C metal proof reuses it.
 
-## 5. Work packages (implementation order)
-
-### Phase 0 — Prerequisites on the ESP serial path (#57)
-
-**Owner:** silico metal spine.  
-**Done when:** M5GO-class board can be discovered without false CH340-only despair; BEDSIDE has esptool first-flash next to UF2; pull/inspect do not lie on modern MicroPython ESP images.
-
-This phase is **not** the C backend, but C Day 1 metal proof reuses the same port scoring and esptool literacy.
+Done when M5GO-class boards are discoverable without false CH340-only despair, BEDSIDE has esptool next to UF2, and pull/inspect do not lie on modern MicroPython ESP images.
 
 Checklist:
 
-- [ ] CH9102 / M5 scoring in `ports.py` + tests (`tests/test_ports.py`)
-- [ ] BEDSIDE + AGENTS: ESP32 first-flash subsection (esptool erase/write; chip variants)
-- [ ] pull/ls robustness as needed for ESP boots
-- [ ] mpy pin honesty for old UIFlow images (do not apply wrong pin)
+1. CH9102 / M5 scoring in `ports.py` plus tests.
+2. BEDSIDE and AGENTS: ESP32 first-flash subsection.
+3. Pull/ls robustness against ESP boots.
+4. Honest mpy pin for old UIFlow images.
 
-### Phase 1 — Config + runtime dispatcher (host-only, no board)
+### Phase 1: Config and runtime dispatcher
 
-**Done when:** unit tests select mpy vs c backend from toml; unknown pairs fail with plain language.
+Host-only. No board.
 
-- [ ] Extend `config_toml.py` readers
-- [ ] Add `runtime.py` resolution
-- [ ] Default language = micropython when absent
-- [ ] Tests: fixture repos under `tests/fixtures/gcu_mpy/` and `tests/fixtures/gcu_c/`
+Done when unit tests select mpy versus c from toml and unknown pairs fail in plain language.
 
-### Phase 2 — C host gate + product-path + hygiene
+### Phase 2: C gate, product-path, hygiene
 
-**Done when:** `silico gate` and `silico product-path` against a **fixture** that mirrors xuss-c's host layout exit 0; deliberate violations fail.
+Done when `silico gate` and `silico product-path` pass on a fixture that mirrors xuss-c's host layout, and deliberate violations fail. Doctor reports IDF, language, gate, chip.
 
-- [ ] Run `[host].gate` subprocess for `language=c`
-- [ ] Device-header allowlist scanner + tests
-- [ ] Product-path scanner for C defaults + tests
-- [ ] `silico doctor` lines: IDF present?, language, gate command, chip
+### Phase 3: Serial identity inspect
 
-No hardware required.
+Done when a mock or recorded stream matches or mismatches `[product]`, and the mpy path still works. Shared parser for inspect and deploy verify. Refuse `--apply-mpy-pin` when `language = c`.
 
-### Phase 3 — Inspect identity over serial (C)
+### Phase 4: IDF deploy
 
-**Done when:** with a mock serial or recorded identity stream, inspect reports match/mismatch vs `[product]`; mpy path still works.
+Done when dry plan prints build and flash without writing, `--yes` runs tools when present, missing IDF fails closed, and mpy-only flags are rejected. Prefer mocked subprocess tests so default CI does not need IDF.
 
-- [ ] Serial open + identity parse shared helper (used by inspect + deploy verify)
-- [ ] Branch in `inspect_device.py`; refuse `--apply-mpy-pin` when language=c
-- [ ] Optional: `expect_name` / `expect_version` already on deploy — unify parsers
+### Phase 5: Plate and scaffold
 
-### Phase 4 — Deploy via IDF / esptool
+Done when `silico scaffold … --plate gcu-c` yields a host-green tree with a C compiler, and the IDF project configures where IDF exists. CI may test only the host half.
 
-**Done when:** dry plan prints build+flash recipe without writing; `--yes` invokes tools when present; missing IDF fails closed with install pointer; flags that only make sense for mpy are rejected.
+### Phase 6: xuss-c Day 1 (required to close #53)
 
-- [ ] Extract mpy deploy to keep risk low
-- [ ] `deploy_idf.py`: plan, build, flash, re-enumerate, verify identity
-- [ ] Operator-facing plan copy ("overwrite application image")
-- [ ] Integration test: mock subprocess (do not require real IDF in CI if not installed — skip or container later)
-- [ ] Document Windows/macOS PATH expectations briefly in plate `install/` / AGENTS
+Hello-metal is a prerequisite. It does not close #53.
 
-### Phase 5 — Plate `gcu-c` + scaffold
+Work in `tig/xuss-c` against a silico pin:
 
-**Done when:** `silico scaffold /tmp/hello-c --plate gcu-c` yields host gate green on a machine with a C compiler; IDF project configures on a machine with IDF (CI may test host half only).
+1. `silico.toml` with `language = c`, chip, project, identity.
+2. Full IDF project under `firmware/`.
+3. Host gate string wired to existing CMake/CTest.
+4. Boot identity before boot riff (their spec already requires that).
+5. Escape hatch present.
+6. Pin `tig-silico` when a tag exists.
+7. Ambiguity log in every PR. No parallel host spine.
 
-- [ ] Author plate tree
-- [ ] Scaffold flag + tests (`test_scaffold_and_cli.py`)
-- [ ] Hello-metal main: identity + blink or serial-only heartbeat
-- [ ] Package data includes plate in wheel/sdist
+Fix every spine bug found on the bench. Make it better than you found it.
 
-### Phase 6 — First consumer: xuss-c Day 1 on silico (**required for #53**)
+### Phase 7: Docs and S3 readiness
 
-**Done when:** checklist in §6 is green on real M5GO hardware for **xuss-c** (or honest partial with open follow-ups that still name metal-TODO). Hello-metal / `plates/gcu-c` is a **prerequisite** (Phases 1–5); it does **not** by itself close #53.
+AGENTS, BEDSIDE, lexicon, silicov1 pointers. Close #53 only when Phase 6 is green on xuss-c. Document S3 as the same verb with a different `chip` once proven, or leave an open follow-up.
 
-Work primarily **in tig/xuss-c**, consuming a silico pin (editable install or tag):
+### Phase 8: Measurement rig (not on the critical path)
 
-- [ ] Add `silico.toml` (`language=c`, chip=esp32, project=firmware, identity XUSSC)
-- [ ] Complete ESP-IDF `firmware/` project (still product code; silico only deploys it)
-- [ ] Wire host gate string to existing CMake/CTest
-- [ ] Ensure boot identity line matches silico product keys
-- [ ] Escape hatch present (spec L1)
-- [ ] Pin `tig-silico` in docs/requirements once tag cuts
-- [ ] Record ambiguity log in PRs; do not invent a parallel host spine
+Grady is right that power is measured on real hardware or not at all. Current sensing belongs to the bench story (Xuss day job), not silico core. Track it separately. Do not block Phases 1 through 6 on it.
 
-**Silico-side acceptance for this phase:** issues/PR notes that **xuss-c is the mandatory first consumer** that validates the architecture; fix spine bugs found on the bench (Make it better than you found it).
+## Done when (#53)
 
-### Phase 7 — Docs, doctrine, and Grady S3 readiness
+Close #53 only when **xuss-c** completes Day 1 on ESP32-class hardware with silico. Hello-metal is required and not sufficient.
 
-- [ ] AGENTS.md: C plate, IDF prerequisites, deploy path; keep MicroPython default path primary
-- [ ] BEDSIDE.md: esptool image flash as scary surface; after-flash re-enumerate
-- [ ] lexicon: "C plate" / "runtime backend" short entries if needed
-- [ ] silicov1.md: note ESP-IDF backend as forced by real GCU (xuss-c / Quilan-class), not abstract multi-runtime
-- [ ] Cross-link #53, #57; **close #53 only when §6 is met on xuss-c** (not hello-metal alone)
-- [ ] S3 chip variant: same deploy verb, different `chip` / idf target — document once proven on S3 or leave open issue if only classic ESP32 was proven
+### Prerequisite: `plates/gcu-c`
 
-### Phase 8 — Measurement rig (out of critical path for "C backend exists")
+1. Scaffold yields a buildable tree.
+2. Day 1 verbs work on the plate (doctor through product-path).
+3. Minimal escape hatch, or an honest metal-TODO that says so.
 
-Per #53: power measurement on real hardware settles language choice for solar GCUs. Current sensing belongs to the bench story (Xuss day job / AMeter), not to silico core. Track separately; do not block Phases 1–6.
+### Required: xuss-c
 
----
+1. `doctor` reports `language = c` without Python-only lies.
+2. `wait-device` finds the ESP port.
+3. `inspect --port COMx` verifies identity without mpremote.
+4. confirm-board and confirm-deploy still required.
+5. `deploy` dry plan shows IDF build and flash.
+6. `deploy --yes --verify` writes the image; identity matches host.
+7. `gate` is green on xuss-c CTest.
+8. `product-path` proves compiled use of shipped defaults.
+9. Escape hatch works.
+10. xuss-c is the consumer that validates the architecture.
 
-## 6. Done when (issue #53 acceptance)
+Same operator experience. Different toolchain. Closing on fixtures alone is not done.
 
-**#53 closes only when xuss-c** (the designated first consumer) completes the full Day 1 path on **ESP32-class** hardware with silico. A standalone `plates/gcu-c` hello-metal run is a **required prerequisite** (proves the plate + spine), not a substitute for xuss-c integration.
+## Testing in silico
 
-### 6.1 Prerequisite — hello-metal / `plates/gcu-c`
+Unit tests for toml, runtime resolution, identity parser, include hygiene, product-path fixtures. CLI tests for scaffold, gate, product-path, and deploy plan text. Optional metal job later. All existing MicroPython tests stay green when language is omitted.
 
-| Check | Proof |
-|-------|--------|
-| Scaffold | `silico scaffold --plate gcu-c` (or equivalent) yields a buildable tree |
-| Day 1 verbs on plate | doctor → wait-device → inspect → deploy plan/write → gate → product-path green on the plate |
-| Escape hatch | Minimal product speaks `repl`/`reboot` (or documents deferral with open metal follow-up) |
+Default silico CI must not require ESP-IDF. Host C compiler for plate fixtures is nice when available; otherwise skip with an explicit marker.
 
-### 6.2 Required — xuss-c (closes #53)
+## xuss-c notes
 
-| Check | Proof |
-|-------|--------|
-| `silico doctor` | Reports language=c, IDF/chip status, ports without Python-only lies |
-| `silico wait-device` | Preferred/explicit ESP port appears |
-| `silico inspect --port COMx` | Identity verified against xuss-c `[product]` (no mpremote REPL required) |
-| Operator gates | confirm-board + confirm-deploy still required |
-| `silico deploy --port COMx` | Dry plan shows IDF build + flash for xuss-c firmware |
-| `silico deploy --port COMx --yes --verify` | Image written; identity/version matches host |
-| `silico gate` | Host-compiled tests green (CTest) on xuss-c |
-| `silico product-path` | At least one host test **invokes the product path with shipped defaults unmodified** (compiled use; see §4.6) |
-| Escape hatch | Product `repl`/`reboot` works (product acceptance; silico redeploy without hands when possible) |
-| Consumer | xuss-c is the proof that validates the architecture; plate remains the forever template |
+Reuse portable domain, host CTest, identity macros, and product rails as-is. Align the identity string form with silico's parser.
 
-**Same operator experience, different toolchain.** Closing #53 with only hello-metal (no xuss-c on a real board) is **not** done.
+Add the IDF project, `silico.toml`, boot identity before audio, and a host test that actually uses shipped defaults if one is missing.
 
----
+Keep out of silico: ESP32-Synth investigation, face/PIR/ANGLE/tach domain, L2 fixture versus Zakalwe.
 
-## 7. Testing strategy (silico repo)
+Xuss and Xuss-C share acceptance rows, not firmware trees. Shared spine is verbs, identity, and deploy manners only.
 
-| Layer | What |
-|-------|------|
-| Unit | toml parsing, runtime resolution, identity line parser, include hygiene fixtures, product-path C fixtures |
-| CLI | scaffold `--plate gcu-c`; gate/product-path on fixture trees; deploy plan text without hardware |
-| Optional metal | Manual or labeled CI job with IDF + board; not required for every PR |
-| Regression | All existing mpy tests stay green; no behavior change when language omitted |
+## Risks
 
-CI on silico: **must not** require ESP-IDF for the default job. Host-only C compiler (for compiling plate host tests in a fixture) is desirable when available; otherwise skip with explicit marker.
+1. IDF install is heavy. Doctor detects it. One bedside step points at Espressif's getting started. Do not re-host the full manual.
+2. Port re-enumerates after flash. Re-discover. Never reuse a stale COM.
+3. Identity grammar drifts. One parser. Plate documents the line. Tests lock examples.
+4. Hygiene false positives on third_party. Scan product sources; allowlist board TUs.
+5. Arduino or PlatformIO scope creep. Refuse in review.
+6. `language = cpp` as a third peer. Refuse.
+7. Closing #53 on hello-metal alone. Refuse.
+8. Product-path scanner too weak. Require compiled use into the product path.
 
----
+## PR breakdown (silico)
 
-## 8. xuss-c integration notes (first test case)
+Small steps, same order as the phases:
 
-### 8.1 What to reuse as-is
+1. PR-A: #57 port scoring and BEDSIDE esptool notes (can merge alone).
+2. PR-B: runtime and toml fields, dispatcher stubs, fixtures.
+3. PR-C: C gate, product-path, hygiene, doctor lines.
+4. PR-D: serial identity inspect and shared verify helper.
+5. PR-E: IDF deploy; extract mpy deploy.
+6. PR-F: `plates/gcu-c` and scaffold flag.
+7. PR-G: AGENTS, BEDSIDE, lexicon, silicov1; point at xuss-c proof.
 
-- `include/xuss/*` + `src/*` as the portable domain and protocol.
-- `host/CMakeLists.txt` + CTest as `[host].gate`.
-- Product identity macros (`XUSS_FW_NAME` / `XUSS_FW_VERSION`) — align string form with silico's identity parser.
-- Spec rails: dead-man, escape hatch, serial bounds (product-owned).
+Consumer work lands on `tig/xuss-c` after PR-E and PR-F are usable via an editable silico pin.
 
-### 8.2 What xuss-c must add for silico Day 1
-
-1. Full IDF project under `firmware/` (their README already sketches it).
-2. `silico.toml` as above.
-3. Boot path: identity line **before** boot riff audio (spec already requires this).
-4. Optional pin of silico for agents: docs pointing at `silico deploy` instead of raw `idf.py flash` once Phase 4 lands.
-5. Host test that **must** include shipped defaults (product-path honesty) if not already guaranteed by existing tests.
-
-### 8.3 What stays out of silico
-
-- ESP32-Synth investigation and voice path (xuss-c spec 3.1).
-- Face, PIR, ANGLE, tach routing domain.
-- L2 fixture role vs Zakalwe (product / bench runner).
-
-### 8.4 Twin discipline
-
-Xuss (MicroPython) and Xuss-C share **acceptance rows**, not firmware trees. Silico must not force them to share `firmware/*.py`. Shared spine is verbs + identity + deploy/verify manners only.
-
----
-
-## 9. Risks and mitigations
-
-| Risk | Mitigation |
-|------|------------|
-| IDF install is heavy; agents dump walls of install steps | doctor detects; one `bedside step` for "install ESP-IDF per Espressif getting started"; link official docs; do not re-host full install manual |
-| Port re-enumerates after flash; COM changes | deploy verify re-runs wait/list; never reuse stale COM without re-discover (BEDSIDE) |
-| Identity grammar drifts between GCU products | single parser; plate documents the line format; tests lock examples |
-| C hygiene false positives on third_party | scan only product `src/` + `include/` + non-allowlisted firmware TUs; allowlist board files |
-| Scope creep into Arduino/PlatformIO as silico backends | refuse in review; one non-Python toolchain in toml enum (`esp-idf`) |
-| Scope creep into `language = cpp` as a third peer | refuse; C++ stays a product choice inside IDF firmware, not a silico runtime key (§1.2) |
-| Closing #53 on fixtures alone | §6 requires real board for metal rows; xuss-c mandatory |
-| Grady S3 vs M5GO classic ESP32 differences | chip/target in toml; prove classic first; open S3 checklist item if needed |
-| Product-path scanner too weak (comments / bare `#include` pass) | require **compiled use** into the product path (§4.6), same spirit as Python AST gate |
-
----
-
-## 10. Suggested PR breakdown (silico)
-
-Small, reviewable steps (order aligns with phases):
-
-1. **PR-A:** #57 port scoring + BEDSIDE esptool notes (can merge independently).  
-2. **PR-B:** `runtime` + toml fields + dispatcher stubs + fixtures (no behavior change for default GCUs).  
-3. **PR-C:** C gate + product-path + hygiene scanners + doctor lines.  
-4. **PR-D:** Serial identity inspect + shared verify helper.  
-5. **PR-E:** IDF deploy plan/flash + extract mpy deploy.  
-6. **PR-F:** `plates/gcu-c` + scaffold flag + package data.  
-7. **PR-G:** AGENTS/BEDSIDE/lexicon/silicov1 pointers; link xuss-c proof.  
-
-Consumer work: **PRs on tig/xuss-c** after PR-E/F are usable via editable silico pin.
-
----
-
-## 11. Sequencing summary
+## Sequencing
 
 ```text
 #57 ESP serial / esptool literacy
-        │
-        ▼
-Config + gate/product-path (host fixtures)
-        │
-        ▼
-Inspect identity (serial) + deploy idf-flash
-        │
-        ▼
+        |
+        v
+Config + gate / product-path (host fixtures)
+        |
+        v
+Inspect identity + deploy idf-flash
+        |
+        v
 plates/gcu-c scaffold
-        │
-        ▼
-tig/xuss-c consumes pin → real M5GO Day 1
-        │
-        ▼
-Docs + close #53; S3 pin as follow-up if unproven
-        │
-        ▼
-(optional) power measurement rig → language decision for solar GCUs
+        |
+        v
+tig/xuss-c on real M5GO Day 1
+        |
+        v
+Docs; close #53; S3 follow-up if needed
+        |
+        v
+(optional) measure power; then argue language
 ```
 
-**Recommendation stays:** Grady ships MicroPython first on ESP32-class when #57 is honest; C backend exists so measurement-driven swap is a backend change, not a product rewrite.
+Recommendation stays: ship MicroPython first on ESP32-class once #57 is honest. Build the C backend so a measurement-driven swap is a backend change, not a product rewrite.
 
----
+## Open decisions (log in PRs)
 
-## 12. Open decisions (resolve during implementation, log in PRs)
+1. Freeze one identity line format for plate and xuss-c (prefer key=value tokens products already use).
+2. Pin exact IDF release in plate toml (prefer exact over "minimum major").
+3. Prefer `idf.py -C firmware build flash` as the one documented path.
+4. No separate `silico flash` verb for v1; `deploy` covers first image and update.
+5. Baud and USB-JTAG per board in product toml, not hard-coded forever to 115200 with no override.
+6. No IDF in default silico CI until cost is justified.
+7. Plate hello-metal stays C; product `firmware/` may add `.cpp` board TUs without changing `language = c`.
 
-1. **Exact identity line grammar** — freeze one line format for plate + xuss-c (prefer key=value tokens already used by products).  
-2. **IDF pin policy** — pin exact Espressif release in plate toml vs "minimum major"; prefer exact pin for reproducibility.  
-3. **Build invocation** — always `idf.py -C firmware build flash` vs cmake+esptool direct; prefer `idf.py` for one documented path.  
-4. **Whether `silico flash` exists** as a synonym for first-image write vs only `deploy` for C (lean: **deploy only**, plan text covers first and update).  
-5. **Baud and USB-JTAG** — S3 native USB vs UART bridge; document per board in product silico.toml, not hard-coded forever to 115200-only without override.  
-6. **CI IDF** — none in default silico CI until cost is justified; xuss-c may add its own IDF workflow later.  
-7. **C++ in plate metal** — plate hello-metal stays C; document that product `firmware/` may add `.cpp` board TUs without changing `language = c` (hygiene allowlist still applies).
+## References
 
----
-
-## 13. References
-
-- Issue: https://github.com/tig/silico/issues/53  
-- First consumer: https://github.com/tig/xuss-c  
-- Twin product (MicroPython): https://github.com/tig/xuss  
-- ESP MicroPython Day 1 gaps: https://github.com/tig/silico/issues/57  
-- Xuss product issue: https://github.com/tig/silico/issues/50  
-- Doctrine: [silicov1.md](./silicov1.md), [tenets.md](./tenets.md), [lexicon.md](./lexicon.md)  
-- Operator manners: root `AGENTS.md`, `BEDSIDE.md`, vendored bedside contract
+- Issue: https://github.com/tig/silico/issues/53
+- First consumer: https://github.com/tig/xuss-c
+- Twin (MicroPython): https://github.com/tig/xuss
+- ESP Day 1 gaps: https://github.com/tig/silico/issues/57
+- Xuss product: https://github.com/tig/silico/issues/50
+- Doctrine: [silicov1.md](./silicov1.md), [tenets.md](./tenets.md), [lexicon.md](./lexicon.md)
+- Operator path: root `AGENTS.md`, `BEDSIDE.md`, vendored bedside contract

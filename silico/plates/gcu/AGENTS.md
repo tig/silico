@@ -28,6 +28,8 @@ Assume low ops literacy. Prefer doing over dumping shell. **Poll USB** after ask
 
 **Metal acceptance:** Day 1 is not “on the metal” until the operator can **see or hear** the documented **product face** after deploy. Wrong plate pin / product face LED confusion is work to finish with the operator — not an honesty footnote under a done banner. Trackers do not replace observe. **If the pin / product face mapping is unclear, ask the operator to clarify (structured chooser) in that turn** — do not only file an issue or assume GPIO16 is fine.
 
+**Surprising metal effects:** before deploy, soft-reset, or any board act that may make noise, long tones, bright lights, or motion — **clearly state in chat** what will happen and roughly how long. Not always a new yes/no gate; always a forewarning. Never silent-deploy a screaming boot riff.
+
 Portable manners gaps: file on **tig/bedside**; metal spine gaps: **tig/silico**.
 
 ## Definition of done

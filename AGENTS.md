@@ -211,6 +211,26 @@ Opening many pull requests as Day 1 proceeds **adds mental burden the operator d
 
 **Anti-pattern:** five open PRs titled variations of “Day 1 scaffold,” “L0 product face,” “L0 domain,” “L1 spine” with no operator request to split. Operator should never have to ask “which order do I merge these?”
 
+#### Announce surprising metal effects (before they happen)
+
+Anything done **to the GCU / board** that may **surprise** the operator — loud or long tones, music, sudden LEDs, motor/actuator motion, first-flash erase, deploy that boots a noisy app, soft-reset that restarts sound — must be **clearly stated in agent output first**.
+
+This is **not** always an extra confirm gate (deploy overwrite already has `confirm-deploy`). It **is** a required **forewarning in plain language** so the human is not startled or left guessing what the device is doing.
+
+**Required before the surprising act** (in the same turn, before the tool/command runs):
+
+1. **What** you are about to do (deploy, soft-reset, first-flash, start app loop, …).
+2. **What they may notice** — see/hear/feel (e.g. “the speaker may play a ~15s tone,” “status LEDs will blink,” “board will reboot and reappear on a new COM”).
+3. **How long** if non-trivial (seconds, until reset, until stop).
+4. **What “done / good” looks like** if relevant (silence after stop, LED pattern ends, version matches).
+
+Do **not** bury this only in code comments, issue text, or a post-hoc “by the way.” Do **not** wait until after the scream.
+
+**Anti-pattern:** `silico deploy … --yes --verify --reset` with no operator-facing line, then a 15-second boot tone with no warning.  
+**Better (before deploy/reset):** “I’m about to write firmware to COM7 and soft-reset so the app runs. On this build the product face includes a boot tone for about 15 seconds — you should hear that, then silence when the idle state is reached. Ready; deploying now.”
+
+Irreversible writes still need **operator gate** confirmation. Surprising **effects** need **announcement** even when write permission was already granted earlier in the session (permission ≠ “no heads-up on loud audio”).
+
 Violating Bedside on the operator path violates **Agents operate the host path**.
 
 ## Part truth: pointers, not documents
@@ -444,8 +464,8 @@ bedside ask --id clarify-product-face \
    - ESP32-class: esptool erase + `ESP32_GENERIC` (or board variant) at `0x1000` (see knowledge/first-flash).
    - Re-inspect until talk; then `--apply-mpy-pin` only on non-ancient MP.
 4. Optional backup: `silico pull <dir> --port COMx`.
-5. Dry plan: `silico deploy --port COMx` → confirm-deploy → `silico deploy --port COMx --yes --verify --reset`.
-6. Soft-reset so **main.py runs as the app** (deploy verify uses REPL and parks the loop). If raw REPL fails: product `repl` door or boot window (Ctrl-C may be data).
+5. Dry plan: `silico deploy --port COMx` → confirm-deploy → **announce surprising product face effects** (tones, long audio, bright LEDs, motion — see **Announce surprising metal effects**) → `silico deploy --port COMx --yes --verify --reset`.
+6. Soft-reset so **main.py runs as the app** (deploy verify uses REPL and parks the loop). If the soft-reset itself will start sound/motion, announce that **before** the reset. If raw REPL fails: product `repl` door or boot window (Ctrl-C may be data).
 7. **Operator-observable check:** document the **product face** “good”; confirm with the operator from the bench. If product face ≠ plate generic pin (or mapping is unclear): **clarify with the operator first** (structured ask), then fix, redeploy, re-confirm observe — do not stop at version match or issue-only.
 8. Optional: `silico monitor --port COMx --duration 10`.
 9. Document `install/` leave-behind (Day-2 one-liner + product face “good”: LEDs/audio/etc.).
@@ -540,6 +560,7 @@ Enforce with `silico gate` (deploy-set CPython import + machine allowlist). Do n
 - Do **not** invent short forms of lexicon terms (e.g. bare “face” for **product face**) in operator-facing prose.
 - Do **not** present phase forks as free-text `1. / 2. / 3.` menus in chat when a structured chooser exists (or `bedside ask` is available).
 - Do **not** open a fan-out of PRs for sequential Day 1 / same-session work unless the operator asked to stage multi-PR. One PR + individual commits is the default.
+- Do **not** deploy, soft-reset, or otherwise drive metal that may play loud/long audio, flash bright patterns, or move actuators without a clear operator-facing forewarning of what will happen and for how long.
 - Prefer issue titles like `host-done / metal-TODO` when splitting layers is honest — and **never** put “on the metal” in the same message as metal-TODO.
 
 Never treat "I flashed something" or "pytest green" as metal/vehicle done.
@@ -601,11 +622,12 @@ Starter products are confidential. In public silico docs and commits use **Zakal
 5. Do not skip host gate or CI because metal "looked fine."
 6. Do not use blind serial auto-connect on multi-device hosts.
 7. Do not open many PRs for one Day 1 arc unless the operator asked to stage multi-PR (one PR, many commits).
-8. Do not deploy host `sim/` or silico package modules to the board.
-9. Do not claim external adoption or platform status without scoreboard evidence.
-10. Do not rewrite PR titles, Grady quotes, or Tig quotes unless the human asks.
-11. Do not start Arduino / multi-runtime work unless a GCU forces it (v2).
-12. Do not burn an hour recovering from silico friction and leave no issue or doc fix for the next agent.
+8. Do not surprise the operator with metal effects (loud/long tones, motion, sudden reboot loops) without clearly announcing what will happen first.
+9. Do not deploy host `sim/` or silico package modules to the board.
+10. Do not claim external adoption or platform status without scoreboard evidence.
+11. Do not rewrite PR titles, Grady quotes, or Tig quotes unless the human asks.
+12. Do not start Arduino / multi-runtime work unless a GCU forces it (v2).
+13. Do not burn an hour recovering from silico friction and leave no issue or doc fix for the next agent.
 
 ## Commands (host)
 

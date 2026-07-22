@@ -111,11 +111,57 @@ def test_deploy_idf_mock_build_flash(tmp_path: Path, monkeypatch):
         calls.append(cmd)
         return Fake(0)
 
-    r = deploy_idf(port="COM7", yes=True, verify=False, root=root, run_fn=run_fn)
+    live: list[str] = []
+    r = deploy_idf(
+        port="COM7", yes=True, verify=False, root=root, run_fn=run_fn, on_progress=live.append
+    )
     assert r.ok, r.lines
     assert len(calls) == 2
     assert any("build" in c for c in calls[0])
     assert any("flash" in c for c in calls[1])
+    # CR: IDF path must stream progress via on_progress (not silent under CLI --yes)
+    assert live == r.lines
+    assert any("PROGRESS" in x or "Building" in x or "build" in x.lower() for x in live)
+    assert any("OK: build" in x for x in live)
+    assert any("OK: flash" in x for x in live)
+
+
+def test_deploy_dispatch_idf_passes_on_progress(tmp_path: Path, monkeypatch):
+    """CLI deploy --yes with language=c must forward on_progress (not silent)."""
+    from silico import deploy as deploy_mod
+    from silico.deploy import deploy
+    from silico.deploy_types import DeployResult
+    from silico.progress import ProgressLog
+
+    root = _c_root(tmp_path)
+    monkeypatch.chdir(root)
+    import silico.ports as ports
+
+    monkeypatch.setattr(
+        ports,
+        "list_scored_ports",
+        lambda: [PortInfo("COM7", 0x1A86, 0x55D4, "CH9102", "m", 55, "ESP")],
+    )
+    monkeypatch.setattr(ports, "port_is_listed", lambda d: True)
+
+    seen: dict = {}
+
+    def fake_idf(**kwargs):
+        seen["on_progress"] = kwargs.get("on_progress")
+        log = ProgressLog(kwargs.get("on_progress"))
+        log("PROGRESS [idf-build] fake")
+        log("OK: build")
+        log("OK: flash")
+        return DeployResult(True, log.lines)
+
+    monkeypatch.setattr(deploy_mod, "deploy_idf", fake_idf)
+    live: list[str] = []
+    cb = live.append
+    r = deploy(None, port="COM7", yes=True, root=root, on_progress=cb)
+    assert r.ok, r.lines
+    assert seen.get("on_progress") is cb
+    assert live
+    assert live == r.lines
 
 
 def test_mpy_flags_rejected_on_c(tmp_path: Path, monkeypatch):

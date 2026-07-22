@@ -7,6 +7,7 @@ from pathlib import Path
 
 from silico.mpremote_util import ls_device, mpremote_available, run_mpremote
 from silico.ports import pick_best_port, port_is_listed
+from silico.progress import ProgressCallback, ProgressLog, file_step, stage_header
 
 
 @dataclass
@@ -114,6 +115,7 @@ def pull_device(
     *,
     port: str | None = None,
     only: list[str] | None = None,
+    on_progress: ProgressCallback | None = None,
 ) -> PullResult:
     if not mpremote_available():
         return PullResult(False, ["FAIL: mpremote not available"])
@@ -125,28 +127,36 @@ def pull_device(
 
     dest = dest.resolve()
     dest.mkdir(parents=True, exist_ok=True)
-    lines = [f"Pull from {chosen.device} -> {dest}"]
+    log = ProgressLog(on_progress)
+    log(stage_header("pull", f"{chosen.device} -> {dest}"))
 
     ls = ls_device(chosen.device)
     if ls.returncode != 0:
-        return PullResult(False, lines + ["FAIL: ls device", (ls.stderr or "").strip()])
+        log("FAIL: ls device")
+        if ls.stderr:
+            log(ls.stderr.strip())
+        return PullResult(False, log.lines)
     names = _parse_ls_names(ls.stdout or "")
     if only:
         want = set(only)
         names = [n for n in names if n in want]
     if not names:
-        lines.append("INFO: no files to pull")
-        return PullResult(True, lines)
+        log("INFO: no files to pull")
+        return PullResult(True, log.lines)
 
+    n = len(names)
+    log(f"PROGRESS [pull] {n} file(s) to copy")
     ok = True
-    for name in names:
+    for i, name in enumerate(names, start=1):
         local = dest / name
+        log(file_step(stage="pull", index=i, total=n, name=name, verb="Reading"))
         r = run_mpremote(chosen.device, "cp", f":{name}", str(local))
         if r.returncode != 0:
             ok = False
-            lines.append(f"FAIL: :{name} -> {local}")
+            log(f"FAIL: :{name} -> {local}")
             if r.stderr:
-                lines.append(r.stderr.strip())
+                log(r.stderr.strip())
         else:
-            lines.append(f"OK: :{name} -> {local}")
-    return PullResult(ok, lines)
+            log(f"OK: :{name} -> {local}")
+    log(stage_header("done", "pull finished " + ("OK" if ok else "with errors")))
+    return PullResult(ok, log.lines)

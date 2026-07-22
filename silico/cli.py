@@ -9,6 +9,7 @@ from pathlib import Path
 from silico import __version__
 from silico.deploy import DeployResult, deploy, plan_deploy
 from silico.doctor import run_doctor
+from silico.first_flash import FirstFlashResult, first_flash, plan_first_flash
 from silico.host_hygiene import run_hygiene
 from silico.inspect_device import inspect
 from silico.monitor import monitor_port
@@ -19,9 +20,14 @@ from silico.scaffold import scaffold
 from silico.wait_device import TIMEOUT_SOP, format_port_snapshot, wait_for_board
 
 
+def _out(msg: str) -> None:
+    """Operator-facing line (flush so multi-minute flash/deploy is not silent)."""
+    print(msg, flush=True)
+
+
 def _print_lines(lines: list[str]) -> None:
     for line in lines:
-        print(line)
+        _out(line)
 
 
 def cmd_doctor(_args: argparse.Namespace) -> int:
@@ -100,9 +106,12 @@ def cmd_deploy(args: argparse.Namespace) -> int:
         _print_lines(planned.lines)
         if isinstance(planned, DeployResult):
             return 1
-        print("Dry plan only. Re-run with --yes only after operator confirmed identity + write.")
+        _out(
+            "Dry plan only. Re-run with --yes only after operator confirmed identity + write."
+        )
         return 2
 
+    # Live PROGRESS lines as each file/stage completes (operators see movement).
     result = deploy(
         files,
         port=args.port,
@@ -113,14 +122,37 @@ def cmd_deploy(args: argparse.Namespace) -> int:
         expect_version=args.expect_version,
         reset=args.reset,
         prune=args.prune,
+        on_progress=_out,
     )
-    _print_lines(result.lines)
+    return 0 if result.ok else 1
+
+
+def cmd_first_flash(args: argparse.Namespace) -> int:
+    """First-flash MicroPython (esptool or UF2) with streamed progress."""
+    kwargs = dict(
+        image=Path(args.image),
+        port=args.port,
+        chip=args.chip,
+        offset=args.offset,
+        erase=not args.no_erase,
+        uf2_dest=Path(args.uf2_dest) if args.uf2_dest else None,
+    )
+    if not args.yes:
+        planned = plan_first_flash(**kwargs)
+        _print_lines(planned.lines)
+        if isinstance(planned, FirstFlashResult):
+            return 1
+        _out(
+            "Dry plan only. Re-run with --yes only after operator confirmed board + image."
+        )
+        return 2
+
+    result = first_flash(**kwargs, yes=True, on_progress=_out)
     return 0 if result.ok else 1
 
 
 def cmd_pull(args: argparse.Namespace) -> int:
-    result = pull_device(Path(args.dest), port=args.port)
-    _print_lines(result.lines)
+    result = pull_device(Path(args.dest), port=args.port, on_progress=_out)
     return 0 if result.ok else 1
 
 
@@ -235,6 +267,44 @@ def build_parser() -> argparse.ArgumentParser:
     dep.add_argument("--expect-version", default=None)
     dep.add_argument("--reset", action="store_true", help="soft reset after deploy")
     dep.set_defaults(func=cmd_deploy)
+
+    ff = sub.add_parser(
+        "first-flash",
+        help="first-flash MicroPython (esptool ESP32 or UF2 copy) with live progress",
+    )
+    ff.add_argument("image", help="firmware .bin (esptool) or .uf2 (mass storage)")
+    ff.add_argument(
+        "--port",
+        default=None,
+        help="COMx for esptool path (required unless --uf2-dest)",
+    )
+    ff.add_argument(
+        "--chip",
+        default="esp32",
+        help="esptool chip id (default esp32; e.g. esp32s3)",
+    )
+    ff.add_argument(
+        "--offset",
+        default="0x1000",
+        help="write-flash offset (default 0x1000 for classic ESP32)",
+    )
+    ff.add_argument(
+        "--no-erase",
+        action="store_true",
+        help="skip erase-flash before write (default is erase once)",
+    )
+    ff.add_argument(
+        "--uf2-dest",
+        default=None,
+        metavar="PATH",
+        help="copy UF2 to this path on the boot volume (e.g. E:/fw.uf2)",
+    )
+    ff.add_argument(
+        "--yes",
+        action="store_true",
+        help="operator confirmed this board + image (required to flash)",
+    )
+    ff.set_defaults(func=cmd_first_flash)
 
     pull = sub.add_parser("pull", help="backup device files to a host directory (read-only)")
     pull.add_argument("dest", help="host directory to write into")

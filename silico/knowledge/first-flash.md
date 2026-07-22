@@ -14,12 +14,31 @@ After first-flash, deploys are mpremote over USB CDC for all supported boards.
 ## UF2 (RP2040-class)
 
 1. Operator holds BOOT, taps RESET → `RPI-RP2` volume.
-2. Copy the board’s MicroPython `.uf2`.
+2. Copy the board’s MicroPython `.uf2` (prefer `silico first-flash` below for byte progress).
 3. Re-enumerate COM; `silico inspect --port COMx`.
+
+```text
+# After BOOT+RESET → volume mounted (e.g. E:\)
+silico first-flash firmware.uf2 --uf2-dest E:/firmware.uf2
+silico first-flash firmware.uf2 --uf2-dest E:/firmware.uf2 --yes
+# streams: PROGRESS [uf2-copy] N% (written / total)
+```
 
 ## esptool (ESP32-class classic)
 
-Typical classic ESP32 (not S2/S3 — check chip with `esptool chip-id`):
+Prefer the silico verb so **progress streams** to the operator (`PROGRESS [esptool] …` percentages):
+
+```text
+# dry plan (no write)
+silico first-flash ESP32_GENERIC-<date>-vX.Y.Z.bin --port COMx
+# after operator confirm board + image:
+silico first-flash ESP32_GENERIC-<date>-vX.Y.Z.bin --port COMx --yes
+# variants:
+silico first-flash image.bin --port COMx --chip esp32s3 --offset 0x0 --yes
+silico first-flash image.bin --port COMx --no-erase --yes   # skip erase-flash
+```
+
+Manual equivalent (if you must):
 
 ```text
 esptool --chip esp32 --port COMx erase-flash
@@ -40,8 +59,9 @@ Same for all boards:
 
 ```text
 silico inspect --port COMx --apply-mpy-pin
-silico deploy --port COMx   # dry plan
-# operator confirm →
+silico deploy --port COMx   # dry plan (lists sizes + PROGRESS stages)
+# operator confirm → announce surprising product face effects if any →
 silico deploy --port COMx --yes --verify --reset
+# live: PROGRESS [write] i/n name (size), then reset / verify stages
 # soft-reset again if the product face / app loop is not running after verify
 ```

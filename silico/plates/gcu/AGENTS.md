@@ -24,7 +24,7 @@ Assume low ops literacy. Prefer doing over dumping shell. **Poll USB** after ask
 
 **Next-step forks:** use a structured chooser (`bedside ask` or host picker). Never a free-text `1. / 2.` menu in chat.
 
-**Metal acceptance:** Day 1 is not “on the metal” until the operator can **see or hear** documented product good after deploy. Wrong plate pin / face LED confusion is work to finish with the operator — not an honesty footnote under a done banner. Trackers do not replace observe.
+**Metal acceptance:** Day 1 is not “on the metal” until the operator can **see or hear** documented product good after deploy. Wrong plate pin / face LED confusion is work to finish with the operator — not an honesty footnote under a done banner. Trackers do not replace observe. **If the pin/face mapping is unclear, ask the operator to clarify (structured chooser) in that turn** — do not only file an issue or assume GPIO16 is fine.
 
 Portable manners gaps: file on **tig/bedside**; metal spine gaps: **tig/silico**.
 

@@ -378,9 +378,32 @@ Deploy verify + `FW_VERSION` match prove the **host wrote this build**. They do 
 3. If product docs name a face (e.g. M5 face/side LEDs, speaker riff) and the plate only toggles a generic/dev-board pin (e.g. XIAO GPIO LED that is not the product face): **that is HW confusion, not Day 1 done.** Resolve it with the operator — map pins from product parts/spec/board knowledge, fix `firmware/` / HAL defaults, host-test, redeploy, re-confirm observe. Filing a GitHub issue is a tracker, not acceptance.
 4. Product face gaps that block observe are **in-scope Day 1 metal work**. Silico exists to help the operator through this. Do not label the session “on the metal” / “Day 1 complete” while an open issue still says the visible/audible face is unproven.
 
+##### GPIO / pin / face ambiguity → **stop and ask** (mandatory)
+
+When you notice (or should notice) that the **pin, LED, speaker, or “good” face** in firmware does not clearly match the **product board / spec**, you **must not** quietly assume, monologue an “Honesty” paragraph, or only open a GitHub issue.
+
+**Required path:**
+
+1. **Stop advancing** Phase E/F claims. Stay in Phase D metal acceptance.
+2. **State the mismatch in plain language** (what the code drives vs what the product docs / board face look like).
+3. **Ask the operator to clarify** with a **structured chooser** (`bedside ask` or host picker) — or one focused free-text question only if the answer is open (e.g. “which LED on the M5 face is the product status light?”). Put the **recommended** guess first when you have one from parts/spec/knowledge.
+4. Only after their answer: implement the mapping, host-test, redeploy, then **confirm observe** (“Do you see/hear X?”).
+5. Optional: file/update an issue **as a tracker after or while** you are driving the clarify → fix loop — never instead of asking.
+
+Example gate shape (use host picker / `bedside ask`, not a free-text `1/2/3` wall):
+
+```text
+bedside ask --id clarify-face-led \
+  --prompt "Plate hello blinks GPIO16 (often a small module LED). Xuss spec wants the M5 face/side lights. Which should we treat as Day-1 good on this board?" \
+  --choices "m5-face-led,m5-side-led,gpio16-ok-for-now,operator-will-point" \
+  --default m5-face-led
+```
+
+**Anti-pattern:** agent notices wrong GPIO, writes “Honesty: not the M5 face LED,” files `#5`, and asks “merge PR or start domain?” without ever asking the operator which light/sound is correct. That **strands** the operator and violates Help the operator / scary surfaces.
+
 **Anti-pattern (forbidden claim):** title or summary like “GCU is on the metal” + an “Honesty” section that admits the product face/light/sound was **not** proven. That is layered lying: call the layer you proved (`deployed` / `REPL ready`) and leave metal-acceptance open.
 
-**Allowed partial claim (honest):** “Board talks on COM7; deploy verified XUSS 0.0.1; product face LED mapping still open — continuing Phase D until you can see/hear documented good.” Then **keep driving** that resolution (or get an explicit operator defer that Day 1 metal is incomplete).
+**Allowed partial claim (honest):** “Board talks on COM7; deploy verified XUSS 0.0.1; product face LED mapping is unclear — I need you to clarify which light is Day-1 good before we call metal done.” Then run the clarify gate **in that same turn**, not later.
 
 **Phase D steps (order only — details in BEDSIDE + knowledge/first-flash):**
 
@@ -393,7 +416,7 @@ Deploy verify + `FW_VERSION` match prove the **host wrote this build**. They do 
 4. Optional backup: `silico pull <dir> --port COMx`.
 5. Dry plan: `silico deploy --port COMx` → confirm-deploy → `silico deploy --port COMx --yes --verify --reset`.
 6. Soft-reset so **main.py runs as the app** (deploy verify uses REPL and parks the loop). If raw REPL fails: product `repl` door or boot window (Ctrl-C may be data).
-7. **Operator-observable check:** document what “good” should look/sound like; confirm with the operator from the bench. If product face ≠ plate generic pin, fix and redeploy — do not stop at version match.
+7. **Operator-observable check:** document what “good” should look/sound like; confirm with the operator from the bench. If product face ≠ plate generic pin (or mapping is unclear): **clarify with the operator first** (structured ask), then fix, redeploy, re-confirm observe — do not stop at version match or issue-only.
 8. Optional: `silico monitor --port COMx --duration 10`.
 9. Document `install/` leave-behind (Day-2 one-liner + LED/face/audio “good”).
 
@@ -425,7 +448,7 @@ While coding, you will find product `spec.md` items that are lacking, confusing,
 
 | Gap type | Rule |
 |----------|------|
-| **Blocks see/hear acceptance** (which LED is face, pin map for this board, boot riff, “what good looks like”) | **In-scope now.** Do not park only as an issue and claim Day 1 metal done. Work it with the operator (parts.toml, knowledge, board docs, explicit assumption + confirm). Spec rewrite can still wait, but **bench truth cannot**. |
+| **Blocks see/hear acceptance** (which LED is face, pin map for this board, boot riff, “what good looks like”) | **In-scope now.** **Ask the operator to clarify** (structured gate) as soon as you notice the mismatch — do not only monologue or file an issue. Then parts.toml / knowledge / board docs / implement + confirm. Spec rewrite can still wait, but **bench truth cannot**. |
 | **Domain polish / later product depth** (full protocol, vehicle appendix, extra modes) | Do not block the current host-green slice. Note the gap; **late step** offer a proposed `spec.md` edit after host gate is green or at a phase boundary. |
 
 For non-blocking gaps:
@@ -483,6 +506,7 @@ Enforce with `silico gate` (deploy-set CPython import + machine allowlist). Do n
   2. leave a **blocking metal follow-up** open (title/status makes metal-TODO obvious) and do not narrate the product as metal-ready.
 - Do **not** mark vehicle/Appendix acceptance done without the vehicle procedure (or explicit defer with open tracker).
 - Do **not** mark Day 1 / “on the metal” done when the operator cannot see or hear product “good,” even if deploy verify and version match passed. Filing “face LED wrong pin” and moving to Phase F is a forbidden close.
+- Do **not** notice GPIO/face/audio mismatch and skip asking the operator to clarify (honesty note or issue alone is not a clarify gate).
 - Do **not** present phase forks as free-text `1. / 2. / 3.` menus in chat when a structured chooser exists (or `bedside ask` is available).
 - Prefer issue titles like `host-done / metal-TODO` when splitting layers is honest — and **never** put “on the metal” in the same message as metal-TODO.
 

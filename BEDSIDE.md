@@ -28,11 +28,13 @@ Host tools and Day-1 **phase order** live in **AGENTS.md**. Metal-specific once-
 4. Operator confirms this port is the product board before any write (`bedside ask --id confirm-board`, recommended default **no** if unsure).
 5. Deploy overwrite only after `bedside ask --id confirm-deploy` (or host UI same contract).
 6. After `--verify`, **soft-reset again** so the product boot entry runs (verify parks the app loop).
-7. **Operator-observable good:** confirm the human can **see or hear** the documented face/status for **this** product board (not only `FW_VERSION` over REPL). Plate generic LED on the wrong pin is not acceptance — resolve HW confusion with the operator (spec/parts/knowledge → fix → redeploy → re-confirm).
-8. App updates after first-flash: no re-teaching UF2/esptool.
+7. **Operator-observable good:** confirm the human can **see or hear** the documented face/status for **this** product board (not only `FW_VERSION` over REPL). Plate generic LED on the wrong pin is not acceptance.
+8. **Pin/face mismatch → ask first:** if GPIO, LED, or audio face is unclear vs product docs/board, **stop and clarify with the operator** (`bedside ask` / host picker) before assuming, filing-only, or advancing phases. Then fix → redeploy → re-confirm observe.
+9. App updates after first-flash: no re-teaching UF2/esptool.
 
 Do **not** stop Day 1 after host gate green unless the operator explicitly defers metal.  
-Do **not** claim “on the metal” while product face/audio is unproven or only tracked as an open issue.
+Do **not** claim “on the metal” while product face/audio is unproven or only tracked as an open issue.  
+Do **not** monologue HW confusion without asking the operator to clarify.
 
 ## Scary surfaces (metal glossary)
 

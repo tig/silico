@@ -196,6 +196,21 @@ Non-interactive / CI: `--answer` on `ask`, `--confirm` / `--decline` / `--no-wai
 
 That is a multi-choice wall. Use `bedside ask` or the host **structured chooser** (recommended option first). One open free-text question is fine only when the answer is open domain judgment the picker cannot capture — not for “pick next phase fork.”
 
+#### One PR by default (do not PR-spam the operator)
+
+Opening many pull requests as Day 1 proceeds **adds mental burden the operator does not need**: merge order, base-branch graphs, overlapping titles, and “which one is real?” confusion. That is a bedside manners failure (Help the operator / never leave them at a cliff of process).
+
+**Default (unless the operator explicitly asks to stage work as multiple PRs):**
+
+1. Prefer **one open PR** per product session / Day 1 arc (or keep working on `main` with direct pushes if that is already the repo’s workflow and the operator is fine with it).
+2. Land progress as **individual, reviewable commits** on that single branch/PR (scaffold → host gate → metal face → domain slice, etc.). Commit history is the staging; the PR list is not.
+3. Update the same PR as work continues (push more commits). Do **not** open a second PR for the next phase of the same Day 1.
+4. Issues remain fine for tracking intent; **issues ≠ a PR each**.
+
+**Only open multiple PRs when** the operator clearly asks to stage, split review, or stack work (e.g. “separate PRs per issue,” Graphite stack, etc.). Then say in plain language how they relate and merge order — do not invent a multi-PR plan unprompted.
+
+**Anti-pattern:** five open PRs titled variations of “Day 1 scaffold,” “L0 product face,” “L0 domain,” “L1 spine” with no operator request to split. Operator should never have to ask “which order do I merge these?”
+
 Violating Bedside on the operator path violates **Agents operate the host path**.
 
 ## Part truth: pointers, not documents
@@ -358,7 +373,7 @@ silico scaffold .
 3. Set product identity in `firmware/version.py` and `silico.toml` from **product files** when present (README title, `spec.md` identity lines); plate defaults are generic only.
 4. If `spec.md` exists: host gate proves the **plate + product path** first; domain behavior comes from the **product** spec/AGENTS (not invented in silico). Open host knowledge topics only when the product needs board caps (e.g. `silico/knowledge/esp32-audio.md` for DAC/speaker work).
 5. Run host gate until green: `python -m pytest -q` (or `silico doctor` then pytest / `silico gate` / `silico product-path`).
-6. Commit and push. Confirm CI/Actions is on.
+6. Commit and push (or open **one** PR if the repo uses PRs for CI). Further Day 1 work continues as **more commits on the same branch/PR** — see **One PR by default**. Confirm CI/Actions is on.
 7. **Do not stop here.** Host gate green is a checkpoint. **Immediately continue into Phase D**.
 
 ### Phase D - Talk to real hardware (hello metal)
@@ -441,7 +456,7 @@ Non-Python deploy assets (e.g. audio riffs) may appear in `[deploy].core`; host 
 
 1. Ask the human to open a GitHub Issue on the **GCU** repo (or create with `gh` after approve). Title example: `Change the firmware blink pattern (distinct A vs B)`.
 2. Implement: firmware behavior change **and** host tests/CI green. Domain follows product `spec.md` when present.
-3. Push or PR. Watch CI; fix red builds.
+3. Push commits to the **existing** Day 1 branch/PR (or open the first PR if none yet). Do **not** open a new PR per phase. Watch CI; fix red builds.
 4. Deploy only after operator confirmation again if overwriting; confirm the visible/audible acceptance matches the issue.
 5. Close the issue with a short note linking the commit/PR.
 
@@ -451,9 +466,9 @@ Closed loop: **issue → agent → host gate → CI → metal**.
 
 1. Human points at domain intent (docs, notes, rough brief). You do **not** invent the vertical moat.
 2. Write detailed specs, tests, and `firmware/` under test-first and host-first rules.
-3. Staged plan as **cross-linked, tagged GitHub Issues** for proprietary work.
+3. Staged plan as **cross-linked, tagged GitHub Issues** for proprietary work — **issues stage work, not a PR per issue** unless the operator asked for multi-PR staging.
 4. Host gate green locally before claiming done. Flash only confirms.
-5. Push; CI matches local. Change requests arrive as GitHub Issues. Implement them without requiring the human to know git branches unless they want to.
+5. Push more commits to the same branch/PR; CI matches local. Change requests arrive as GitHub Issues. Implement them without requiring the human to know git branches unless they want to.
 
 #### Spec gaps
 
@@ -524,6 +539,7 @@ Enforce with `silico gate` (deploy-set CPython import + machine allowlist). Do n
 - Do **not** notice GPIO / product face mismatch and skip asking the operator to clarify (honesty note or issue alone is not a clarify gate).
 - Do **not** invent short forms of lexicon terms (e.g. bare “face” for **product face**) in operator-facing prose.
 - Do **not** present phase forks as free-text `1. / 2. / 3.` menus in chat when a structured chooser exists (or `bedside ask` is available).
+- Do **not** open a fan-out of PRs for sequential Day 1 / same-session work unless the operator asked to stage multi-PR. One PR + individual commits is the default.
 - Prefer issue titles like `host-done / metal-TODO` when splitting layers is honest — and **never** put “on the metal” in the same message as metal-TODO.
 
 Never treat "I flashed something" or "pytest green" as metal/vehicle done.
@@ -584,11 +600,12 @@ Starter products are confidential. In public silico docs and commits use **Zakal
 4. Do not dump unexplained command walls; do not say "run this" when you could run it.
 5. Do not skip host gate or CI because metal "looked fine."
 6. Do not use blind serial auto-connect on multi-device hosts.
-7. Do not deploy host `sim/` or silico package modules to the board.
-8. Do not claim external adoption or platform status without scoreboard evidence.
-9. Do not rewrite PR titles, Grady quotes, or Tig quotes unless the human asks.
-10. Do not start Arduino / multi-runtime work unless a GCU forces it (v2).
-11. Do not burn an hour recovering from silico friction and leave no issue or doc fix for the next agent.
+7. Do not open many PRs for one Day 1 arc unless the operator asked to stage multi-PR (one PR, many commits).
+8. Do not deploy host `sim/` or silico package modules to the board.
+9. Do not claim external adoption or platform status without scoreboard evidence.
+10. Do not rewrite PR titles, Grady quotes, or Tig quotes unless the human asks.
+11. Do not start Arduino / multi-runtime work unless a GCU forces it (v2).
+12. Do not burn an hour recovering from silico friction and leave no issue or doc fix for the next agent.
 
 ## Commands (host)
 

@@ -387,6 +387,7 @@ Product specs must **not** name a MicroPython version or hand-derive the PyPI pi
 ```text
 silico scaffold .
 # empty dir also fine: silico scaffold ./my-gcu
+# C / ESP-IDF plate (issue #53): silico scaffold . --plate gcu-c
 # --force overwrites non-protected plate files only (not README/spec)
 ```
 
@@ -548,6 +549,19 @@ The host gate is only honest if domain firmware is host-importable and hardware 
 4. **main** — `init(hal=…)` / `tick`; no top-level hardware; boot only as `__main__`.
 
 Enforce with `silico gate` (deploy-set CPython import + machine allowlist). Do not re-derive a private HAL shape per GCU when the plate already ships one.
+
+### C / ESP-IDF backend (`language = c`)
+
+Opt-in plate: `silico scaffold . --plate gcu-c`. Runtime from `silico.toml` (`language = c`, `toolchain = esp-idf`, `chip`, `[deploy].mode = idf-flash`).
+
+| Verb | C behavior |
+|------|------------|
+| `gate` | Device-header allowlist (`#include`) + `[host].gate` (cmake/ctest) when `build/host` exists |
+| `product-path` | Host C tests must use shipped defaults table (compiled use) |
+| `inspect` | Serial identity line; no mpremote; no `--apply-mpy-pin` |
+| `deploy` | `idf.py build` + flash; plan says full image overwrite; `--prune` / `--verify-import` refuse |
+
+Default plate stays MicroPython. Arduino is not this path (see issue #59). First consumer for C Day 1 is **tig/xuss-c** (spec-first product; not closed by hello-metal alone).
 
 ### Forbidden closes
 

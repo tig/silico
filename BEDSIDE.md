@@ -47,7 +47,8 @@ Do **not** start surprising audio/motion without a clear forewarning in agent ou
 |---------|----------------|
 | USB serial / COM | Prefer explicit `COMx`; demote CH340 adapters and Debug Probe; ESP-class CDC (CH9102, CP210x) may score as candidates — still confirm identity |
 | First-flash | UF2 **or** esptool once; never apply mpy pins from language version alone |
-| Deploy overwrite | Inspect first; write only with operator yes (`silico deploy --port COMx --yes`, usually `[deploy].core`); **announce** post-boot product face (sound/light/motion) before write/reset |
+| Deploy overwrite | Inspect first; write only with operator yes (`silico deploy --port COMx --yes`). MicroPython: usually `[deploy].core` files. **C / ESP-IDF:** full app image (`idf.py build` + flash). **Announce** post-boot product face (sound/light/motion) before write/reset |
+| C image identity | `language = c`: inspect knocks serial for `fw_name=… fw_version=…` (no mpremote REPL) |
 | Surprising audio / motion | Loud or long tones, music, actuators: forewarn in plain language before the act — not only after |
 | Board identity | High score is a hint; `bedside ask --id confirm-board` (or host picker) |
 | Physical plug / BOOT | `bedside step --id …` one instruction + confirm in their words |
@@ -59,11 +60,22 @@ Do **not** start surprising audio/motion without a clear forewarning in agent ou
 
 ## Day-2 leave-behind (metal)
 
+MicroPython plate:
+
 ```text
 pytest -q
 silico deploy --port COMx --yes --verify --reset
 # soft-reset once more if the product face / app loop is not running
 ```
+
+C / ESP-IDF plate (`silico scaffold . --plate gcu-c`):
+
+```text
+cmake -S host -B build/host && cmake --build build/host --target test
+silico deploy --port COMx --yes --verify
+```
+
+Requires ESP-IDF (`idf.py` or `IDF_PATH`). First flash and update flash are the same image path.
 
 Good: host gate green; device `FW_VERSION` matches host; **operator-confirmed product face** (LED/status/audio for this product; silence after stop if the product has a speaker). Version match alone is not “good.”
 

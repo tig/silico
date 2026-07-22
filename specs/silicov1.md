@@ -111,13 +111,13 @@ Private GCU repos pin silico as a **host** dependency and follow the plate. Devi
 
 ```text
 # GCU depends on silico (host / CI only)
+# Day 1: local clone of tig/silico + editable pin (not git+https pip bootstrap)
 requirements-dev.txt:
-  tig-silico @ git+https://github.com/tig/silico.git@main
-  # prefer a real git tag only after one exists with name=tig-silico
-  # or while extracting:  -e /path/to/tig/silico
+  -e ../silico
+  # CI may use a checked-out sibling or a real tag/SHA that ships tig-silico
 
 firmware/   -> board
-silico      -> Mac / CI only
+silico      -> Mac / CI only (local clone preferred on the agent host)
 ```
 
 The GCU needs a GitHub remote (or equivalent) so CI can run the host gate. A package pin alone is necessary but not sufficient for Grady's path.
@@ -302,7 +302,7 @@ Until then, Quilan owns modem, credentials, and uplink protocol in private app c
 
 1. **License: Apache-2.0** (patent grant for serious vertical legal review).
 2. **Python floor: 3.11+** (do not guide operators onto EOL 3.9).
-3. **Pin silico by tag or commit SHA** for version identity when a **real** tag ships `tig-silico`. Until then bootstrap with `@main` (plate default). Do **not** invent a tag from the package version string (e.g. `0.1.4` ≠ `@v0.1.4`).
+3. **Host pin:** Day 1 agents **clone `tig/silico` locally** and pin editable (`-e ../silico` / `pip install -e …`). Do **not** bootstrap via `git+https://…@…` pip URLs. Remote tag/SHA pins only when CI or the operator needs an immutable remote ref that actually ships `tig-silico` — never invent a tag from the package version string.
 4. **mpy-cross** pinned to device MicroPython runtime (single source in `silico.toml` when tooling lands).
 
 **Still open**

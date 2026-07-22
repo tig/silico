@@ -309,7 +309,7 @@ Example shape:
 >
 > **Day 1 map:** (A) machine tools → (B) workspace locked → (C) **plate** (standard project template) via **scaffold**, then **host gate** (automated tests on this computer) green → (D) board talks over USB and a confirmed first deploy. We do not stop at host-only.
 >
-> **Next after go:** install/pin Silico on this host and scaffold/merge the plate here — that gives us the maintainable repo layout and an honest host test path before we touch the board.
+> **Next after go:** ensure a **local clone** of Silico on this machine, editable-install it, then scaffold/merge the plate here — that gives us the maintainable repo layout and an honest host test path before we touch the board.
 >
 > Do you want me to start? Or should I adjust something?
 
@@ -348,39 +348,59 @@ When a human must install or approve something, use **Big steps: why + where** (
 3. If create new: confirm a product or codename (**not** `silico`); `gh` create private; clone **or** init in the empty cwd.
 4. Remind them: silico stays `github.com/tig/silico`; **their product** is the GCU repo.
 
-### Phase C - Pin silico and scaffold the GCU
+### Phase C - Local silico checkout, pin, and scaffold the GCU
 
-**Where we are:** Phase C — pin Silico, **scaffold** the **plate**, green the **host gate**. Next after green: Phase D (board talk), not “done.”
+**Where we are:** Phase C — get a **local Silico clone** on this host, editable-install the CLI, **scaffold** the **plate**, green the **host gate**. Next after green: Phase D (board talk), not “done.”
 
 **Do not hand-invent a parallel spine.** Use the package + plate. **Always `silico scaffold .` from the product root** (Phase B0), never from a silico package checkout.
 
-1. Install silico on the host. **Default pin is `@main`** until a real git tag exists that ships package name **`tig-silico`**.
+1. **Local Silico checkout (not “pip install from GitHub”).** Day 1 agents **clone** `tig/silico` onto the machine (once) and install from that path so host tools do **not** re-hit GitHub over HTTPS on every `pip install`.
+
+   **Find or clone:**
+
+   1. If cwd is already a **silico-package** checkout (or you are only working on silico itself): use **this** tree. Do not clone a second copy for that work.
+   2. If cwd is a **GCU**: look for an existing clone (common: sibling `../silico` under the same parent as the GCU, e.g. `…/tig/silico` next to `…/tig/xuss-lame`).
+   3. If missing: clone beside the GCU (or into the operator’s usual source root) with authenticated git / `gh` — **not** by asking pip to fetch the package:
 
 ```text
-# In GCU requirements-dev.txt (or pip install directly while bootstrapping):
-tig-silico @ git+https://github.com/tig/silico.git@main
+# From the parent of the GCU (example layout):
+gh repo clone tig/silico
+# → ./silico  next to  ./<gcu>
+```
+
+   **Editable install from the clone** (package name **`tig-silico`**, CLI still `silico`):
+
+```text
+python -m pip install -U pip
+python -m pip install -e "/path/to/tig/silico" pytest
+python -m pip install -e "/path/to/tig/silico/third_party/bedside"
+# Never: pip install silico  — unrelated PyPI package (issue #27).
+# Never Day-1 bootstrap:  pip install "tig-silico @ git+https://github.com/tig/silico.git@…"
+#   That forces HTTPS to GitHub on install and is not the intended host path.
+```
+
+   **GCU `requirements-dev.txt` pin** — local path, not a git URL:
+
+```text
+# Host-only. Prefer editable local clone (sibling layout is typical).
+-e ../silico
 pytest>=8
 mpy-cross==<pin matching device MicroPython major.minor — see below>
 ```
 
-```text
-python -m pip install -U pip
-python -m pip install "tig-silico @ git+https://github.com/tig/silico.git@main" pytest
-# Never: pip install silico  — unrelated PyPI package (issue #27).
-# local extraction only:
-# python -m pip install -e /path/to/tig/silico
-```
+   Use the real relative or absolute path to **this machine’s** clone. After scaffold, rewrite plate defaults if they still show a remote git URL.
 
-**Pin rules (do not invent tags):**
+**Checkout / pin rules:**
 
 | Fact | Rule |
 |------|------|
-| Plate / bootstrap | Use `@main` as written above. That is correct today. |
-| Package version on `main` (e.g. `0.1.4` in `pyproject.toml`) | **Not** a git tag. `silico doctor` reporting `tig-silico 0.1.4` means the installed wheel’s version, **not** that `@v0.1.4` exists. |
-| Git tags `v0.1.3` and earlier | **Unusable** as `tig-silico@…` — those tags declare package name `silico` (pre-rename). |
-| Future immutable pin | Only after a tag is **actually cut** on GitHub with `name = "tig-silico"`. Then prefer that tag over `@main`. **Do not** guess the next tag name from the package version. |
+| Day 1 host path | **Clone once** (`gh repo clone tig/silico` or equivalent) → `pip install -e <clone>`. |
+| Why not git+https pip pins | Every install re-talks to GitHub; auth/rate-limit/offline failures; wrong mental model (“Install silico” from the network). |
+| Package version (e.g. `0.1.4` in `pyproject.toml`) | Dist metadata only. `silico doctor` saying `tig-silico 0.1.4` does **not** mean invent `@v0.1.4`. |
+| Git tags `v0.1.3` and earlier | Pre-rename (`name=silico`); do not use as a `tig-silico` pin. |
+| CI / immutable remote pin | Only when the operator/CI truly needs a remote ref — and only a **real** tag/SHA that ships `tig-silico`. Not the Day 1 default. |
 
-If install fails, **stop**, say the pin is broken, and file/fix on `tig/silico`. Do **not** vendor host tooling into the GCU. Do **not** thrash alternate version refs to “find” a missing tag.
+If clone or editable install fails, **stop**, say what broke, and file/fix on `tig/silico`. Do **not** vendor host tooling into the GCU. Do **not** thrash invented version tags or remote pip URLs as a workaround.
 
 **mpy-cross pin (ABI) — Silico owns this chain:**
 
@@ -389,7 +409,7 @@ Product specs must **not** name a MicroPython version or hand-derive the PyPI pi
 1. Plate defaults ship a **recent stable** PyPI `mpy-cross` as a starting point only.
 2. After the board talks: `silico inspect --port COMx --apply-mpy-pin` — Silico reads device MicroPython **from `sys.implementation`**, maps to an installable pin, and writes **both** `silico.toml` `[runtime].mpy_cross` and `requirements-dev.txt`.
 3. Refuse/warn on **ancient** device images; first-flash a current port before applying pins.
-4. Packaging: install **`tig-silico`**, never bare `pip install silico`. Bootstrap from `@main` (see pin rules above).
+4. Packaging: install **`tig-silico`** from the **local clone** (`pip install -e …`), never bare `pip install silico`.
 5. `silico doctor` warns on ancient plate pins. Fix before claiming the host compile gate is honest.
 
 2. Scaffold the plate (merge into existing GCU is OK; product `README.md` / `spec.md` are never overwritten):
@@ -670,7 +690,7 @@ Prefer [silicov1.md](specs/silicov1.md). Do not invent a second architecture.
 |--|---------------------------|--------------------------------|
 | Owner | Open spine | Vertical product |
 | On metal | No | `firmware/` yes |
-| Host pin | N/A (is the package) | `requirements-dev.txt` pins silico |
+| Host pin | N/A (is the package) | `requirements-dev.txt` pins **local** silico clone (`-e ../silico`) |
 | Domain IP | Never | Always |
 | Public codenames | Zakalwe, Quilan, Sma only | Real brands stay private |
 
@@ -701,11 +721,12 @@ Starter products are confidential. In public silico docs and commits use **Zakal
 Run these yourself when possible. Show the human only what they must see.
 
 ```text
-# Install spine (@main until a real tig-silico git tag exists) + vendored bedside CLI
+# Host spine: local clone of tig/silico, then editable install (Phase C).
 # Package: tig-silico. CLI: silico. Not `pip install silico` (unrelated PyPI name).
-# Do not invent @vX.Y.Z from the package version string — see Phase C pin rules.
-python -m pip install "tig-silico @ git+https://github.com/tig/silico.git@main"
-# when working in this repo:
+# Prefer: sibling clone or `gh repo clone tig/silico` — not git+https pip pins.
+python -m pip install -e "/path/to/tig/silico" pytest
+python -m pip install -e "/path/to/tig/silico/third_party/bedside"
+# when already inside a silico checkout:
 python -m pip install -e ".[dev]"
 python -m pip install -e ./third_party/bedside
 

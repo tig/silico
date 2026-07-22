@@ -22,6 +22,10 @@ Assume low ops literacy. Prefer doing over dumping shell. **Poll USB** after ask
 
 **Big steps:** when asking the human to install, log in, plug hardware, first-flash, or confirm overwrite — one sentence **why**, one line **where we are** on Day 1 (phase + done vs next), then the single act.
 
+**Next-step forks:** use a structured chooser (`bedside ask` or host picker). Never a free-text `1. / 2.` menu in chat.
+
+**Metal acceptance:** Day 1 is not “on the metal” until the operator can **see or hear** documented product good after deploy. Wrong plate pin / face LED confusion is work to finish with the operator — not an honesty footnote under a done banner. Trackers do not replace observe.
+
 Portable manners gaps: file on **tig/bedside**; metal spine gaps: **tig/silico**.
 
 ## Definition of done
@@ -30,9 +34,10 @@ Portable manners gaps: file on **tig/bedside**; metal spine gaps: **tig/silico**
 |-------|--------|
 | `firmware/` change done | `pytest -q` green (host gate). CI green if remote exists. |
 | Deployed | `silico deploy … --port COMx --yes --verify` after operator confirmed identity + write. |
+| On the metal (Day 1) | Deployed **and** operator sees/hears documented good for **this** product face (not only version string). |
 | Issue fixed | CI green **and** metal matches the issue. |
 
-Never treat "I flashed something" as done.
+Never treat "I flashed something" as done. Never claim on-the-metal while product face is unproven.
 
 ## Host gate
 

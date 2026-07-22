@@ -11,6 +11,7 @@ Product domain (idle control, drone songs, vehicle acceptance) stays in the **GC
 | ESP32 / DAC / speaker / PWM tone / sample playback | [esp32-audio.md](esp32-audio.md) |
 | ESP32 USB-serial duplex / console lockout / UART0 | [esp32-usb-serial.md](esp32-usb-serial.md) |
 | First-flash UF2 vs esptool | [first-flash.md](first-flash.md) |
+| Thin / contradictory product `spec.md` (interview mode) | [spec-interview.md](spec-interview.md) |
 | Index of topics | [INDEX.md](INDEX.md) |
 
 Do **not** load every knowledge file into context. Open only the topic you need.

@@ -1,7 +1,6 @@
 """First-flash MicroPython: esptool (ESP32-class) or UF2 copy (RP2040-class).
 
-App updates after first-flash use ``silico deploy`` (mpremote). This module is
-the once-per-board runtime image path, with operator-visible progress.
+App updates after first-flash use ``silico deploy`` (mpremote).
 """
 
 from __future__ import annotations
@@ -9,25 +8,36 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from pathlib import Path
 
-from silico.esptool_util import (
-    copy_with_progress,
-    esptool_available,
-    run_esptool_streaming,
-)
+from silico.esptool_util import copy_with_progress, esptool_available, run_esptool_streaming
 from silico.ports import IDENTITY_HINT, pick_best_port, port_is_listed
-from silico.progress import ProgressCallback, emit, file_size, format_bytes, stage_header
+from silico.progress import (
+    ProgressCallback,
+    ProgressLog,
+    file_size,
+    format_bytes,
+    stage_header,
+)
 
 
 @dataclass
-class FirstFlashPlan:
-    mode: str  # "esptool" | "uf2"
-    port: str | None
+class EsptoolFlashPlan:
+    port: str
     image: Path
     chip: str
     offset: str
     erase: bool
-    uf2_dest: Path | None
     lines: list[str] = field(default_factory=list)
+
+
+@dataclass
+class Uf2FlashPlan:
+    image: Path
+    dest: Path
+    lines: list[str] = field(default_factory=list)
+
+
+# Union alias for plan_first_flash success path (not a bag of optional fields).
+FirstFlashPlan = EsptoolFlashPlan | Uf2FlashPlan
 
 
 @dataclass
@@ -52,29 +62,22 @@ def plan_first_flash(
     size = file_size(image)
     size_s = format_bytes(size) if size >= 0 else "?"
 
-    # UF2 path: explicit dest volume/file, or .uf2 suffix without --port write via esptool
     if uf2_dest is not None:
         dest = Path(uf2_dest)
-        lines = [
-            stage_header("plan", "UF2 first-flash (mass storage copy)"),
-            f"  image: {image} ({size_s})",
-            f"  dest:  {dest}",
-            "This OVERWRITES the MicroPython (or bootloader) image on the board once.",
-            "After copy, the volume usually disconnects; wait for a new COM, then silico inspect.",
-            "Refusing without --yes after operator confirmed the board and this image.",
-        ]
-        return FirstFlashPlan(
-            mode="uf2",
-            port=None,
+        return Uf2FlashPlan(
             image=image,
-            chip=chip,
-            offset=offset,
-            erase=erase,
-            uf2_dest=dest,
-            lines=lines,
+            dest=dest,
+            lines=[
+                stage_header("plan", "UF2 first-flash (mass storage copy)"),
+                f"  image: {image} ({size_s})",
+                f"  dest:  {dest}",
+                "This OVERWRITES the MicroPython (or bootloader) image on the board once.",
+                "After copy, the volume usually disconnects; wait for a new COM, then silico inspect.",
+                "Refusing without --yes after operator confirmed the board and this image.",
+            ],
         )
 
-    if image.suffix.lower() == ".uf2" and uf2_dest is None:
+    if image.suffix.lower() == ".uf2":
         return FirstFlashResult(
             False,
             [
@@ -109,28 +112,25 @@ def plan_first_flash(
             [f"FAIL: port {chosen.device} not in serial inventory. Re-run wait-device."],
         )
 
-    lines = [
-        stage_header("plan", f"esptool first-flash on {chosen.device}"),
-        f"  port:   {chosen.device} ({chosen.label})",
-        f"  chip:   {chip}",
-        f"  image:  {image} ({size_s})",
-        f"  offset: {offset}",
-        f"  erase:  {'yes (erase-flash first)' if erase else 'no'}",
-        IDENTITY_HINT,
-        "This ERASES/overwrites the chip runtime once. App deploys later use silico deploy.",
-        "Operator must confirm: (1) this is the product board, (2) this image is correct.",
-        "Refusing without --yes.",
-        "Progress: esptool percentages stream as PROGRESS [esptool] lines.",
-    ]
-    return FirstFlashPlan(
-        mode="esptool",
+    return EsptoolFlashPlan(
         port=chosen.device,
         image=image,
         chip=chip,
         offset=offset,
         erase=erase,
-        uf2_dest=None,
-        lines=lines,
+        lines=[
+            stage_header("plan", f"esptool first-flash on {chosen.device}"),
+            f"  port:   {chosen.device} ({chosen.label})",
+            f"  chip:   {chip}",
+            f"  image:  {image} ({size_s})",
+            f"  offset: {offset}",
+            f"  erase:  {'yes (erase-flash first)' if erase else 'no'}",
+            IDENTITY_HINT,
+            "This ERASES/overwrites the chip runtime once. App deploys later use silico deploy.",
+            "Operator must confirm: (1) this is the product board, (2) this image is correct.",
+            "Refusing without --yes.",
+            "Progress: esptool percentages stream as PROGRESS [esptool] lines.",
+        ],
     )
 
 
@@ -153,69 +153,62 @@ def first_flash(
         erase=erase,
         uf2_dest=uf2_dest,
     )
-    if isinstance(planned, FirstFlashResult):
-        if on_progress:
-            for line in planned.lines:
-                on_progress(line)
-        return planned
+    log = ProgressLog(on_progress)
 
-    lines: list[str] = []
-    for line in planned.lines:
-        emit(lines, line, on_progress=on_progress)
+    if isinstance(planned, FirstFlashResult):
+        log.extend(planned.lines)
+        return FirstFlashResult(planned.ok, log.lines)
+
+    log.extend(planned.lines)
 
     if not yes:
-        emit(
-            lines,
-            "ABORTED: pass --yes only after the operator explicitly confirmed first-flash.",
-            on_progress=on_progress,
-        )
-        return FirstFlashResult(False, lines)
+        log("ABORTED: pass --yes only after the operator explicitly confirmed first-flash.")
+        return FirstFlashResult(False, log.lines)
 
-    if planned.mode == "uf2":
-        assert planned.uf2_dest is not None
-        emit(
-            lines,
-            stage_header("uf2-copy", f"{planned.image.name} -> {planned.uf2_dest}"),
-            on_progress=on_progress,
-        )
-        try:
-            copy_with_progress(planned.image, planned.uf2_dest, on_progress=on_progress)
-        except OSError as e:
-            emit(lines, f"FAIL: UF2 copy: {e}", on_progress=on_progress)
-            return FirstFlashResult(False, lines)
-        emit(lines, "OK: UF2 copy finished. Wait for volume disconnect / new COM, then silico inspect.", on_progress=on_progress)
-        return FirstFlashResult(True, lines)
+    if isinstance(planned, Uf2FlashPlan):
+        return _run_uf2(planned, log)
+    return _run_esptool(planned, log)
 
-    # esptool path
-    assert planned.port is not None
+
+def _run_uf2(planned: Uf2FlashPlan, log: ProgressLog) -> FirstFlashResult:
+    log(stage_header("uf2-copy", f"{planned.image.name} -> {planned.dest}"))
+    try:
+        copy_with_progress(planned.image, planned.dest, log=log)
+    except OSError as e:
+        log(f"FAIL: UF2 copy: {e}")
+        return FirstFlashResult(False, log.lines)
+    log(
+        "OK: UF2 copy finished. Wait for volume disconnect / new COM, then silico inspect."
+    )
+    return FirstFlashResult(True, log.lines)
+
+
+def _run_esptool(planned: EsptoolFlashPlan, log: ProgressLog) -> FirstFlashResult:
     if not port_is_listed(planned.port):
-        emit(
-            lines,
-            f"FAIL: port {planned.port} disappeared before flash. Re-discover and re-confirm.",
-            on_progress=on_progress,
+        log(
+            f"FAIL: port {planned.port} disappeared before flash. Re-discover and re-confirm."
         )
-        return FirstFlashResult(False, lines)
+        return FirstFlashResult(False, log.lines)
 
     if planned.erase:
-        emit(lines, stage_header("erase", f"{planned.port} chip={planned.chip}"), on_progress=on_progress)
-        r = run_esptool_streaming(
+        log(stage_header("erase", f"{planned.port} chip={planned.chip}"))
+        code = run_esptool_streaming(
             ["--chip", planned.chip, "--port", planned.port, "erase-flash"],
-            on_progress=on_progress,
+            log=log,
         )
-        if r.returncode != 0:
-            emit(lines, f"FAIL: esptool erase-flash exit {r.returncode}", on_progress=on_progress)
-            return FirstFlashResult(False, lines)
-        emit(lines, "OK: erase-flash", on_progress=on_progress)
+        if code != 0:
+            log(f"FAIL: esptool erase-flash exit {code}")
+            return FirstFlashResult(False, log.lines)
+        log("OK: erase-flash")
 
-    emit(
-        lines,
+    log(
         stage_header(
             "write-flash",
-            f"{planned.image.name} @ {planned.offset} ({format_bytes(file_size(planned.image))})",
-        ),
-        on_progress=on_progress,
+            f"{planned.image.name} @ {planned.offset} "
+            f"({format_bytes(file_size(planned.image))})",
+        )
     )
-    r = run_esptool_streaming(
+    code = run_esptool_streaming(
         [
             "--chip",
             planned.chip,
@@ -226,17 +219,15 @@ def first_flash(
             planned.offset,
             str(planned.image),
         ],
-        on_progress=on_progress,
+        log=log,
     )
-    if r.returncode != 0:
-        emit(lines, f"FAIL: esptool write-flash exit {r.returncode}", on_progress=on_progress)
-        return FirstFlashResult(False, lines)
+    if code != 0:
+        log(f"FAIL: esptool write-flash exit {code}")
+        return FirstFlashResult(False, log.lines)
 
-    emit(lines, "OK: write-flash complete", on_progress=on_progress)
-    emit(
-        lines,
+    log("OK: write-flash complete")
+    log(
         "Next: hard reset if needed, then silico inspect --port "
-        f"{planned.port} --apply-mpy-pin (only on modern MicroPython).",
-        on_progress=on_progress,
+        f"{planned.port} --apply-mpy-pin (only on modern MicroPython)."
     )
-    return FirstFlashResult(True, lines)
+    return FirstFlashResult(True, log.lines)

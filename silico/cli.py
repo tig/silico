@@ -20,14 +20,14 @@ from silico.scaffold import scaffold
 from silico.wait_device import TIMEOUT_SOP, format_port_snapshot, wait_for_board
 
 
+def _out(msg: str) -> None:
+    """Operator-facing line (flush so multi-minute flash/deploy is not silent)."""
+    print(msg, flush=True)
+
+
 def _print_lines(lines: list[str]) -> None:
     for line in lines:
-        print(line, flush=True)
-
-
-def _live_progress(msg: str) -> None:
-    """Stream progress as it happens so multi-minute flash/deploy is not silent."""
-    print(msg, flush=True)
+        _out(line)
 
 
 def cmd_doctor(_args: argparse.Namespace) -> int:
@@ -106,9 +106,8 @@ def cmd_deploy(args: argparse.Namespace) -> int:
         _print_lines(planned.lines)
         if isinstance(planned, DeployResult):
             return 1
-        print(
-            "Dry plan only. Re-run with --yes only after operator confirmed identity + write.",
-            flush=True,
+        _out(
+            "Dry plan only. Re-run with --yes only after operator confirmed identity + write."
         )
         return 2
 
@@ -123,7 +122,7 @@ def cmd_deploy(args: argparse.Namespace) -> int:
         expect_version=args.expect_version,
         reset=args.reset,
         prune=args.prune,
-        on_progress=_live_progress,
+        on_progress=_out,
     )
     return 0 if result.ok else 1
 
@@ -143,18 +142,17 @@ def cmd_first_flash(args: argparse.Namespace) -> int:
         _print_lines(planned.lines)
         if isinstance(planned, FirstFlashResult):
             return 1
-        print(
-            "Dry plan only. Re-run with --yes only after operator confirmed board + image.",
-            flush=True,
+        _out(
+            "Dry plan only. Re-run with --yes only after operator confirmed board + image."
         )
         return 2
 
-    result = first_flash(**kwargs, yes=True, on_progress=_live_progress)
+    result = first_flash(**kwargs, yes=True, on_progress=_out)
     return 0 if result.ok else 1
 
 
 def cmd_pull(args: argparse.Namespace) -> int:
-    result = pull_device(Path(args.dest), port=args.port, on_progress=_live_progress)
+    result = pull_device(Path(args.dest), port=args.port, on_progress=_out)
     return 0 if result.ok else 1
 
 

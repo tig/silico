@@ -15,7 +15,8 @@ from silico.mpremote_util import cp_to_device, exec_on_device, ls_device, mpremo
 from silico.ports import IDENTITY_HINT, pick_best_port, port_is_listed
 from silico.progress import (
     ProgressCallback,
-    emit,
+    ProgressLog,
+    cp_timeout_for_size,
     file_size,
     file_step,
     format_bytes,
@@ -26,7 +27,6 @@ from silico.runtime import resolve_runtime
 
 # Re-export for callers that import from silico.deploy
 __all__ = ["DeployPlan", "DeployResult", "deploy", "plan_deploy", "resolve_deploy_files"]
-
 
 
 # Modules that start an infinite loop when imported on-device (plate main.py).
@@ -48,7 +48,6 @@ def device_verify_import_snippet(mod: str) -> tuple[str, str]:
     device loop cannot hang mpremote (CR fix).
     """
     if mod in _BOOT_ENTRY_MODULES:
-        # open+compile; do not exec / import the boot module
         code = (
             f"src=open('{mod}.py').read()\n"
             f"compile(src, '{mod}.py', 'exec')\n"
@@ -74,7 +73,7 @@ def resolve_deploy_files(
             [
                 "FAIL: no files given and no [deploy].core in silico.toml.",
                 "Pass files on the CLI, or add:",
-                '  [deploy]',
+                "  [deploy]",
                 '  core = ["firmware/version.py", "firmware/main.py"]',
             ],
         )
@@ -190,12 +189,11 @@ def plan_deploy(
         if ls.returncode == 0:
             on_dev = set(_parse_ls_names(ls.stdout or ""))
             want = {remote for _, remote in pairs}
-            # Never auto-delete unknown system leftovers without listing
             prune_remotes = sorted(n for n in on_dev if n.endswith(".py") and n not in want)
             if prune_remotes:
                 lines.append("Will REMOVE on device (--prune), .py not in manifest:")
-                for n in prune_remotes:
-                    lines.append(f"  delete :{n}")
+                for name in prune_remotes:
+                    lines.append(f"  delete :{name}")
             else:
                 lines.append("Prune: no orphan .py files on device")
         else:
@@ -216,6 +214,133 @@ def plan_deploy(
         prune_remotes=prune_remotes,
         kind="mpy",
     )
+
+
+def _write_files(log: ProgressLog, planned: DeployPlan) -> bool:
+    n = len(planned.files)
+    total_b = sum(max(file_size(p), 0) for p, _ in planned.files)
+    log(
+        stage_header(
+            "write",
+            f"Confirmed (--yes). Copying {n} file(s), {format_bytes(total_b)} via mpremote…",
+        )
+    )
+    for i, (local, remote) in enumerate(planned.files, start=1):
+        sz = file_size(local)
+        log(file_step(stage="write", index=i, total=n, name=remote, size=sz, verb="Writing"))
+        t0 = time.monotonic()
+        r = cp_to_device(planned.port, local, remote, timeout=cp_timeout_for_size(sz))
+        elapsed = time.monotonic() - t0
+        if r.returncode != 0:
+            log(f"FAIL: cp {local} -> :{remote}")
+            if r.stderr:
+                log(r.stderr.strip())
+            return False
+        log(
+            f"OK: wrote :{remote} ({format_bytes(sz) if sz >= 0 else '?'}) in {elapsed:.1f}s"
+        )
+    return True
+
+
+def _prune_files(log: ProgressLog, planned: DeployPlan) -> None:
+    if not planned.prune_remotes:
+        return
+    log(stage_header("prune", f"{len(planned.prune_remotes)} orphan .py"))
+    for j, remote in enumerate(planned.prune_remotes, start=1):
+        log(
+            file_step(
+                stage="prune",
+                index=j,
+                total=len(planned.prune_remotes),
+                name=remote,
+                verb="Removing",
+            )
+        )
+        r = run_mpremote(planned.port, "rm", f":{remote}")
+        if r.returncode != 0:
+            log(f"WARN: could not remove :{remote}")
+            if r.stderr:
+                log(r.stderr.strip())
+        else:
+            log(f"OK: removed :{remote}")
+
+
+def _reset_and_wait(log: ProgressLog, port: str) -> None:
+    log(stage_header("reset", "soft-reset device"))
+    r = run_mpremote(port, "reset")
+    log("reset: " + ("ok" if r.returncode == 0 else "warn"))
+    log(stage_header("wait-port", f"waiting for {port} after reset (up to 30s)"))
+    wait_start = time.monotonic()
+    deadline = wait_start + 30.0
+    next_tick = wait_start + 5.0
+    while time.monotonic() < deadline:
+        now = time.monotonic()
+        if now >= next_tick:
+            log(f"PROGRESS [wait-port] t={int(now - wait_start)}s still waiting for {port}…")
+            next_tick += 5.0
+        if port_is_listed(port):
+            time.sleep(0.5)
+            log(f"OK: port {port} back")
+            return
+        time.sleep(0.25)
+    log(f"WARN: port {port} did not reappear within 30s; verify may fail.")
+
+
+def _verify_identity(
+    log: ProgressLog,
+    port: str,
+    *,
+    expect_name: str | None,
+    expect_version: str | None,
+) -> bool:
+    # Same identity grammar as language=c (fw_name=… fw_version=…).
+    log(stage_header("verify", "identity on device"))
+    code = (
+        "import version\n"
+        "print('fw_name=%s fw_version=%s' % (version.FW_NAME, version.FW_VERSION))\n"
+    )
+    r = exec_on_device(port, code)
+    if r.returncode != 0:
+        time.sleep(1.0)
+        r = exec_on_device(port, code)
+    if r.returncode != 0:
+        log("FAIL: version verify (import version failed)")
+        if r.stderr:
+            log(r.stderr.strip())
+        return False
+    blob = (r.stdout or "").strip()
+    log("Device reported: " + " ".join(blob.splitlines()))
+    got = parse_identity_blob(blob)
+    if got is None or not got.complete:
+        log("FAIL: could not parse identity line from device")
+        return False
+    fails = match_expected(got, expect_name=expect_name, expect_version=expect_version)
+    if fails:
+        log.extend(fails)
+        return False
+    log("OK: version verify")
+    return True
+
+
+def _verify_import(log: ProgressLog, port: str, verify_import: str) -> bool:
+    mod = _safe_module_name(verify_import)
+    if not mod:
+        log(f"FAIL: --verify-import {verify_import!r} is not a simple module name")
+        return False
+    code, mode = device_verify_import_snippet(mod)
+    log(stage_header("verify-import", f"{mode} {mod}"))
+    r = exec_on_device(port, code)
+    if r.returncode != 0:
+        log(f"FAIL: {mode} verify for {mod!r}")
+        if r.stderr:
+            log(r.stderr.strip())
+        if mode == "compile":
+            log(
+                "Hint: boot modules are compile-checked (not imported) so the app loop cannot hang deploy."
+            )
+        return False
+    log(f"OK: {mode} verify {mod}")
+    return True
 
 
 def deploy(
@@ -260,208 +385,52 @@ def deploy(
             root=root,
         )
 
+    log = ProgressLog(on_progress)
     planned = plan_deploy(files, port=port, prune=prune, root=root)
     if isinstance(planned, DeployResult):
-        if on_progress:
-            for line in planned.lines:
-                on_progress(line)
-        return planned
+        log.extend(planned.lines)
+        return DeployResult(planned.ok, log.lines)
 
-    lines: list[str] = []
-    for line in planned.lines:
-        emit(lines, line, on_progress=on_progress)
+    log.extend(planned.lines)
 
     if not yes:
-        emit(
-            lines,
-            "ABORTED: pass --yes only after the operator explicitly confirmed the write.",
-            on_progress=on_progress,
-        )
-        return DeployResult(False, lines)
+        log("ABORTED: pass --yes only after the operator explicitly confirmed the write.")
+        return DeployResult(False, log.lines)
 
     if not port_is_listed(planned.port):
-        emit(
-            lines,
-            f"FAIL: port {planned.port} disappeared before write. Re-discover and re-confirm.",
-            on_progress=on_progress,
-        )
-        return DeployResult(False, lines)
+        log(f"FAIL: port {planned.port} disappeared before write. Re-discover and re-confirm.")
+        return DeployResult(False, log.lines)
 
-    n = len(planned.files)
-    total_b = sum(max(file_size(p), 0) for p, _ in planned.files)
-    emit(
-        lines,
-        stage_header(
-            "write",
-            f"Confirmed (--yes). Copying {n} file(s), {format_bytes(total_b)} via mpremote…",
-        ),
-        on_progress=on_progress,
-    )
-    for i, (local, remote) in enumerate(planned.files, start=1):
-        sz = file_size(local)
-        emit(
-            lines,
-            file_step(stage="write", index=i, total=n, name=remote, size=sz, verb="Writing"),
-            on_progress=on_progress,
-        )
-        # Scale timeout for larger assets (audio riffs, etc.)
-        timeout = 30.0
-        if sz > 0:
-            timeout = max(30.0, min(600.0, 30.0 + sz / 50_000.0))
-        t0 = time.monotonic()
-        r = cp_to_device(planned.port, local, remote, timeout=timeout)
-        elapsed = time.monotonic() - t0
-        if r.returncode != 0:
-            emit(lines, f"FAIL: cp {local} -> :{remote}", on_progress=on_progress)
-            if r.stderr:
-                emit(lines, r.stderr.strip(), on_progress=on_progress)
-            return DeployResult(False, lines)
-        emit(
-            lines,
-            f"OK: wrote :{remote} ({format_bytes(sz) if sz >= 0 else '?'}) in {elapsed:.1f}s",
-            on_progress=on_progress,
-        )
+    if not _write_files(log, planned):
+        return DeployResult(False, log.lines)
 
-    if planned.prune_remotes:
-        emit(
-            lines,
-            stage_header("prune", f"{len(planned.prune_remotes)} orphan .py"),
-            on_progress=on_progress,
-        )
-    for j, remote in enumerate(planned.prune_remotes, start=1):
-        emit(
-            lines,
-            file_step(
-                stage="prune",
-                index=j,
-                total=len(planned.prune_remotes),
-                name=remote,
-                verb="Removing",
-            ),
-            on_progress=on_progress,
-        )
-        r = run_mpremote(planned.port, "rm", f":{remote}")
-        if r.returncode != 0:
-            emit(lines, f"WARN: could not remove :{remote}", on_progress=on_progress)
-            if r.stderr:
-                emit(lines, r.stderr.strip(), on_progress=on_progress)
-        else:
-            emit(lines, f"OK: removed :{remote}", on_progress=on_progress)
+    _prune_files(log, planned)
 
     if reset:
-        emit(lines, stage_header("reset", "soft-reset device"), on_progress=on_progress)
-        r = run_mpremote(planned.port, "reset")
-        emit(
-            lines,
-            "reset: " + ("ok" if r.returncode == 0 else "warn"),
-            on_progress=on_progress,
-        )
-        emit(
-            lines,
-            stage_header("wait-port", f"waiting for {planned.port} after reset (up to 30s)"),
-            on_progress=on_progress,
-        )
-        wait_start = time.monotonic()
-        deadline = wait_start + 30.0
-        last_tick = -1
-        while time.monotonic() < deadline:
-            elapsed = int(time.monotonic() - wait_start)
-            if elapsed >= 5 and elapsed // 5 != last_tick // 5:
-                emit(
-                    lines,
-                    f"PROGRESS [wait-port] t={elapsed}s still waiting for {planned.port}…",
-                    on_progress=on_progress,
-                )
-                last_tick = elapsed
-            if port_is_listed(planned.port):
-                time.sleep(0.5)
-                emit(lines, f"OK: port {planned.port} back", on_progress=on_progress)
-                break
-            time.sleep(0.25)
-        else:
-            emit(
-                lines,
-                f"WARN: port {planned.port} did not reappear within 30s; verify may fail.",
-                on_progress=on_progress,
-            )
+        _reset_and_wait(log, planned.port)
 
-    if verify:
-        # Same identity grammar as language=c (fw_name=… fw_version=…).
-        emit(lines, stage_header("verify", "identity on device"), on_progress=on_progress)
-        code = (
-            "import version\n"
-            "print('fw_name=%s fw_version=%s' % (version.FW_NAME, version.FW_VERSION))\n"
-        )
-        r = exec_on_device(planned.port, code)
-        if r.returncode != 0:
-            time.sleep(1.0)
-            r = exec_on_device(planned.port, code)
-        if r.returncode != 0:
-            emit(lines, "FAIL: version verify (import version failed)", on_progress=on_progress)
-            if r.stderr:
-                emit(lines, r.stderr.strip(), on_progress=on_progress)
-            return DeployResult(False, lines)
-        blob = (r.stdout or "").strip()
-        emit(lines, "Device reported: " + " ".join(blob.splitlines()), on_progress=on_progress)
-        got = parse_identity_blob(blob)
-        if got is None or not got.complete:
-            emit(lines, "FAIL: could not parse identity line from device", on_progress=on_progress)
-            return DeployResult(False, lines)
-        fails = match_expected(
-            got, expect_name=expect_name, expect_version=expect_version
-        )
-        if fails:
-            for fail in fails:
-                emit(lines, fail, on_progress=on_progress)
-            return DeployResult(False, lines)
-        emit(lines, "OK: version verify", on_progress=on_progress)
+    if verify and not _verify_identity(
+        log,
+        planned.port,
+        expect_name=expect_name,
+        expect_version=expect_version,
+    ):
+        return DeployResult(False, log.lines)
 
-    # Optional soft liveness: import module, or compile-check boot entrypoints
-    if verify_import:
-        mod = _safe_module_name(verify_import)
-        if not mod:
-            emit(
-                lines,
-                f"FAIL: --verify-import {verify_import!r} is not a simple module name",
-                on_progress=on_progress,
-            )
-            return DeployResult(False, lines)
-        code, mode = device_verify_import_snippet(mod)
-        emit(
-            lines,
-            stage_header("verify-import", f"{mode} {mod}"),
-            on_progress=on_progress,
-        )
-        r = exec_on_device(planned.port, code)
-        if r.returncode != 0:
-            emit(lines, f"FAIL: {mode} verify for {mod!r}", on_progress=on_progress)
-            if r.stderr:
-                emit(lines, r.stderr.strip(), on_progress=on_progress)
-            if mode == "compile":
-                emit(
-                    lines,
-                    "Hint: boot modules are compile-checked (not imported) so the app loop cannot hang deploy.",
-                    on_progress=on_progress,
-                )
-            return DeployResult(False, lines)
-        emit(lines, f"OK: {mode} verify {mod}", on_progress=on_progress)
+    if verify_import and not _verify_import(log, planned.port, verify_import):
+        return DeployResult(False, log.lines)
 
-    # Only when we entered the REPL for verification — avoid nagging on plain --yes writes.
     if verify or verify_import:
-        emit(
-            lines,
+        log(
             "INFO: deploy verify talks over the REPL and parks the app loop. "
             "Soft-reset once more (or power cycle) so main.py runs as the product. "
-            "Prefer including --reset on write, then soft-reset again after verify if the product face is dead.",
-            on_progress=on_progress,
+            "Prefer including --reset on write, then soft-reset again after verify if the product face is dead."
         )
-        emit(
-            lines,
+        log(
             "If cp/inspect failed with 'could not enter raw repl': the app owns CDC "
             "(Ctrl-C is data). Open the product protocol door (`repl`) or catch the "
-            "boot window, then redeploy.",
-            on_progress=on_progress,
+            "boot window, then redeploy."
         )
 
-    emit(lines, stage_header("done", "deploy finished OK"), on_progress=on_progress)
-    return DeployResult(True, lines)
+    log(stage_header("done", "deploy finished OK"))
+    return DeployResult(True, log.lines)

@@ -1,18 +1,14 @@
-"""Run esptool with operator-visible progress (streamed stdout/stderr).
-
-First-flash of MicroPython on ESP32-class boards uses the ROM bootloader path.
-esptool already prints percentages; we must not capture output into a black hole.
-"""
+"""Run esptool / UF2 copy with operator-visible progress via ProgressLog."""
 
 from __future__ import annotations
 
 import shutil
 import subprocess
 import sys
-from collections.abc import Callable
+import time
 from pathlib import Path
 
-ProgressCallback = Callable[[str], None]
+from silico.progress import ProgressLog, format_bytes
 
 
 def esptool_available() -> bool:
@@ -35,25 +31,39 @@ def esptool_cmd_prefix() -> list[str]:
     return [sys.executable, "-m", "esptool"]
 
 
+def _emit_stream_chunks(buf: str, log: ProgressLog, prefix: str) -> str:
+    """Split on CR/LF; emit complete lines; return residual buffer."""
+    while True:
+        i_n = buf.find("\n")
+        i_r = buf.find("\r")
+        if i_n < 0 and i_r < 0:
+            return buf
+        if i_n < 0:
+            cut = i_r
+        elif i_r < 0:
+            cut = i_n
+        else:
+            cut = min(i_n, i_r)
+        line = buf[:cut].strip()
+        buf = buf[cut + 1 :]
+        if line:
+            log(f"{prefix}{line}")
+    return buf
+
+
 def run_esptool_streaming(
     args: list[str],
     *,
-    on_progress: ProgressCallback | None = None,
-    timeout: float | None = None,
-) -> subprocess.CompletedProcess[str]:
-    """Run esptool, streaming progress lines to the operator.
+    log: ProgressLog,
+    timeout: float | None = 600.0,
+) -> int:
+    """Run esptool; stream progress into ``log`` (full transcript).
 
-    esptool often updates a single line with ``\\r`` (progress bar). We split on
-    both ``\\n`` and ``\\r`` so each percentage update becomes a progress line
-    agents can show. When stdout is a TTY and no callback is set, inherit the
-    terminal so native bars still work.
+    Splits on ``\\r`` and ``\\n`` so percentage updates become PROGRESS lines.
+    Returns process exit code.
     """
     cmd = [*esptool_cmd_prefix(), *args]
-    inherit = on_progress is None and sys.stdout.isatty()
-    if inherit:
-        r = subprocess.run(cmd, check=False, timeout=timeout)
-        return subprocess.CompletedProcess(cmd, r.returncode, "", "")
-
+    log(f"PROGRESS [esptool] $ {' '.join(cmd)}")
     proc = subprocess.Popen(
         cmd,
         stdout=subprocess.PIPE,
@@ -62,55 +72,41 @@ def run_esptool_streaming(
         bufsize=1,
     )
     assert proc.stdout is not None
-    chunks: list[str] = []
     buf = ""
+    deadline = time.monotonic() + timeout if timeout else None
     try:
         while True:
-            ch = proc.stdout.read(1)
-            if ch == "" and proc.poll() is not None:
+            if deadline is not None and time.monotonic() > deadline:
+                proc.kill()
+                log("FAIL: esptool timed out")
+                proc.wait(timeout=5)
+                return 124
+            chunk = proc.stdout.read(256)
+            if chunk:
+                buf = _emit_stream_chunks(buf + chunk, log, "PROGRESS [esptool] ")
+                continue
+            if proc.poll() is not None:
                 break
-            if ch == "":
-                continue
-            if ch in ("\n", "\r"):
-                line = buf.strip()
-                buf = ""
-                if line:
-                    chunks.append(line)
-                    if on_progress is not None:
-                        on_progress(f"PROGRESS [esptool] {line}")
-                continue
-            buf += ch
-            # Flush long lines without CR (some esptool builds)
-            if len(buf) > 200 and "Writing" in buf:
-                line = buf.strip()
-                buf = ""
-                chunks.append(line)
-                if on_progress is not None:
-                    on_progress(f"PROGRESS [esptool] {line}")
+            time.sleep(0.05)
         if buf.strip():
-            line = buf.strip()
-            chunks.append(line)
-            if on_progress is not None:
-                on_progress(f"PROGRESS [esptool] {line}")
-        proc.wait(timeout=timeout)
+            log(f"PROGRESS [esptool] {buf.strip()}")
+        return int(proc.wait(timeout=5) or 0)
     except Exception:
         proc.kill()
         raise
-    out = "\n".join(chunks)
-    return subprocess.CompletedProcess(cmd, proc.returncode or 0, out, "")
 
 
 def copy_with_progress(
     src: Path,
     dest: Path,
     *,
-    on_progress: ProgressCallback | None = None,
+    log: ProgressLog,
     chunk_size: int = 256 * 1024,
 ) -> None:
-    """Copy a UF2 (or other image) with byte progress for the operator."""
+    """Copy a UF2 (or other image); percent lines go into ``log``."""
     total = src.stat().st_size
     written = 0
-    last_pct = -1
+    last_bucket = -1
     dest.parent.mkdir(parents=True, exist_ok=True)
     with src.open("rb") as inf, dest.open("wb") as outf:
         while True:
@@ -120,19 +116,10 @@ def copy_with_progress(
             outf.write(block)
             written += len(block)
             pct = int(100 * written / total) if total else 100
-            if on_progress is not None and (pct != last_pct or written == total):
-                # Throttle: every 5% or completion
-                if pct == 100 or pct // 5 != last_pct // 5:
-                    on_progress(
-                        f"PROGRESS [uf2-copy] {pct}% "
-                        f"({_fmt(written)} / {_fmt(total)}) -> {dest}"
-                    )
-                    last_pct = pct
-
-
-def _fmt(n: int) -> str:
-    if n < 1024:
-        return f"{n} B"
-    if n < 1024 * 1024:
-        return f"{n / 1024:.1f} KiB"
-    return f"{n / (1024 * 1024):.2f} MiB"
+            bucket = pct // 5
+            if pct == 100 or bucket != last_bucket:
+                log(
+                    f"PROGRESS [uf2-copy] {pct}% "
+                    f"({format_bytes(written)} / {format_bytes(total)}) -> {dest}"
+                )
+                last_bucket = bucket

@@ -7,9 +7,20 @@ from unittest.mock import MagicMock
 
 from silico import deploy as deploy_mod
 from silico.esptool_util import copy_with_progress
-from silico.first_flash import FirstFlashPlan, FirstFlashResult, first_flash, plan_first_flash
+from silico.first_flash import (
+    EsptoolFlashPlan,
+    Uf2FlashPlan,
+    first_flash,
+    plan_first_flash,
+)
 from silico.ports import PortInfo
-from silico.progress import emit, file_step, format_bytes, stage_header
+from silico.progress import (
+    ProgressLog,
+    cp_timeout_for_size,
+    file_step,
+    format_bytes,
+    stage_header,
+)
 from silico.pull_device import pull_device
 
 
@@ -25,12 +36,19 @@ def test_file_step_shape():
     assert "Writing" in s
 
 
-def test_emit_streams_and_records():
-    lines: list[str] = []
+def test_progress_log_streams_and_records():
     live: list[str] = []
-    emit(lines, "hello", on_progress=live.append)
-    assert lines == ["hello"]
-    assert live == ["hello"]
+    log = ProgressLog(live.append)
+    log("hello")
+    log.extend(["a", "b"])
+    assert log.lines == ["hello", "a", "b"]
+    assert live == ["hello", "a", "b"]
+
+
+def test_cp_timeout_for_size():
+    assert cp_timeout_for_size(0) == 30.0
+    assert cp_timeout_for_size(50_000) == 31.0
+    assert cp_timeout_for_size(10**12) == 600.0
 
 
 def test_deploy_plan_includes_sizes_and_progress_hint(tmp_path: Path, monkeypatch):
@@ -92,6 +110,8 @@ def test_deploy_yes_emits_live_progress(tmp_path: Path, monkeypatch):
     assert "PROGRESS [write]" in joined
     assert "OK: wrote :version.py" in joined
     assert "PROGRESS [done]" in joined
+    # Full transcript in result.lines (same contract as live)
+    assert result.lines == live
 
 
 def test_pull_progress(tmp_path: Path, monkeypatch):
@@ -131,18 +151,19 @@ def test_pull_progress(tmp_path: Path, monkeypatch):
     assert result.ok
     assert any("PROGRESS [pull]" in x for x in live)
     assert any("1/2" in x or "2/2" in x for x in live)
+    assert result.lines == live
 
 
 def test_copy_with_progress(tmp_path: Path):
     src = tmp_path / "fw.uf2"
     src.write_bytes(b"x" * 10_000)
     dest = tmp_path / "out" / "fw.uf2"
-    live: list[str] = []
-    copy_with_progress(src, dest, on_progress=live.append, chunk_size=1024)
+    log = ProgressLog()
+    copy_with_progress(src, dest, log=log, chunk_size=1024)
     assert dest.is_file()
     assert dest.stat().st_size == 10_000
-    assert any("PROGRESS [uf2-copy]" in x for x in live)
-    assert any("100%" in x for x in live)
+    assert any("PROGRESS [uf2-copy]" in x for x in log.lines)
+    assert any("100%" in x for x in log.lines)
 
 
 def test_first_flash_plan_esptool(tmp_path: Path, monkeypatch):
@@ -166,7 +187,7 @@ def test_first_flash_plan_esptool(tmp_path: Path, monkeypatch):
     )
     monkeypatch.setattr(ff, "port_is_listed", lambda _d: True)
     plan = plan_first_flash(image=img, port="COM7")
-    assert isinstance(plan, FirstFlashPlan)
+    assert isinstance(plan, EsptoolFlashPlan)
     text = "\n".join(plan.lines)
     assert "esptool" in text
     assert "COM7" in text
@@ -197,6 +218,7 @@ def test_first_flash_aborts_without_yes(tmp_path: Path, monkeypatch):
     result = first_flash(image=img, port="COM7", yes=False, on_progress=live.append)
     assert not result.ok
     assert any("ABORTED" in x for x in result.lines)
+    assert result.lines == live
 
 
 def test_first_flash_esptool_yes_streams(tmp_path: Path, monkeypatch):
@@ -222,11 +244,11 @@ def test_first_flash_esptool_yes_streams(tmp_path: Path, monkeypatch):
 
     calls: list[list[str]] = []
 
-    def fake_esptool(args, on_progress=None, timeout=None):
+    def fake_esptool(args, log=None, timeout=None):
         calls.append(list(args))
-        if on_progress:
-            on_progress("PROGRESS [esptool] Writing at 0x00010000... (50 %)")
-        return MagicMock(returncode=0, stdout="", stderr="")
+        if log is not None:
+            log("PROGRESS [esptool] Writing at 0x00010000... (50 %)")
+        return 0
 
     monkeypatch.setattr(ff, "run_esptool_streaming", fake_esptool)
     live: list[str] = []
@@ -236,6 +258,9 @@ def test_first_flash_esptool_yes_streams(tmp_path: Path, monkeypatch):
     assert any("write-flash" in c for c in calls)
     assert any("PROGRESS [esptool]" in x for x in live)
     assert any("OK: write-flash" in x for x in live)
+    # esptool mid-stream lines land in result.lines
+    assert any("PROGRESS [esptool]" in x for x in result.lines)
+    assert result.lines == live
 
 
 def test_first_flash_uf2_yes(tmp_path: Path):
@@ -247,6 +272,10 @@ def test_first_flash_uf2_yes(tmp_path: Path):
     assert result.ok
     assert dest.is_file()
     assert any("uf2-copy" in x for x in live)
+    assert any("uf2-copy" in x for x in result.lines)
+    assert result.lines == live
+    plan = plan_first_flash(image=img, uf2_dest=dest)
+    assert isinstance(plan, Uf2FlashPlan)
 
 
 def test_cli_first_flash_help():

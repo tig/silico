@@ -7,7 +7,7 @@ from pathlib import Path
 
 from silico.mpremote_util import ls_device, mpremote_available, run_mpremote
 from silico.ports import pick_best_port, port_is_listed
-from silico.progress import ProgressCallback, emit, file_step, stage_header
+from silico.progress import ProgressCallback, ProgressLog, file_step, stage_header
 
 
 @dataclass
@@ -127,48 +127,36 @@ def pull_device(
 
     dest = dest.resolve()
     dest.mkdir(parents=True, exist_ok=True)
-    lines: list[str] = []
-    emit(
-        lines,
-        stage_header("pull", f"{chosen.device} -> {dest}"),
-        on_progress=on_progress,
-    )
+    log = ProgressLog(on_progress)
+    log(stage_header("pull", f"{chosen.device} -> {dest}"))
 
     ls = ls_device(chosen.device)
     if ls.returncode != 0:
-        emit(lines, "FAIL: ls device", on_progress=on_progress)
+        log("FAIL: ls device")
         if ls.stderr:
-            emit(lines, ls.stderr.strip(), on_progress=on_progress)
-        return PullResult(False, lines)
+            log(ls.stderr.strip())
+        return PullResult(False, log.lines)
     names = _parse_ls_names(ls.stdout or "")
     if only:
         want = set(only)
         names = [n for n in names if n in want]
     if not names:
-        emit(lines, "INFO: no files to pull", on_progress=on_progress)
-        return PullResult(True, lines)
+        log("INFO: no files to pull")
+        return PullResult(True, log.lines)
 
     n = len(names)
-    emit(lines, f"PROGRESS [pull] {n} file(s) to copy", on_progress=on_progress)
+    log(f"PROGRESS [pull] {n} file(s) to copy")
     ok = True
     for i, name in enumerate(names, start=1):
         local = dest / name
-        emit(
-            lines,
-            file_step(stage="pull", index=i, total=n, name=name, verb="Reading"),
-            on_progress=on_progress,
-        )
+        log(file_step(stage="pull", index=i, total=n, name=name, verb="Reading"))
         r = run_mpremote(chosen.device, "cp", f":{name}", str(local))
         if r.returncode != 0:
             ok = False
-            emit(lines, f"FAIL: :{name} -> {local}", on_progress=on_progress)
+            log(f"FAIL: :{name} -> {local}")
             if r.stderr:
-                emit(lines, r.stderr.strip(), on_progress=on_progress)
+                log(r.stderr.strip())
         else:
-            emit(lines, f"OK: :{name} -> {local}", on_progress=on_progress)
-    emit(
-        lines,
-        stage_header("done", "pull finished " + ("OK" if ok else "with errors")),
-        on_progress=on_progress,
-    )
-    return PullResult(ok, lines)
+            log(f"OK: :{name} -> {local}")
+    log(stage_header("done", "pull finished " + ("OK" if ok else "with errors")))
+    return PullResult(ok, log.lines)

@@ -32,7 +32,7 @@ See also: [silico](#silico), [gobbledygook](#gobbledygook).
 
 ### plate
 
-The **template** [GCU](#gcu) repo layout and conventions (folders, `AGENTS.md`, `silico.toml`, host [pin](#pin), CI that runs the [host gate](#host-gate)). Scaffolding a GCU means following the plate, not inventing a parallel tree.
+The **template** [GCU](#gcu) repo layout and conventions (folders, `AGENTS.md`, `silico.toml`, host [pin](#pin), CI that runs the [host gate](#host-gate)). Scaffolding a GCU means following the plate, not inventing a parallel tree. Default: MicroPython `gcu`. Opt-in: C/ESP-IDF `gcu-c` (`silico scaffold . --plate gcu-c`). Default plate is a product choice, not a quality ranking (see [tenets](./tenets.md)).
 
 See also: [spine](#spine), [scaffold](#scaffold).
 
@@ -179,7 +179,15 @@ See also: [spine](#spine).
 
 ### Pi-class
 
-MCU class for v1 starters: RP2040-class boards, MicroPython runtime, USB serial deploy path. Arduino-class [plates](#plate) are architectural room, not a v1 deliverable until a [GCU](#gcu) forces them.
+MCU class for many v1 starters: **RP2040-class** boards, typically MicroPython, UF2 first-flash, then USB serial file deploy. Still a common default path; not the only supported class (see **ESP32-class**).
+
+See also: [plate](#plate), [ESP32-class](#esp32-class).
+
+### ESP32-class
+
+MCU class on the silico spine: classic ESP32 and S3-class boards. Supported runtimes: **MicroPython** (esptool first-flash, then mpremote) and **C / ESP-IDF** (`gcu-c` plate; image flash). Not the same as Arduino-core ESP boards as a silico backend.
+
+See also: [Pi-class](#pi-class), [plate](#plate).
 
 See also: [silicov1.md](./silicov1.md), [metal](#metal).
 

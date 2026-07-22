@@ -2,10 +2,10 @@
 
 **Status:** Draft spec for build.
 **Steward:** Tig Kindel (github.com/tig/silico). Not a company product line.
-**Scope:** The spine required by three Pi-class GCUs (RP2040 / MicroPython first).
-**Non-scope:** Industry default. Category marketing. Cloud fleet. Built-in phone-home for all GCUs. Arduino-class plates as a deliverable. Company branding of the spine. Full v2 narrative (longer-term vision lives in [wb-2026-fall-three-gcus.md](./wb-2026-fall-three-gcus.md) FAQ 37).
+**Scope:** The spine required by three starter GCUs, with supported MCU/runtime paths as of dual-runtime (#53): RP2040 + MicroPython (default plate), ESP32-class + MicroPython, ESP32-class + C/ESP-IDF (`gcu-c` plate). See [v1 WB FAQ 3](./wb-2026-fall-three-gcus.md) and root README.
+**Non-scope:** Industry default. Category marketing. Cloud fleet. Built-in phone-home for all GCUs. Arduino-class plates as a silico deliverable ([issue #59](https://github.com/tig/silico/issues/59)). PlatformIO or Pico SDK as silico dual-runtime peers. Company branding of the spine. Full v2 narrative (longer-term vision lives in [wb-2026-fall-three-gcus.md](./wb-2026-fall-three-gcus.md) FAQ 37).
 
-Related: [tenets.md](./tenets.md), [lexicon.md](./lexicon.md), [gcu-codenames.md](./gcu-codenames.md), [wb-2026-fall-three-gcus.md](./wb-2026-fall-three-gcus.md).
+Related: [tenets.md](./tenets.md) (including **Default is a product choice, not a quality ranking**), [lexicon.md](./lexicon.md), [gcu-codenames.md](./gcu-codenames.md), [wb-2026-fall-three-gcus.md](./wb-2026-fall-three-gcus.md).
 
 ## 0. Why this exists
 
@@ -123,6 +123,8 @@ The GCU needs a GitHub remote (or equivalent) so CI can run the host gate. A pac
 
 ### 5.1 GCU repo layout (plate)
 
+**Default plate** (`silico scaffold .` → `plates/gcu`, MicroPython):
+
 ```
 <gcu>/
   AGENTS.md
@@ -138,21 +140,23 @@ The GCU needs a GitHub remote (or equivalent) so CI can run the host gate. A pac
   silico.toml               # product config for silico host tools
 ```
 
+**C / ESP-IDF plate** (`silico scaffold . --plate gcu-c`): same operator contracts via `silico.toml` (`language = c`, `deploy.mode = idf-flash`). Layout uses portable `include/` + `src/`, host CMake/CTest under `host/`, and ESP-IDF under `firmware/` (no pytest/mpy-cross requirement). See plate `AGENTS.md` and tenet **Default is a product choice, not a quality ranking**.
+
 ## 6. Firmware architecture (device)
 
 ### 6.1 Required modules (conceptual)
 
-1. `version` with `FW_NAME` and semver `FW_VERSION`.
-2. `hal` contract that imports nothing on the device path.
-3. Device HAL backend (v1: RP2040 / MicroPython).
-4. `main` with `init(hal=None)` and periodic `tick` (or explicit run period).
+1. Version / identity: `FW_NAME` and semver `FW_VERSION` (Python modules or C macros / identity line — same grammar at the port: `fw_name=… fw_version=…`).
+2. `hal` contract that does not pull device drivers into portable domain.
+3. Device HAL backend: MicroPython `machine` allowlist modules, or C allowlisted board TUs (`#include` freertos / esp_* only there).
+4. `main` / `app_main` with init and periodic tick (or explicit run period); no hardware at import of portable domain.
 5. Domain modules owned by the GCU (private). Agents write them under contracts.
-6. On-device harness or self-test entry that is not an infinite boot loop.
+6. On-device harness or self-test entry that is not an infinite boot loop without an escape hatch when the product requires one.
 
 ### 6.2 Rules
 
-1. Domain policy modules do not import `machine`.
-2. `main` does not construct hardware at import. Function-local import of device HAL is fine.
+1. Domain policy does not import `machine` (MicroPython) or device headers outside allowlisted board TUs (C).
+2. Portable entry does not construct hardware at import. Function-local / board-only import of device HAL is fine.
 3. IRQ handlers use fixed buffers only.
 4. One owner of status outputs per tick.
 5. Single loop or schedule; no nested infinite mode runners calling each other.
@@ -165,18 +169,18 @@ v1 defines:
 
 1. Time: ticks, tick diff, sleep.
 2. Pattern for product-specific read/write methods.
-3. Host sim backend implementing the same product HAL for tests.
-4. Hygiene tests: `hal` imports nothing; device backend implements the contract; machine import allowlist is config.
+3. Host double implementing the same product HAL for tests (pytest sim or host CTest).
+4. Hygiene: machine-import allowlist (MicroPython) or device-header allowlist (C); portable domain stays host-testable.
 
 ## 7. Host gate
 
 Every GCU CI and every honest "firmware done" includes:
 
-1. Unit and packaging tests on host.
-2. Bytecode or compile gate for on-device sources (`mpy-cross` **pinned to the device MicroPython version**, not a loose floor).
-3. Hygiene gates (import rules, core file set, no sim in deploy set).
+1. Unit and packaging tests on host (pytest for MicroPython plates; CMake/CTest for `language = c`).
+2. Compile honesty for on-device sources: `mpy-cross` **pinned to the device MicroPython version** (mpy path), or host-compiled portable C + include hygiene (C path).
+3. Hygiene gates (import / include rules, deploy set or IDF project, no host-only trees on metal).
 4. At least one scenario or smoke exercising init and tick against a plant or fake HAL.
-5. Print or log of `FW_NAME` and `FW_VERSION` under test.
+5. Identity under test (`FW_NAME` / `FW_VERSION` or equivalent identity line).
 
 No COM port in CI.
 
@@ -201,11 +205,11 @@ This is the minimum **Prompt for metal** / **Host first** bar. Soften it and a n
 ### 8.1 Lifecycle
 
 1. **Discover** board (VID/PID scoring; explicit port wins; never blind auto on multi-device hosts).
-2. **Bootstrap** host tools if needed (Python **3.11+**, mpremote).
-3. **Runtime** (once): document UF2 or equivalent first flash of MicroPython.
-4. **Application:** deploy configured core file set in dependency order.
-5. **Verify:** device `FW_VERSION` matches host.
-6. **Optional harness:** known success signature.
+2. **Bootstrap** host tools if needed (Python **3.11+**; mpremote for MicroPython; ESP-IDF / `idf.py` for `language = c`).
+3. **Runtime / first image** (once as needed): UF2 for RP2040 MicroPython; esptool for classic ESP32 MicroPython; IDF image flash for C (first and update may be the same path).
+4. **Application:** MicroPython — deploy configured core file set; C — `idf.py build` + flash of the app image.
+5. **Verify:** device identity / `FW_VERSION` matches host (serial identity line for C).
+6. **Optional harness:** known success signature; operator-confirmed **product face**.
 
 ### 8.2 Maturity for v1
 
@@ -217,13 +221,13 @@ This is the minimum **Prompt for metal** / **Host first** bar. Soften it and a n
 
 ### 8.3 Port scoring (v1 defaults)
 
-Prefer Raspberry Pi / MicroPython USB (`2e8a`). Demote CH340 (`1a86`) and Debug Probe (`2e8a:000c`). Always allow `--port`.
+Prefer RP2040 / MicroPython USB (`2e8a`). Score ESP-class CDC positively (CH9102, CP210x, Espressif native) as candidates — still confirm identity. Demote generic CH340 adapters and Debug Probe (`2e8a:000c`). Always allow explicit `--port`.
 
 ## 9. Version identity
 
-1. Semver in device `version` module is source of truth for the app build.
-2. Host reads the same file before deploy.
-3. After deploy, host queries device; noise-tolerant `FW_VERSION=` (or successor).
+1. Semver (or equivalent) on the product is source of truth for the app build (Python `version` module or C macros / identity line).
+2. Host reads the same product identity before deploy (`silico.toml` / shipped sources).
+3. After deploy, host queries device; noise-tolerant `fw_name=` / `fw_version=` (or successor).
 4. Mismatch fails the update.
 
 ## 10. Agent contracts
@@ -272,19 +276,20 @@ Machine-readable config declares at least:
 
 ## 14. Non-goals (v1)
 
-1. Arduino / PlatformIO plate as a deliverable.
+1. Arduino / PlatformIO as a **silico** dual-runtime plate (Arduino tracked in [issue #59](https://github.com/tig/silico/issues/59); PlatformIO may live inside a GCU, not as silico deploy).
 2. Built-in internet, phone-home, cloud accounts, fleet dashboards, or remote OTA as silico spine features. Quilan may phone home in app code.
-3. Replacing MicroPython with C as the default.
+3. Replacing MicroPython with C as the **default** (C/ESP-IDF is supported opt-in; see tenet **Default is a product choice, not a quality ranking**).
 4. Shipping private product source in silico.
 5. Claiming platform status, company org chart, or external proof.
 6. Perfect multi-os desktop GUI installers.
 7. Features for imaginary unicorns before three GCUs force the shape.
 8. Requiring human hand-authorship of firmware as the blessed path.
+9. Pico SDK C or `language = cpp` as additional silico language peers (C++ may appear in ESP-IDF board TUs).
 
 ### 14.1 Later (not v1; see also v1 WB FAQ 37)
 
 1. Phone-home through silico when a second GCU needs Quilan's app loop; USB remains always available.
-2. Multi-target plates when a GCU forces them.
+2. Further multi-target plates when a GCU forces them (Arduino-class, Pico SDK C, …). ESP32 MicroPython and ESP-IDF C are already on the spine.
 3. Echo-shaped continuous deploy with automatic rollback for fleets, only after host-first is boring.
 4. External default among vertical teams.
 

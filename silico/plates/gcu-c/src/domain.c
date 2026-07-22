@@ -1,16 +1,8 @@
 #include "gcu/defaults.h"
-#include "gcu/hal.h"
+#include "gcu/domain.h"
 #include "gcu/version.h"
 
 #include <stdio.h>
-#include <string.h>
-
-typedef struct {
-  gcu_hal_t *hal;
-  int tick_count;
-  int led_on;
-  int tick_sleep_ms;
-} gcu_state_t;
 
 void gcu_identity_line(char *out, int out_len) {
   if (!out || out_len < 8) {

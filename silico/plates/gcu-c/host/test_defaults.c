@@ -1,23 +1,11 @@
 /* Product-path: drive domain with shipped GCU_DEFAULTS unmodified. */
 #include "gcu/defaults.h"
+#include "gcu/domain.h"
 #include "gcu/hal.h"
 #include "gcu/version.h"
 
 #include <stdio.h>
 #include <string.h>
-
-/* domain.c symbols (not in a public header yet — plate stub) */
-typedef struct {
-  gcu_hal_t *hal;
-  int tick_count;
-  int led_on;
-  int tick_sleep_ms;
-} gcu_state_t;
-
-void gcu_identity_line(char *out, int out_len);
-void gcu_init(gcu_state_t *st, gcu_hal_t *hal);
-void gcu_tick(gcu_state_t *st);
-int gcu_tick_sleep_ms(const gcu_state_t *st);
 
 static int led;
 

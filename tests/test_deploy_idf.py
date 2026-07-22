@@ -43,11 +43,13 @@ def test_plan_idf_shows_overwrite_image(tmp_path: Path, monkeypatch):
         lambda: [PortInfo("COM7", 0x1A86, 0x55D4, "CH9102", "m", 55, "ESP")],
     )
     monkeypatch.setattr(ports, "port_is_listed", lambda d: d == "COM7")
-    from silico.deploy_idf import IdfDeployPlan, IdfDeployResult
+    from silico.deploy_types import DeployPlan, DeployResult
 
     planned = plan_idf_deploy(port="COM7", root=root)
-    assert isinstance(planned, IdfDeployPlan)
-    assert not isinstance(planned, IdfDeployResult)
+    assert isinstance(planned, DeployPlan)
+    assert planned.kind == "idf"
+    assert planned.build_cmd and planned.flash_cmd
+    assert not isinstance(planned, DeployResult)
     text = "\n".join(planned.lines)
     assert "OVERWRITE the entire application image" in text
     assert "idf.py" in text or "build" in text
@@ -132,3 +134,20 @@ def test_mpy_flags_rejected_on_c(tmp_path: Path, monkeypatch):
     r = deploy(None, port="COM7", yes=True, verify_import="main", root=root)
     assert not r.ok
     assert any("MicroPython-only" in x for x in r.lines)
+
+
+def test_idf_invocation_uses_sys_executable(monkeypatch, tmp_path: Path):
+    import silico.deploy_idf as m
+
+    monkeypatch.delenv("IDF_PATH", raising=False)
+    monkeypatch.setattr(m.shutil, "which", lambda name: None)
+    monkeypatch.setenv("IDF_PATH", str(tmp_path))
+    tools = tmp_path / "tools"
+    tools.mkdir()
+    (tools / "idf.py").write_text("# idf\n", encoding="utf-8")
+    inv = m._idf_py_invocation()
+    assert inv[0].endswith("python.exe") or "python" in inv[0].lower() or inv[0]
+    import sys
+
+    assert inv[0] == sys.executable
+    assert inv[1].endswith("idf.py")

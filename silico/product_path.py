@@ -27,24 +27,23 @@ class ProductPathReport:
 
 
 def resolve_defaults_path(root: Path | None = None) -> Path | None:
-    """Locate the shipped-defaults module (toml override or plate convention)."""
+    """Locate the shipped-defaults file (toml override or language-aware convention)."""
     root = (root or Path.cwd()).resolve()
     configured = read_product_defaults_path(root)
     if configured:
         p = (root / configured).resolve()
         return p if p.is_file() else None
-    # Convention: firmware/defaults.py (MicroPython plate)
+    cfg = resolve_runtime(root)
+    if cfg.language == "c":
+        for alt in (
+            root / "include" / "gcu" / "defaults.h",
+            root / "src" / "defaults.c",
+        ):
+            if alt.is_file():
+                return alt
+        return None
     cand = root / "firmware" / "defaults.py"
-    if cand.is_file():
-        return cand
-    # C plate convention
-    for alt in (
-        root / "include" / "gcu" / "defaults.h",
-        root / "src" / "defaults.c",
-    ):
-        if alt.is_file():
-            return alt
-    return None
+    return cand if cand.is_file() else None
 
 
 def load_shipped_defaults(root: Path | None = None) -> dict[str, object]:
@@ -193,42 +192,43 @@ def _host_c_files(root: Path) -> list[Path]:
     return sorted(set(out))
 
 
-def _c_file_uses_defaults(text: str, defaults_path: Path) -> bool:
-    """True if source shows compiled use of the shipped defaults table.
+def _strip_c_comments_and_strings(text: str) -> str:
+    """Remove // and /* */ comments so greps cannot pass on comment-only mentions."""
+    # Block comments first
+    text = re.sub(r"/\*.*?\*/", " ", text, flags=re.DOTALL)
+    # Line comments
+    text = re.sub(r"//.*?$", " ", text, flags=re.MULTILINE)
+    return text
 
-    Accepts #include of the defaults header, or identifier tokens from common
-    plate symbols (GCU_DEFAULTS, TICK_SLEEP_MS, defaults table names).
-    Bare comments alone do not count (no #include / no identifier).
+
+def _c_file_uses_defaults(text: str, defaults_path: Path) -> bool:
+    """True if source *code* includes defaults and uses a shipped symbol.
+
+    Comments do not count. Bare ``#include`` without using a symbol does not count.
     """
+    code = _strip_c_comments_and_strings(text)
     stem = defaults_path.stem
     name = defaults_path.name
-    # Must include the header or the .c that defines the table
     include_hit = (
-        f'#include "{name}"' in text
-        or f'#include <{name}>' in text
-        or f'#include "gcu/{name}"' in text
-        or f'#include <gcu/{name}>' in text
-        or f'#include "{stem}.h"' in text
-        or f'#include "gcu/{stem}.h"' in text
+        f'#include "{name}"' in code
+        or f"#include <{name}>" in code
+        or f'#include "gcu/{name}"' in code
+        or f"#include <gcu/{name}>" in code
+        or f'#include "{stem}.h"' in code
+        or f'#include "gcu/{stem}.h"' in code
     )
-    if not include_hit and defaults_path.suffix == ".c":
-        # linking the .c is enough if tests call into symbols from defaults.c
-        include_hit = stem in text and (
-            "GCU_DEFAULTS" in text
-            or "TICK_SLEEP_MS" in text
-            or "defaults" in text.lower()
-        )
     if not include_hit:
         return False
-    # Compiled use: reference a known shipped symbol (not only include for side effects)
+    # Must use a shipped table/symbol in code (not only include for side effects).
     symbols = (
         "GCU_DEFAULTS",
-        "TICK_SLEEP_MS",
+        "GCU_TICK_SLEEP_MS",
         "gcu_defaults",
         "defaults_table",
-        stem.upper() if stem.isidentifier() else "",
     )
-    return any(s and s in text for s in symbols)
+    if stem.isidentifier() and stem.upper() not in symbols:
+        symbols = (*symbols, stem.upper())
+    return any(s in code for s in symbols)
 
 
 def count_c_defaults_references(root: Path, defaults_path: Path) -> tuple[int, list[str]]:
@@ -277,8 +277,8 @@ def run_product_path_check(root: Path | None = None) -> ProductPathReport:
 
     lines.append(f"Shipped defaults: {path.relative_to(root)}")
 
-    # --- C / language=c path ---
-    if cfg.is_c or path.suffix.lower() in {".h", ".c", ".hpp", ".cpp"}:
+    # --- C / language=c only (do not branch on file suffix alone) ---
+    if cfg.language == "c":
         refs, detail = count_c_defaults_references(root, path)
         lines.append(f"Host C files using shipped defaults (compiled use): {refs}")
         for d in detail:
@@ -289,8 +289,8 @@ def run_product_path_check(root: Path | None = None) -> ProductPathReport:
             lines.append(
                 "FAIL: defaults file exists but no host C test uses it. "
                 "At least one host test must #include the defaults header and "
-                "reference a shipped symbol (e.g. GCU_DEFAULTS / TICK_SLEEP_MS). "
-                "A comment alone does not count."
+                "reference a shipped symbol in code (e.g. GCU_DEFAULTS). "
+                "Comments and bare includes do not count."
             )
         else:
             lines.append(f"OK: {refs} host C file(s) exercise shipped defaults.")

@@ -26,3 +26,10 @@ def test_match_expected():
     assert match_expected(idn, expect_name="XUSSC", expect_version="0.0.1") == []
     fails = match_expected(idn, expect_name="OTHER", expect_version="0.0.1")
     assert fails and "fw_name" in fails[0]
+
+
+def test_parse_mpy_style_printf_line():
+    """Deploy --verify prints one fw_name= line (unified with C)."""
+    got = parse_identity_blob("fw_name=GCU fw_version=0.0.1\n")
+    assert got is not None and got.complete
+    assert got.fw_name == "GCU"

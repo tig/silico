@@ -62,8 +62,7 @@ def test_scan_rejects_device_header_in_src(tmp_path: Path):
     assert any("leaky.c" in f for f in fails)
 
 
-def test_c_gate_hygiene_ok(tmp_path: Path, monkeypatch):
-    monkeypatch.setenv("SILICO_C_GATE_SKIP_CMD", "1")
+def test_c_gate_hygiene_ok(tmp_path: Path):
     _write_c_fixture(tmp_path)
     report = run_c_gate(tmp_path, run_command=False)
     assert report.ok, report.lines
@@ -86,6 +85,30 @@ def test_product_path_c_fails_without_host_use(tmp_path: Path):
     _write_c_fixture(tmp_path)
     (tmp_path / "host" / "test_defaults.c").write_text(
         "/* no include */\nint main(void) { return 0; }\n",
+        encoding="utf-8",
+    )
+    report = run_product_path_check(tmp_path)
+    assert not report.ok
+
+
+def test_product_path_c_fails_on_comment_only_symbol(tmp_path: Path):
+    """Comments must not satisfy product-path (same honesty as Python AST gate)."""
+    _write_c_fixture(tmp_path)
+    (tmp_path / "host" / "test_defaults.c").write_text(
+        '#include "gcu/defaults.h"\n'
+        "/* use GCU_DEFAULTS someday */\n"
+        "int main(void) { return 0; }\n",
+        encoding="utf-8",
+    )
+    report = run_product_path_check(tmp_path)
+    assert not report.ok
+    assert any("FAIL" in line for line in report.lines)
+
+
+def test_product_path_c_fails_on_bare_include(tmp_path: Path):
+    _write_c_fixture(tmp_path)
+    (tmp_path / "host" / "test_defaults.c").write_text(
+        '#include "gcu/defaults.h"\nint main(void) { return 0; }\n',
         encoding="utf-8",
     )
     report = run_product_path_check(tmp_path)

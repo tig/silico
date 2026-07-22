@@ -5,6 +5,7 @@ from __future__ import annotations
 import re
 import shlex
 import subprocess
+import sys
 from dataclasses import dataclass, field
 from pathlib import Path
 
@@ -74,15 +75,9 @@ def _iter_source_files(root: Path) -> list[Path]:
 
 
 def _is_allowlisted(path: Path, root: Path, allow: set[str]) -> bool:
-    stem = path.stem
-    if stem in allow:
-        return True
-    # board backends often live under firmware/main/
-    rel = path.relative_to(root).as_posix()
-    for a in allow:
-        if f"/{a}." in f"/{rel}" or rel.startswith(f"{a}.") or f"/{a}/" in f"/{rel}":
-            return True
-    return False
+    """Allowlist by file stem only (e.g. hal_board.c → hal_board)."""
+    del root  # reserved for future exact-path allowlists
+    return path.stem in allow
 
 
 def scan_device_includes(
@@ -131,16 +126,27 @@ def run_host_gate_command(
 
     lines.append(f"Running host gate: {cmd}")
     try:
-        # shell=True for Windows cmake one-liners; still pinned to product cwd.
-        completed = subprocess.run(
-            cmd,
-            shell=True,
-            cwd=str(root),
-            capture_output=True,
-            text=True,
-            timeout=timeout_s,
-            check=False,
-        )
+        # Prefer argv split; shell=True only on Windows when needed for .bat/cmake paths.
+        if sys.platform == "win32":
+            completed = subprocess.run(
+                cmd,
+                shell=True,
+                cwd=str(root),
+                capture_output=True,
+                text=True,
+                timeout=timeout_s,
+                check=False,
+            )
+        else:
+            completed = subprocess.run(
+                shlex.split(cmd),
+                shell=False,
+                cwd=str(root),
+                capture_output=True,
+                text=True,
+                timeout=timeout_s,
+                check=False,
+            )
     except subprocess.TimeoutExpired:
         lines.append(f"FAIL: host gate timed out after {timeout_s}s: {cmd}")
         return False, lines
@@ -168,7 +174,7 @@ def run_c_gate(root: Path | None = None, *, run_command: bool = True) -> CGateRe
     ok = True
 
     cfg = resolve_runtime(root)
-    if not cfg.is_c:
+    if cfg.language != "c":
         lines.append(
             f"INFO: runtime language={cfg.language} — use silico gate MicroPython path."
         )

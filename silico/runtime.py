@@ -5,17 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from pathlib import Path
 
-from silico.config_toml import (
-    read_deploy_mode,
-    read_deploy_project,
-    read_esp_idf_pin,
-    read_host_gate,
-    read_runtime_board,
-    read_runtime_chip,
-    read_runtime_language,
-    read_runtime_toolchain,
-    read_serial_baud,
-)
+from silico.config_toml import _load
 
 LANG_MICROPYTHON = "micropython"
 LANG_C = "c"
@@ -30,49 +20,90 @@ class RuntimeConfig:
     esp_idf: str | None
     chip: str | None
     board: str | None
-    deploy_mode: str  # "file-copy" | "idf-flash"
+    deploy_mode: str  # "file-copy" | "idf-flash" | "none"
     project: str | None
     host_gate: str | None
     baud: int
-    errors: tuple[str, ...] = ()
+    errors: tuple[str, ...] = ()  # FAIL lines only
+    warnings: tuple[str, ...] = ()  # WARN lines only
 
     @property
     def ok(self) -> bool:
+        """True when safe to select a deploy backend (no FAIL errors)."""
         return not self.errors
 
     @property
     def is_c(self) -> bool:
-        return self.language == LANG_C
+        return self.language == LANG_C and self.ok
 
     @property
     def is_micropython(self) -> bool:
-        return self.language == LANG_MICROPYTHON
+        return self.language == LANG_MICROPYTHON and self.ok
+
+
+def _str_field(section: dict, key: str) -> str | None:
+    raw = section.get(key)
+    if isinstance(raw, str) and raw.strip():
+        return raw.strip()
+    return None
 
 
 def resolve_runtime(root: Path | None = None) -> RuntimeConfig:
-    """Load and validate runtime selection.
+    """Load and validate runtime selection from one silico.toml parse.
 
-    Default (no language key): MicroPython file-copy path for existing GCUs.
-    ``language = c`` requires toolchain esp-idf (defaulted if omitted).
+    Default (no language key): MicroPython file-copy for existing GCUs.
+    Unknown language fails closed (errors set; not treated as micropython).
     """
     root = (root or Path.cwd()).resolve()
-    language = read_runtime_language(root)
-    toolchain = read_runtime_toolchain(root)
-    esp_idf = read_esp_idf_pin(root)
-    chip = read_runtime_chip(root)
-    board = read_runtime_board(root)
-    mode = read_deploy_mode(root)
-    project = read_deploy_project(root)
-    host_gate = read_host_gate(root)
-    baud = read_serial_baud(root)
+    data = _load(root)
+    runtime = data.get("runtime") if isinstance(data.get("runtime"), dict) else {}
+    deploy = data.get("deploy") if isinstance(data.get("deploy"), dict) else {}
+    host = data.get("host") if isinstance(data.get("host"), dict) else {}
+
+    lang_raw = _str_field(runtime, "language")
+    language = (lang_raw or LANG_MICROPYTHON).lower()
+    toolchain = _str_field(runtime, "toolchain")
+    if toolchain:
+        toolchain = toolchain.lower()
+    esp_idf = _str_field(runtime, "esp_idf")
+    chip = _str_field(runtime, "chip")
+    if chip:
+        chip = chip.lower()
+    board = _str_field(runtime, "board")
+    mode = _str_field(deploy, "mode")
+    if mode:
+        mode = mode.lower()
+    project = _str_field(deploy, "project")
+    host_gate = _str_field(host, "gate")
+    baud_raw = runtime.get("baud")
+    if isinstance(baud_raw, int) and baud_raw > 0:
+        baud = baud_raw
+    elif isinstance(baud_raw, str) and baud_raw.strip().isdigit():
+        baud = int(baud_raw.strip())
+    else:
+        baud = 115200
+
     errors: list[str] = []
+    warnings: list[str] = []
 
     if language not in KNOWN_LANGUAGES:
         errors.append(
             f"FAIL: unknown [runtime].language={language!r}. "
             f"Supported: {', '.join(sorted(KNOWN_LANGUAGES))}."
         )
-        language = LANG_MICROPYTHON  # safe fallback for partial reports
+        return RuntimeConfig(
+            language=language,
+            toolchain=toolchain,
+            esp_idf=esp_idf,
+            chip=chip,
+            board=board,
+            deploy_mode=mode or "none",
+            project=project,
+            host_gate=host_gate,
+            baud=baud,
+            errors=tuple(errors),
+            warnings=tuple(warnings),
+        )
 
     if language == LANG_C:
         if toolchain is None:
@@ -93,28 +124,21 @@ def resolve_runtime(root: Path | None = None) -> RuntimeConfig:
         if host_gate is None:
             host_gate = "cmake --build build/host --target test"
         if chip is None:
-            errors.append(
+            warnings.append(
                 "WARN: [runtime].chip not set (esptool needs esp32 / esp32s3 / …). "
                 "Defaulting plan text to esp32; set chip in silico.toml."
             )
             chip = "esp32"
     else:
-        # micropython
-        if toolchain and toolchain != "micropython":
-            # allow absent; if set to something odd, warn via error list as soft fail
-            if toolchain == TOOLCHAIN_ESP_IDF:
-                errors.append(
-                    "FAIL: toolchain=esp-idf requires language=c (not micropython)."
-                )
+        if toolchain == TOOLCHAIN_ESP_IDF:
+            errors.append(
+                "FAIL: toolchain=esp-idf requires language=c (not micropython)."
+            )
         if mode is None:
             mode = "file-copy"
-        if mode == "idf-flash" and language == LANG_MICROPYTHON:
-            errors.append(
-                "FAIL: [deploy].mode=idf-flash requires language=c."
-            )
+        if mode == "idf-flash":
+            errors.append("FAIL: [deploy].mode=idf-flash requires language=c.")
 
-    # Hard failures only (WARN lines are still errors tuple for doctor to print soft)
-    hard = tuple(e for e in errors if e.startswith("FAIL:"))
     return RuntimeConfig(
         language=language,
         toolchain=toolchain,
@@ -125,7 +149,8 @@ def resolve_runtime(root: Path | None = None) -> RuntimeConfig:
         project=project,
         host_gate=host_gate,
         baud=baud,
-        errors=tuple(errors) if hard else tuple(errors),
+        errors=tuple(errors),
+        warnings=tuple(warnings),
     )
 
 
@@ -150,4 +175,6 @@ def runtime_summary_lines(cfg: RuntimeConfig) -> list[str]:
         lines.append(f"  serial baud: {cfg.baud}")
     for e in cfg.errors:
         lines.append(e)
+    for w in cfg.warnings:
+        lines.append(w)
     return lines

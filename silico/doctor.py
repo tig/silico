@@ -61,10 +61,11 @@ def run_doctor(*, root: Path | None = None) -> DoctorReport:
 
     cfg = resolve_runtime(root)
     lines.extend(runtime_summary_lines(cfg))
-    if any(e.startswith("FAIL:") for e in cfg.errors):
+    if cfg.errors:
         ok = False
 
-    if cfg.is_c:
+    # Tooling hints for C intent even if config has FAILs (language still "c").
+    if cfg.language == "c":
         if idf_py_available():
             lines.append("OK: ESP-IDF tools available (idf.py or IDF_PATH)")
         else:

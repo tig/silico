@@ -2,30 +2,21 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
 import re
 from pathlib import Path
 
+from silico.backend import BACKEND_IDF, BACKEND_INVALID, backend_kind
 from silico.config_toml import read_deploy_core
-from silico.deploy_idf import IdfDeployResult, deploy_idf, plan_idf_deploy
+from silico.deploy_idf import deploy_idf, plan_idf_deploy
+from silico.deploy_types import DeployPlan, DeployResult
+from silico.identity import match_expected, parse_identity_blob
 from silico.mpremote_util import cp_to_device, exec_on_device, ls_device, mpremote_available, run_mpremote
 from silico.ports import IDENTITY_HINT, pick_best_port, port_is_listed
 from silico.pull_device import _parse_ls_names
 from silico.runtime import resolve_runtime
 
-
-@dataclass
-class DeployPlan:
-    port: str
-    files: list[tuple[Path, str]]  # local path, remote name
-    lines: list[str] = field(default_factory=list)
-    prune_remotes: list[str] = field(default_factory=list)
-
-
-@dataclass
-class DeployResult:
-    ok: bool
-    lines: list[str] = field(default_factory=list)
+# Re-export for callers that import from silico.deploy
+__all__ = ["DeployPlan", "DeployResult", "deploy", "plan_deploy", "resolve_deploy_files"]
 
 
 
@@ -98,7 +89,10 @@ def plan_deploy(
 ) -> DeployPlan | DeployResult:
     root = root or Path.cwd()
     cfg = resolve_runtime(root)
-    if cfg.is_c or cfg.deploy_mode == "idf-flash":
+    kind = backend_kind(cfg)
+    if kind == BACKEND_INVALID:
+        return DeployResult(False, list(cfg.errors) or ["FAIL: invalid runtime config"])
+    if kind == BACKEND_IDF:
         if files:
             return DeployResult(
                 False,
@@ -115,16 +109,7 @@ def plan_deploy(
                     "C deploy overwrites the application image."
                 ],
             )
-        idf = plan_idf_deploy(port=port, root=root, cfg=cfg)
-        if isinstance(idf, IdfDeployResult):
-            return DeployResult(idf.ok, idf.lines)
-        # IdfDeployPlan → adapt to DeployPlan-shaped result for CLI
-        return DeployPlan(
-            port=idf.port,
-            files=[],
-            lines=idf.lines,
-            prune_remotes=[],
-        )
+        return plan_idf_deploy(port=port, root=root, cfg=cfg)
 
     if not mpremote_available():
         return DeployResult(False, ["FAIL: mpremote not available (pip install mpremote)"])
@@ -208,6 +193,7 @@ def plan_deploy(
         files=pairs,
         lines=lines,
         prune_remotes=prune_remotes,
+        kind="mpy",
     )
 
 
@@ -226,7 +212,10 @@ def deploy(
 ) -> DeployResult:
     root = root or Path.cwd()
     cfg = resolve_runtime(root)
-    if cfg.is_c or cfg.deploy_mode == "idf-flash":
+    kind = backend_kind(cfg)
+    if kind == BACKEND_INVALID:
+        return DeployResult(False, list(cfg.errors) or ["FAIL: invalid runtime config"])
+    if kind == BACKEND_IDF:
         if verify_import:
             return DeployResult(
                 False,
@@ -240,7 +229,7 @@ def deploy(
                 False,
                 ["FAIL: --prune is MicroPython-only for language=c deploys."],
             )
-        idf = deploy_idf(
+        return deploy_idf(
             port=port,
             yes=yes,
             verify=verify,
@@ -248,7 +237,6 @@ def deploy(
             expect_version=expect_version,
             root=root,
         )
-        return DeployResult(idf.ok, idf.lines)
 
     planned = plan_deploy(files, port=port, prune=prune, root=root)
     if isinstance(planned, DeployResult):
@@ -300,7 +288,11 @@ def deploy(
             )
 
     if verify:
-        code = "import version\nprint(version.FW_NAME)\nprint(version.FW_VERSION)\n"
+        # Same identity grammar as language=c (fw_name=… fw_version=…).
+        code = (
+            "import version\n"
+            "print('fw_name=%s fw_version=%s' % (version.FW_NAME, version.FW_VERSION))\n"
+        )
         r = exec_on_device(planned.port, code)
         if r.returncode != 0:
             import time
@@ -312,15 +304,17 @@ def deploy(
             if r.stderr:
                 lines.append(r.stderr.strip())
             return DeployResult(False, lines)
-        out = (r.stdout or "").strip().splitlines()
-        lines.append("Device reported: " + " ".join(out))
-        got_name = out[0].strip() if out else None
-        got_version = out[1].strip() if len(out) > 1 else None
-        if expect_name and got_name != expect_name:
-            lines.append(f"FAIL: FW_NAME want {expect_name!r} got {got_name!r}")
+        blob = (r.stdout or "").strip()
+        lines.append("Device reported: " + " ".join(blob.splitlines()))
+        got = parse_identity_blob(blob)
+        if got is None or not got.complete:
+            lines.append("FAIL: could not parse identity line from device")
             return DeployResult(False, lines)
-        if expect_version and got_version != expect_version:
-            lines.append(f"FAIL: FW_VERSION want {expect_version!r} got {got_version!r}")
+        fails = match_expected(
+            got, expect_name=expect_name, expect_version=expect_version
+        )
+        if fails:
+            lines.extend(fails)
             return DeployResult(False, lines)
         lines.append("OK: version verify")
 

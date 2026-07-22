@@ -85,30 +85,17 @@ def run_hygiene(root: Path | None = None) -> HygieneReport:
     """
     root = (root or Path.cwd()).resolve()
     cfg = resolve_runtime(root)
-    if cfg.is_c:
-        import os
-
+    if cfg.language == "c":
         from silico.gate_c import run_c_gate
 
-        # Always run include hygiene. Subprocess host gate when build/host exists
-        # or SILICO_C_GATE_RUN_CMD=1; skip when SILICO_C_GATE_SKIP_CMD=1 (tests).
-        skip = os.environ.get("SILICO_C_GATE_SKIP_CMD", "").strip().lower() in (
-            "1",
-            "true",
-            "yes",
-        )
-        force = os.environ.get("SILICO_C_GATE_RUN_CMD", "").strip().lower() in (
-            "1",
-            "true",
-            "yes",
-        )
+        # Include hygiene always. Host gate subprocess only when build/host exists
+        # (agent configures first). Tests call run_c_gate(..., run_command=False).
         build_ready = (root / "build" / "host").is_dir()
-        run_cmd = (not skip) and (force or build_ready)
-        report = run_c_gate(root, run_command=run_cmd)
-        if not run_cmd and not skip:
+        report = run_c_gate(root, run_command=build_ready)
+        if not build_ready:
             report.lines.append(
                 "INFO: skipped [host].gate subprocess (no build/host yet). "
-                "Configure with cmake -S host -B build/host, or set SILICO_C_GATE_RUN_CMD=1."
+                "Configure: cmake -S host -B build/host"
             )
         return HygieneReport(report.ok, report.lines)
 

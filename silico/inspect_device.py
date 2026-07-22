@@ -27,6 +27,36 @@ class InspectReport:
     device_mpy: str | None = None
 
 
+def _resolve_inspect_port(
+    port: str | None,
+) -> tuple[object, None] | tuple[None, InspectReport]:
+    """Pick and validate port. Returns (PortInfo, None) or (None, fail report)."""
+    chosen = pick_best_port(port)
+    if chosen is None:
+        return None, InspectReport(
+            False,
+            None,
+            [
+                "FAIL: no preferred board port found.",
+                "Plug a data USB cable and run: silico wait-device",
+                "Or pass --port COMx explicitly after operator confirms identity.",
+                "Do not use CH340-only benches without --port.",
+            ],
+        )
+    p = chosen.device
+    if port and not port_is_listed(p):
+        return None, InspectReport(
+            False,
+            p,
+            [
+                f"FAIL: --port {p} is not in the current serial inventory.",
+                "Device unplugged, wrong COM, or path changed. Re-run: silico wait-device",
+                "Do not reuse a COM number from an earlier session without re-discovery.",
+            ],
+        )
+    return chosen, None
+
+
 def _inspect_c(
     port: str | None,
     *,
@@ -45,27 +75,11 @@ def _inspect_c(
         )
 
     cfg = resolve_runtime(root)
-    chosen = pick_best_port(port)
-    if chosen is None:
-        return InspectReport(
-            False,
-            None,
-            [
-                "FAIL: no preferred board port found.",
-                "Plug a data USB cable and run: silico wait-device",
-                "Or pass --port COMx explicitly after operator confirms identity.",
-            ],
-        )
+    chosen, fail = _resolve_inspect_port(port)
+    if fail is not None:
+        return fail
+    assert chosen is not None
     p = chosen.device
-    if port and not port_is_listed(p):
-        return InspectReport(
-            False,
-            p,
-            [
-                f"FAIL: --port {p} is not in the current serial inventory.",
-                "Device unplugged, wrong COM, or path changed. Re-run: silico wait-device",
-            ],
-        )
 
     lines.append(f"Port: {p} ({chosen.label})")
     lines.append(f"Mode: serial identity (language={cfg.language}, no mpremote REPL)")
@@ -96,7 +110,7 @@ def inspect(
     root = root or Path.cwd()
     cfg = resolve_runtime(root)
 
-    if cfg.is_c:
+    if cfg.language == "c":
         return _inspect_c(port, apply_mpy_pin=apply_mpy_pin, root=root)
 
     # --apply-mpy-pin mutates the product repo (silico.toml, requirements-dev.txt).
@@ -120,30 +134,11 @@ def inspect(
     if not mpremote_available():
         return InspectReport(False, None, ["FAIL: mpremote not available"])
 
-    chosen = pick_best_port(port)
-    if chosen is None:
-        return InspectReport(
-            False,
-            None,
-            [
-                "FAIL: no preferred board port found.",
-                "Plug a data USB cable and run: silico wait-device",
-                "Or pass --port COMx explicitly after operator confirms identity.",
-                "Do not use CH340-only benches without --port.",
-            ],
-        )
-
+    chosen, fail = _resolve_inspect_port(port)
+    if fail is not None:
+        return fail
+    assert chosen is not None
     p = chosen.device
-    if port and not port_is_listed(p):
-        return InspectReport(
-            False,
-            p,
-            [
-                f"FAIL: --port {p} is not in the current serial inventory.",
-                "Device unplugged, wrong COM, or path changed. Re-run: silico wait-device",
-                "Do not reuse a COM number from an earlier session without re-discovery.",
-            ],
-        )
 
     lines.append(f"Port: {p} ({chosen.label})")
     # Prefer implementation.version for ABI; language version alone misleads (UIFlow).

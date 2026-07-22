@@ -23,14 +23,22 @@ def _module_ok() -> bool:
 
 RAW_REPL_ERR = "could not enter raw repl"
 
-_DOOR_HINT = (
-    "silico: the board is running an app that owns the console (interrupt "
-    "char disabled per its spec). Knocked with the protocol door (`repl`) and "
-    "it did not open. If the deployed build predates its door, replug USB and "
-    "run silico during the boot window. Note: a deploy's own --verify can race "
-    "that window and report success on a build that is unreachable afterward. "
-    "See tig/silico#49."
+# Shared recovery text (inspect/deploy append; keep short — agents load stderr).
+# #49: knock protocol door. #62: do not thrash; TX alone ≠ duplex; stock MP park.
+LOCKOUT_RECOVERY = (
+    "silico: app owns the console (Ctrl-C is data); knocked `repl` — door stayed shut "
+    "(tig/silico#49 #62).\n"
+    "Do NOT thrash redeploy. Files may already be on the device. Host green ≠ duplex.\n"
+    "TX/telem alone is not metal OK. Recover **once**, park stock MicroPython, stop:\n"
+    "  ESP32: esptool --chip esp32 --port COMx erase-flash && "
+    "esptool --chip esp32 --port COMx write-flash -z 0x1000 ESP32_GENERIC-<ver>.bin\n"
+    "  RP2040: BOOT+RESET → RPI-RP2 → MicroPython .uf2\n"
+    "Then: silico inspect --port COMx  (REPL; stock boot.py only).\n"
+    "Serial ladder + ESP32 UART footguns: silico/knowledge/esp32-usb-serial.md"
 )
+
+# Back-compat name used in older tests/docs.
+_DOOR_HINT = LOCKOUT_RECOVERY
 
 
 def knock_protocol_door(port: str, wait_s: float = 2.5) -> bool:
@@ -74,7 +82,7 @@ def run_mpremote(
             if r2.returncode == 0:
                 return r2
             r = r2
-        r.stderr = (r.stderr or "") + "\n" + _DOOR_HINT + "\n"
+        r.stderr = (r.stderr or "") + "\n" + LOCKOUT_RECOVERY + "\n"
     return r
 
 

@@ -267,7 +267,12 @@ def test_run_mpremote_explains_when_door_stays_shut(monkeypatch):
 
     r = mu.run_mpremote("COM6", "ls", ":")
     assert r.returncode == 1
-    assert "owns the console" in r.stderr and "#49" in r.stderr
+    assert "owns the console" in r.stderr
+    assert "#49" in r.stderr and "#62" in r.stderr
+    # Lockout recovery must be first-class: thrash ban + one-shot reflash recipe.
+    assert "Do NOT thrash" in r.stderr
+    assert "erase-flash" in r.stderr
+    assert "esp32-usb-serial.md" in r.stderr
 
 
 def test_gate_fails_on_future_import_in_deploy_set(tmp_path):

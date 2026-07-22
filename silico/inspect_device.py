@@ -152,11 +152,10 @@ def inspect(
     if r.returncode != 0:
         lines.append("FAIL: could not talk to device (unplugged, wrong port, or held by another program)")
         if r.stderr:
+            # LOCKOUT_RECOVERY is attached by run_mpremote only when raw REPL
+            # failed after a protocol-door knock (#49/#62) — not for port-busy
+            # or other transport errors (do not suggest erase on those).
             lines.append(r.stderr.strip())
-        lines.append(
-            "If an app owns the CDC (Ctrl-C is data), open the product protocol door "
-            "(`repl`) or soft-reset into the boot window, then re-inspect."
-        )
         return InspectReport(False, p, lines)
     repl_out = (r.stdout or "").strip() or "(no output)"
     lines.append("REPL:")

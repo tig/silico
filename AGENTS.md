@@ -404,7 +404,7 @@ silico scaffold .
 
 **Required for Day 1 exit** (not optional polish). Goal: board **talks over USB**, is **prepped** (REPL when that is the runtime), then a **distinct, documented, operator-observable product face** (what the operator sees or hears when the app runs); reconnect is **repeatable**.
 
-Metal COM / first-flash / identity / deploy rules: **[BEDSIDE.md](BEDSIDE.md)** + **[silico/knowledge/first-flash.md](silico/knowledge/first-flash.md)**. Prefer tools: `silico wait-device`, `inspect`, `pull`, `deploy`, `monitor`, and `bedside ask` / `bedside step`. Every physical or overwrite prompt uses **Big steps: why + where**.
+Metal COM / first-flash / identity / deploy rules: **[BEDSIDE.md](BEDSIDE.md)** + **[silico/knowledge/first-flash.md](silico/knowledge/first-flash.md)**. USB duplex / lockout: **[silico/knowledge/esp32-usb-serial.md](silico/knowledge/esp32-usb-serial.md)** (open only when needed). Prefer tools: `silico wait-device`, `inspect`, `pull`, `deploy`, `monitor`, and `bedside ask` / `bedside step`. Every physical or overwrite prompt uses **Big steps: why + where**.
 
 #### Phase D0 - Device talks (prep) before any deploy plan
 
@@ -418,6 +418,18 @@ Until true, device is **not** prepped:
 **If the board was missing at Phase 0:** after host gate, ask only for the data cable plug, then **immediately** run a long `wait-device` poll.
 
 **Anti-pattern:** host gate green + "hardware later" with no wait-device/inspect/REPL proof.
+
+##### Serial readiness ladder (before tool-hostile console)
+
+Host gate green ≠ duplex OK. **TX/telem/identity alone is not metal OK.**
+
+1. Stock (or known-good) raw REPL via `silico inspect`.
+2. Deploy product **without** `micropython.kbd_intr(-1)` until step 3–4.
+3. Prove **round-trip**: host line → device response (not outbound-only spam).
+4. Only then: Ctrl-C-is-data + working `repl`/`reboot` door; prove `repl` restores mpremote.
+5. Then product face observe (D1).
+
+**Lockout:** door dead / cannot enter raw REPL → **do not thrash redeploy**. Recover **once** (esptool erase+write or UF2), park stock MicroPython, fix duplex on the host, then redeploy. CLI prints the recipe (`LOCKOUT_RECOVERY` / #62).
 
 #### Phase D1 - Operator-observable acceptance (not version-string theater)
 
@@ -576,6 +588,8 @@ Default plate stays MicroPython. Arduino is not this path (see issue #59). First
 - Do **not** present phase forks as free-text `1. / 2. / 3.` menus in chat when a structured chooser exists (or `bedside ask` is available).
 - Do **not** open a fan-out of PRs for sequential Day 1 / same-session work unless the operator asked to stage multi-PR. One PR + individual commits is the default.
 - Do **not** deploy, soft-reset, or otherwise drive metal that may play loud/long audio, flash bright patterns, or move actuators without a clear operator-facing forewarning of what will happen and for how long.
+- Do **not** claim metal serial OK from identity/telem TX alone, or enable `kbd_intr(-1)` before round-trip + working `repl` re-entry (see serial readiness ladder; #62).
+- Do **not** thrash full-erase/redeploy when the console is locked; recover once, park stock MP, stop.
 - Prefer issue titles like `host-done / metal-TODO` when splitting layers is honest — and **never** put “on the metal” in the same message as metal-TODO.
 
 Never treat "I flashed something" or "pytest green" as metal/vehicle done.

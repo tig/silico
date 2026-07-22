@@ -302,6 +302,8 @@ def deploy(
         if r.returncode != 0:
             lines.append("FAIL: version verify (import version failed)")
             if r.stderr:
+                # Recovery recipe only when run_mpremote confirmed raw-REPL
+                # lockout (already in stderr). Do not invent erase for other fails.
                 lines.append(r.stderr.strip())
             return DeployResult(False, lines)
         blob = (r.stdout or "").strip()
@@ -347,9 +349,9 @@ def deploy(
             "Prefer including --reset on write, then soft-reset again after verify if the product face is dead."
         )
         lines.append(
-            "If cp/inspect failed with 'could not enter raw repl': the app owns CDC "
-            "(Ctrl-C is data). Open the product protocol door (`repl`) or catch the "
-            "boot window, then redeploy."
+            "If raw REPL fails after write: files may already be on device — "
+            "do not thrash redeploy. Knock `repl` or recover once (stock MP); "
+            "see silico/knowledge/esp32-usb-serial.md (#49 #62)."
         )
 
     return DeployResult(True, lines)

@@ -4,14 +4,40 @@
 
 Silico makes building maintainable firmware for embedded devices simple. Given a device spec, it first guides AI agents to scaffold a Github repository setup for long-term maintainability. Agents then loop to engineer robust firmware, unit and smoke tests, a simulator, ci/cd using both real devices and the simulator, and an end-user installer/ugrader.
 
-The human interface is a coding agent; not an installation guide or shell tutorial. To start, open your coding agent and say:
+The human interface is a coding agent; not an installation guide or shell tutorial. 
+
+## Gettings Started 
+
+First, you need a spec for your GCU. See these repos for example specs that will give you some idea of what's in a spec useful to Silico:
+
+- [Xuss](tig/xuss)
+- [Xuss-C](tig/xuss-c)
+- [Xuss-Lame](tig/xuss)
+
+Get the spec into a Github Repo you control. 
+
+### Using an Agent TUI (Claude Code, Grok Build, Codex, Github Copilot CLI, ...)
+
+* Clone the repo that contains your spec
+* `cd` into that repo
+* Start your favorite Agent TUI
+
+### Using an Agent GUI (Cursor, Claude code, Github Colpilot App, ChatGPT app, ...)
+
+* Start a new project using the Agent GUI's method for doing so.
+* Point the project at your Github repo with the spec in it.
+
+### Say GO!
+
+Paste this prompt and hit ENTER.
 
 ```md
 See https://github.com/tig/silico. Follow the getting started instructions for agents.
 ```
 
-The agent owns the host path: prerequisites, GitHub setup, scaffolding, testing, device discovery, deployment, and verification. You own the
-product judgment and confirm physical or irreversible actions. 
+The agent owns the host path: prerequisites, GitHub setup, scaffolding, testing, device discovery, deployment, and verification. 
+
+You own the product judgment and confirm physical or irreversible actions. 
 
 ## We work backwards from this:
 

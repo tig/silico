@@ -86,5 +86,11 @@ def ls_device(port: str) -> subprocess.CompletedProcess[str]:
     return run_mpremote(port, "ls", ":")
 
 
-def cp_to_device(port: str, local: Path, remote_name: str) -> subprocess.CompletedProcess[str]:
-    return run_mpremote(port, "cp", str(local), f":{remote_name}")
+def cp_to_device(
+    port: str,
+    local: Path,
+    remote_name: str,
+    *,
+    timeout: float = 30.0,
+) -> subprocess.CompletedProcess[str]:
+    return run_mpremote(port, "cp", str(local), f":{remote_name}", timeout=timeout)

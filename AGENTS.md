@@ -657,7 +657,11 @@ silico inspect --port COMx
 # plan only (no write); --port required; prefer silico.toml [deploy].core with no file args:
 silico deploy --port COMx
 # AFTER bedside ask (or equivalent) confirms identity + write:
+# live PROGRESS [write] i/n name (size) lines stream as each file copies
 silico deploy --port COMx --yes --verify
+# first-flash MicroPython once (esptool progress streams; or UF2 with --uf2-dest):
+# silico first-flash ESP32_GENERIC-….bin --port COMx --yes
+# silico first-flash board.uf2 --uf2-dest E:/board.uf2 --yes
 ```
 
 Always pass explicit `COMx` / `/dev/tty...` to deploy. Confirm device identity every session via `bedside ask` (or host picker), not chat multi-choice walls.

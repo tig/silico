@@ -47,7 +47,8 @@ Do **not** start surprising audio/motion without a clear forewarning in agent ou
 |---------|----------------|
 | USB serial / COM | Prefer explicit `COMx`; demote CH340 adapters and Debug Probe; ESP-class CDC (CH9102, CP210x) may score as candidates — still confirm identity |
 | First-flash | UF2 **or** esptool once; never apply mpy pins from language version alone |
-| Deploy overwrite | Inspect first; write only with operator yes (`silico deploy --port COMx --yes`, usually `[deploy].core`); **announce** post-boot product face (sound/light/motion) before write/reset |
+| Deploy overwrite | Inspect first; write only with operator yes (`silico deploy --port COMx --yes`, usually `[deploy].core`); **announce** post-boot product face (sound/light/motion) before write/reset; live `PROGRESS [write] i/n` lines |
+| First-flash progress | `silico first-flash image.bin --port COMx --yes` streams esptool %; UF2 via `--uf2-dest` streams copy % |
 | Surprising audio / motion | Loud or long tones, music, actuators: forewarn in plain language before the act — not only after |
 | Board identity | High score is a hint; `bedside ask --id confirm-board` (or host picker) |
 | Physical plug / BOOT | `bedside step --id …` one instruction + confirm in their words |

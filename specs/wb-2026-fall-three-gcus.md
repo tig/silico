@@ -97,6 +97,16 @@ Load-bearing tenets: [tenets.md](./tenets.md). Especially **Prompt for metal**, 
 
 The operator's getting-started interface is an AI coding agent. Human-facing Silico documentation intentionally does not begin with package installation or shell commands. The agent owns those mechanics.
 
+**Supported on the spine today** (same verbs; plate / `silico.toml` pick the path):
+
+| MCU class | Runtime | Notes |
+|-----------|---------|--------|
+| RP2040-class | MicroPython | Default plate (`gcu`). UF2 once, then mpremote deploy. |
+| ESP32-class | MicroPython | esptool first-flash once, then mpremote (same as other mpy boards). |
+| ESP32-class | C / ESP-IDF | Opt-in plate `gcu-c`. Image flash via `idf.py`; host gate is CMake/CTest. |
+
+**Not first-class silico backends yet:** Arduino / `arduino-cli` ([issue #59](https://github.com/tig/silico/issues/59)), PlatformIO as the deploy path, Pico SDK C as a language peer, or a separate `language = cpp` runtime. PlatformIO, raw MicroPython, and ESP-IDF may still appear *inside* a GCU; silico owns the operator Day 1→Day 2 loop, not every possible build system.
+
 ## 4. What does Day 1 really look like?
 
 Day 1 begins with one human action: open a coding agent and give it the Silico start prompt. The agent owns machine discovery, prerequisites, GitHub authentication, Silico installation, repository setup, testing, and the device host path. The human supplies domain judgment, performs necessary physical actions, and confirms irreversible writes.
@@ -106,7 +116,7 @@ The checklist for Grady, or anyone who finds `github.com/tig/silico` and wants D
 **You need before you start**
 
 1. A Mac or PC with internet.
-2. Hardware that can run the GCU (for RP2040-class: board + USB data cable).
+2. Hardware that can run the GCU (RP2040-class or ESP32-class board + USB **data** cable; see FAQ 3 for runtimes).
 3. A rough idea of what the product must do (domain judgment). Silico will not invent your moat.
 4. A GitHub account. CI and a durable GCU repo need a real remote.
 5. Access to a coding agent (CLI or IDE). Examples: Claude Code, Grok Build, GitHub Copilot, OpenAI Codex.
@@ -119,7 +129,7 @@ The checklist for Grady, or anyone who finds `github.com/tig/silico` and wants D
 
 **Talk to real hardware**
 
-9. Agent prompts the human to plug the device into USB, then configures until the board shows a **distinct, documented blink pattern** (green if the board has a color LED; otherwise a clear on/off pattern a novice can recognize) and reconnect is repeatable. If the board needs a runtime the first time (for example MicroPython UF2), the agent steps the human through it once per board, not on every app change.
+9. Agent prompts the human to plug the device into USB, then configures until the board shows a **distinct, documented product face** (what the operator sees or hears when the app runs) and reconnect is repeatable. If the board needs a first runtime flash (MicroPython UF2 on RP2040-class, esptool for classic ESP32-class MicroPython, or ESP-IDF image flash for `language = c`), the agent steps the human through it once per board, not on every app change.
 10. Agent ensures the GCU GitHub repo has CI/CD. It prompts the human to open a GitHub issue titled roughly: `Change the firmware blink pattern (e.g. solid vs blink, or green vs red if RGB)`. When that issue exists, the agent implements it so CI is green **and** the real device behavior changes. That is the first proof of host gate + metal together.
 
 **Make the device true (still Day 1)**
@@ -189,8 +199,9 @@ Because I still stand by 2011. Calling a tool a platform before the sides show u
 1. Built-in internet and phone-home **as silico spine features** (Quilan may do WAN in the *app*).
 2. Claiming external adoption or "industry default."
 3. A full v2 narrative (see FAQ 37 for longer-term vision in one place).
-4. Arduino-class plates as a v1 deliverable (room in the architecture; build when a GCU forces it).
-5. Paid silico support, multi-tenant cloud twin, "silico certified" marketing.
+4. **Arduino-class** plates as a silico deliverable (tracked; not shipped — [issue #59](https://github.com/tig/silico/issues/59)). ESP32-class MicroPython and ESP-IDF C *are* on the spine (FAQ 3).
+5. PlatformIO or Pico SDK as **silico** dual-runtime peers (may still live inside a GCU’s own build).
+6. Paid silico support, multi-tenant cloud twin, "silico certified" marketing.
 
 ## 13. How will we describe this in one breath?
 
@@ -251,8 +262,8 @@ Open (tig/silico): spine, plates, docs, agent contracts, non-secret examples.
 
 ## 20. What tech do we buy, license, use, or invent?
 
-Use: MicroPython, mpremote, pytest, GitHub Actions, KiCad where products need boards.
-Invent: host-first contracts, install/verify protocol, agent prompt surface, discipline that keeps apps from becoming platforms.
+Use: MicroPython, mpremote, pytest, GitHub Actions; ESP-IDF / esptool for ESP32-class paths; KiCad where products need boards.
+Invent: host-first contracts, install/verify protocol, agent prompt surface, dual-runtime deploy/inspect (mpy file copy vs IDF image), discipline that keeps apps from becoming platforms.
 Buy/license: **open.**
 
 ## 21. What cloud services will be required?
@@ -261,7 +272,7 @@ None for silico v1. Quilan may phone home on its own app dime. Zakalwe does not 
 
 ## 22. What device software will be required?
 
-Per GCU: application firmware on device runtime (MicroPython on RP2040-class for the first three unless a GCU forces a pivot). Agents write it. Shared: version identity, harness or self-test signature, HAL-shaped I/O for host sim.
+Per GCU: application firmware on a supported device runtime (FAQ 3). Default remains **MicroPython** (RP2040-class or ESP32-class). **C / ESP-IDF** is available for ESP32-class GCUs that opt into the `gcu-c` plate. Agents write it. Shared contracts: version / identity on the link, harness or self-test signature where the product needs it, HAL-shaped I/O for host sim (pytest or CTest).
 
 ## 23. How will we measure success?
 
@@ -338,7 +349,7 @@ Commercial brands: **open** per app; not silico sub-brands.
 Not a second full WB (yet). Direction under the same tenets:
 
 1. Silico becomes the boring default for vertical teams who **Prompt for metal** instead of staffing device-ops cults.
-2. Multi-target spine when real GCUs force it (for example Arduino-class plates), not before.
+2. Further multi-target spine when real GCUs force it (Arduino-class plates, Pico SDK C, …) — ESP32 MicroPython and ESP-IDF C already shipped under that rule.
 3. Phone-home and network patterns **in silico** when a second GCU needs what Quilan already does in app code; USB host path remains always available.
 4. Echo-shaped continuous deploy with automatic rollback for fleets, only after host-first and version identity are boring.
 5. External scoreboard: independent GCUs and vertical orgs, not star count.

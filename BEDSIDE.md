@@ -7,6 +7,7 @@ This file is **not** a fork of the Bedside principles.
 | Portable manners (normative) | `third_party/bedside/contract` (pin: `bedside.toml`) |
 | Silico Day 1 / CLI / plate | root `AGENTS.md` |
 | First-flash detail (UF2 / esptool) | `silico/knowledge/first-flash.md` |
+| ESP32 USB duplex / console lockout | `silico/knowledge/esp32-usb-serial.md` |
 | ESP32 audio / DAC / PWM silence | `silico/knowledge/esp32-audio.md` |
 | This file | metal-host glossary only — do **not** also reload the full contract if AGENTS already pinned it |
 
@@ -56,7 +57,8 @@ Do **not** start surprising audio/motion without a clear forewarning in agent ou
 | After reset | Port may re-enumerate; re-discover before reuse |
 | Unknown board content | `silico pull <dir> --port COMx` before overwrite; `--prune` when orphans matter |
 | Running app CDC | App may treat Ctrl-C as data; open product `repl` door or catch boot window before mpremote write |
-| Deploy verify | Uses REPL; **parks the product loop** — soft-reset so main runs |
+| Console lockout | Door dead after `kbd_intr(-1)` + broken RX: **do not thrash deploy** — recover once (first-flash erase/UF2), park stock MP; see `esp32-usb-serial.md` (#62) |
+| Deploy verify | Uses REPL; **parks the product loop** — soft-reset so main runs; TX after reset ≠ duplex |
 | Running app CDC (read-only) | `silico monitor --port COMx` (does not Ctrl-C the loop) |
 
 ## Day-2 leave-behind (metal)

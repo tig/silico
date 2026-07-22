@@ -9,7 +9,7 @@ After first-flash, deploys are mpremote over USB CDC for all supported boards.
 | `silico inspect --port COMx` talks REPL; modern MicroPython (`1.20+`) | No first-flash; deploy app |
 | Mass-storage volume `RPI-RP2` (or similar) after BOOT+RESET | **UF2** drag-and-drop once |
 | ESP32 talks serial but REPL is missing / UIFlow-era / ancient MP (`1.12`-class) | **esptool** erase + write once |
-| App owns CDC (cannot enter raw REPL; Ctrl-C is data) | Product protocol door `repl`, or catch boot window — not first-flash |
+| App owns CDC (cannot enter raw REPL; Ctrl-C is data) | Knock `repl` / boot window. If door dead: **stop thrashing deploy** — recover once via erase+write (ESP) or UF2 (RP2040), park stock MP. See [esp32-usb-serial.md](esp32-usb-serial.md) (#62) |
 
 ## UF2 (RP2040-class)
 
@@ -50,6 +50,8 @@ esptool --chip esp32 --port COMx write-flash -z 0x1000 ESP32_GENERIC-<date>-vX.Y
 - After flash: hard reset; `silico inspect --port COMx`; only then `--apply-mpy-pin`.
 
 Do **not** apply mpy-cross pins from language version alone (e.g. `3.4.0` on old images).
+
+Same erase+write is the **lockout recovery** when product app owns CDC and `repl` never opens — once, then park stock; do not redeploy product until duplex is proven ([esp32-usb-serial.md](esp32-usb-serial.md)).
 
 ## After first-flash
 

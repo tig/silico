@@ -112,7 +112,8 @@ Private GCU repos pin silico as a **host** dependency and follow the plate. Devi
 ```text
 # GCU depends on silico (host / CI only)
 requirements-dev.txt:
-  tig-silico @ git+https://github.com/tig/silico.git@<tag>
+  tig-silico @ git+https://github.com/tig/silico.git@main
+  # prefer a real git tag only after one exists with name=tig-silico
   # or while extracting:  -e /path/to/tig/silico
 
 firmware/   -> board
@@ -301,7 +302,7 @@ Until then, Quilan owns modem, credentials, and uplink protocol in private app c
 
 1. **License: Apache-2.0** (patent grant for serious vertical legal review).
 2. **Python floor: 3.11+** (do not guide operators onto EOL 3.9).
-3. **Pin silico by tag or commit SHA**, not `@main` (version identity).
+3. **Pin silico by tag or commit SHA** for version identity when a **real** tag ships `tig-silico`. Until then bootstrap with `@main` (plate default). Do **not** invent a tag from the package version string (e.g. `0.1.4` ≠ `@v0.1.4`).
 4. **mpy-cross** pinned to device MicroPython runtime (single source in `silico.toml` when tooling lands).
 
 **Still open**

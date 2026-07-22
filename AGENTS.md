@@ -354,11 +354,11 @@ When a human must install or approve something, use **Big steps: why + where** (
 
 **Do not hand-invent a parallel spine.** Use the package + plate. **Always `silico scaffold .` from the product root** (Phase B0), never from a silico package checkout.
 
-1. Install silico on the host (prefer **tag**, not `@main`):
+1. Install silico on the host. **Default pin is `@main`** until a real git tag exists that ships package name **`tig-silico`**.
 
 ```text
 # In GCU requirements-dev.txt (or pip install directly while bootstrapping):
-tig-silico @ git+https://github.com/tig/silico.git@main  # pin tag v0.1.4+ once cut (not v0.1.3: name mismatch)
+tig-silico @ git+https://github.com/tig/silico.git@main
 pytest>=8
 mpy-cross==<pin matching device MicroPython major.minor — see below>
 ```
@@ -371,7 +371,16 @@ python -m pip install "tig-silico @ git+https://github.com/tig/silico.git@main" 
 # python -m pip install -e /path/to/tig/silico
 ```
 
-If install fails, **stop**, say the pin is broken, and file/fix on `tig/silico`. Do **not** vendor host tooling into the GCU.
+**Pin rules (do not invent tags):**
+
+| Fact | Rule |
+|------|------|
+| Plate / bootstrap | Use `@main` as written above. That is correct today. |
+| Package version on `main` (e.g. `0.1.4` in `pyproject.toml`) | **Not** a git tag. `silico doctor` reporting `tig-silico 0.1.4` means the installed wheel’s version, **not** that `@v0.1.4` exists. |
+| Git tags `v0.1.3` and earlier | **Unusable** as `tig-silico@…` — those tags declare package name `silico` (pre-rename). |
+| Future immutable pin | Only after a tag is **actually cut** on GitHub with `name = "tig-silico"`. Then prefer that tag over `@main`. **Do not** guess the next tag name from the package version. |
+
+If install fails, **stop**, say the pin is broken, and file/fix on `tig/silico`. Do **not** vendor host tooling into the GCU. Do **not** thrash alternate version refs to “find” a missing tag.
 
 **mpy-cross pin (ABI) — Silico owns this chain:**
 
@@ -380,7 +389,7 @@ Product specs must **not** name a MicroPython version or hand-derive the PyPI pi
 1. Plate defaults ship a **recent stable** PyPI `mpy-cross` as a starting point only.
 2. After the board talks: `silico inspect --port COMx --apply-mpy-pin` — Silico reads device MicroPython **from `sys.implementation`**, maps to an installable pin, and writes **both** `silico.toml` `[runtime].mpy_cross` and `requirements-dev.txt`.
 3. Refuse/warn on **ancient** device images; first-flash a current port before applying pins.
-4. Packaging: install **`tig-silico`**, never bare `pip install silico`. Prefer tag `v0.1.4+`.
+4. Packaging: install **`tig-silico`**, never bare `pip install silico`. Bootstrap from `@main` (see pin rules above).
 5. `silico doctor` warns on ancient plate pins. Fix before claiming the host compile gate is honest.
 
 2. Scaffold the plate (merge into existing GCU is OK; product `README.md` / `spec.md` are never overwritten):
@@ -692,8 +701,9 @@ Starter products are confidential. In public silico docs and commits use **Zakal
 Run these yourself when possible. Show the human only what they must see.
 
 ```text
-# Install spine (tag pin) + vendored bedside CLI (from a silico checkout)
+# Install spine (@main until a real tig-silico git tag exists) + vendored bedside CLI
 # Package: tig-silico. CLI: silico. Not `pip install silico` (unrelated PyPI name).
+# Do not invent @vX.Y.Z from the package version string — see Phase C pin rules.
 python -m pip install "tig-silico @ git+https://github.com/tig/silico.git@main"
 # when working in this repo:
 python -m pip install -e ".[dev]"

@@ -278,6 +278,22 @@ def test_first_flash_uf2_yes(tmp_path: Path):
     assert isinstance(plan, Uf2FlashPlan)
 
 
+def test_uf2_path_rejects_non_uf2_image(tmp_path: Path):
+    """CR: --uf2-dest must not accept a raw .bin (would brick/confuse RP2040 mass storage)."""
+    from silico.first_flash import FirstFlashResult
+
+    img = tmp_path / "ESP32_GENERIC.bin"
+    img.write_bytes(b"\x00" * 100)
+    dest = tmp_path / "vol" / "firmware.bin"
+    plan = plan_first_flash(image=img, uf2_dest=dest)
+    assert isinstance(plan, FirstFlashResult)
+    assert not plan.ok
+    assert any(".uf2" in x for x in plan.lines)
+    result = first_flash(image=img, uf2_dest=dest, yes=True)
+    assert not result.ok
+    assert not dest.exists()
+
+
 def test_cli_first_flash_help():
     from silico.cli import build_parser
 

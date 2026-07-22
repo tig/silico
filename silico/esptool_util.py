@@ -81,13 +81,15 @@ def run_esptool_streaming(
                 log("FAIL: esptool timed out")
                 proc.wait(timeout=5)
                 return 124
-            chunk = proc.stdout.read(256)
+            # Read 1 char: esptool progress is often short \\r updates; large
+            # reads block until the buffer fills and defeat live PROGRESS.
+            chunk = proc.stdout.read(1)
             if chunk:
                 buf = _emit_stream_chunks(buf + chunk, log, "PROGRESS [esptool] ")
                 continue
             if proc.poll() is not None:
                 break
-            time.sleep(0.05)
+            time.sleep(0.02)
         if buf.strip():
             log(f"PROGRESS [esptool] {buf.strip()}")
         return int(proc.wait(timeout=5) or 0)

@@ -6,11 +6,13 @@ import os
 import shutil
 import subprocess
 import sys
+import time
 from pathlib import Path
 
 from silico.config_toml import read_product_identity
 from silico.deploy_types import DeployPlan, DeployResult
 from silico.ports import IDENTITY_HINT, pick_best_port, port_is_listed
+from silico.progress import ProgressCallback, ProgressLog, stage_header
 from silico.runtime import RuntimeConfig, resolve_runtime
 from silico.serial_identity import probe_serial_identity
 
@@ -94,7 +96,7 @@ def plan_idf_deploy(
     ]
 
     lines = [
-        f"Planned IDF image write to {chosen.device} ({chosen.label}):",
+        stage_header("plan", f"IDF image write to {chosen.device} ({chosen.label})"),
         "This will OVERWRITE the entire application image on the device.",
         IDENTITY_HINT,
         f"  language: {cfg.language}  toolchain: {cfg.toolchain}  chip: {chip}",
@@ -114,6 +116,9 @@ def plan_idf_deploy(
         "(2) the application image may be overwritten."
     )
     lines.append(f"Inspect first: silico inspect --port {chosen.device}")
+    lines.append(
+        "Progress during --yes: PROGRESS [idf-build] / [idf-flash] stream from idf.py."
+    )
     return DeployPlan(
         port=chosen.device,
         lines=lines,
@@ -127,6 +132,7 @@ def plan_idf_deploy(
 
 
 def _run(cmd: list[str], *, cwd: Path) -> subprocess.CompletedProcess[str]:
+    """Capture-only runner (tests inject this)."""
     return subprocess.run(
         cmd,
         cwd=str(cwd),
@@ -134,6 +140,56 @@ def _run(cmd: list[str], *, cwd: Path) -> subprocess.CompletedProcess[str]:
         text=True,
         check=False,
     )
+
+
+def _run_streaming(
+    cmd: list[str],
+    *,
+    cwd: Path,
+    log: ProgressLog,
+    stage: str,
+    timeout: float | None = 3600.0,
+) -> int:
+    """Stream idf.py stdout/stderr into log (live operator progress)."""
+    log(stage_header(stage, " ".join(cmd)))
+    proc = subprocess.Popen(
+        cmd,
+        cwd=str(cwd),
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        text=True,
+        bufsize=1,
+    )
+    assert proc.stdout is not None
+    prefix = f"PROGRESS [{stage}] "
+    buf = ""
+    deadline = time.monotonic() + timeout if timeout else None
+    try:
+        while True:
+            if deadline is not None and time.monotonic() > deadline:
+                proc.kill()
+                log(f"FAIL: {stage} timed out")
+                proc.wait(timeout=5)
+                return 124
+            ch = proc.stdout.read(1)
+            if ch:
+                if ch in ("\n", "\r"):
+                    line = buf.strip()
+                    buf = ""
+                    if line:
+                        log(f"{prefix}{line}")
+                else:
+                    buf += ch
+                continue
+            if proc.poll() is not None:
+                break
+            time.sleep(0.02)
+        if buf.strip():
+            log(f"{prefix}{buf.strip()}")
+        return int(proc.wait(timeout=5) or 0)
+    except Exception:
+        proc.kill()
+        raise
 
 
 def deploy_idf(
@@ -145,66 +201,86 @@ def deploy_idf(
     expect_version: str | None = None,
     root: Path | None = None,
     run_fn=_run,
+    on_progress: ProgressCallback | None = None,
 ) -> DeployResult:
     root = (root or Path.cwd()).resolve()
     cfg = resolve_runtime(root)
+    log = ProgressLog(on_progress)
     planned = plan_idf_deploy(port=port, root=root, cfg=cfg)
     if isinstance(planned, DeployResult):
-        return planned
+        log.extend(planned.lines)
+        return DeployResult(planned.ok, log.lines)
 
-    lines = list(planned.lines)
+    log.extend(planned.lines)
     if not yes:
-        lines.append(
-            "ABORTED: pass --yes only after the operator explicitly confirmed the write."
-        )
-        return DeployResult(False, lines)
+        log("ABORTED: pass --yes only after the operator explicitly confirmed the write.")
+        return DeployResult(False, log.lines)
 
     if not idf_py_available():
-        lines.append(
+        log(
             "FAIL: ESP-IDF tools not found (idf.py / IDF_PATH). "
             "Install per Espressif getting started; silico doctor reports this."
         )
-        return DeployResult(False, lines)
+        return DeployResult(False, log.lines)
 
     if not port_is_listed(planned.port):
-        lines.append(
+        log(
             f"FAIL: port {planned.port} disappeared before write. Re-discover and re-confirm."
         )
-        return DeployResult(False, lines)
+        return DeployResult(False, log.lines)
 
     if not planned.build_cmd or not planned.flash_cmd:
-        lines.append("FAIL: internal error — IDF plan missing build/flash commands.")
-        return DeployResult(False, lines)
+        log("FAIL: internal error — IDF plan missing build/flash commands.")
+        return DeployResult(False, log.lines)
 
-    lines.append("Confirmed (--yes). Building...")
-    build = run_fn(planned.build_cmd, cwd=root)
-    if build.returncode != 0:
-        lines.append("FAIL: idf.py build")
-        if build.stderr:
-            lines.append(build.stderr.strip()[-2000:])
-        elif build.stdout:
-            lines.append(build.stdout.strip()[-2000:])
-        return DeployResult(False, lines)
-    lines.append("OK: build")
+    # Default production path streams; tests inject run_fn (capture).
+    use_stream = run_fn is _run
 
-    lines.append("Flashing application image...")
-    flash = run_fn(planned.flash_cmd, cwd=root)
-    if flash.returncode != 0:
-        lines.append("FAIL: idf.py flash")
-        if flash.stderr:
-            lines.append(flash.stderr.strip()[-2000:])
-        elif flash.stdout:
-            lines.append(flash.stdout.strip()[-2000:])
-        return DeployResult(False, lines)
-    lines.append("OK: flash")
+    log(stage_header("idf-build", "Confirmed (--yes). Building…"))
+    if use_stream:
+        code = _run_streaming(
+            planned.build_cmd, cwd=root, log=log, stage="idf-build"
+        )
+        if code != 0:
+            log(f"FAIL: idf.py build (exit {code})")
+            return DeployResult(False, log.lines)
+    else:
+        build = run_fn(planned.build_cmd, cwd=root)
+        if build.returncode != 0:
+            log("FAIL: idf.py build")
+            if build.stderr:
+                log(build.stderr.strip()[-2000:])
+            elif build.stdout:
+                log(build.stdout.strip()[-2000:])
+            return DeployResult(False, log.lines)
+    log("OK: build")
+
+    log(stage_header("idf-flash", "Flashing application image…"))
+    if use_stream:
+        code = _run_streaming(
+            planned.flash_cmd, cwd=root, log=log, stage="idf-flash"
+        )
+        if code != 0:
+            log(f"FAIL: idf.py flash (exit {code})")
+            return DeployResult(False, log.lines)
+    else:
+        flash = run_fn(planned.flash_cmd, cwd=root)
+        if flash.returncode != 0:
+            log("FAIL: idf.py flash")
+            if flash.stderr:
+                log(flash.stderr.strip()[-2000:])
+            elif flash.stdout:
+                log(flash.stdout.strip()[-2000:])
+            return DeployResult(False, log.lines)
+    log("OK: flash")
 
     if verify:
         name, ver = read_product_identity(root)
         en = expect_name if expect_name is not None else name
         ev = expect_version if expect_version is not None else ver
-        lines.append("Verify: serial identity after flash...")
+        log(stage_header("verify", "serial identity after flash"))
         if not port_is_listed(planned.port):
-            lines.append(
+            log(
                 f"WARN: port {planned.port} not listed after flash; still trying identity probe."
             )
         probe = probe_serial_identity(
@@ -213,9 +289,10 @@ def deploy_idf(
             expect_name=en,
             expect_version=ev,
         )
-        lines.extend(probe.lines)
+        log.extend(probe.lines)
         if not probe.ok:
-            return DeployResult(False, lines)
-        lines.append("OK: identity verify")
+            return DeployResult(False, log.lines)
+        log("OK: identity verify")
 
-    return DeployResult(True, lines)
+    log(stage_header("done", "IDF deploy finished OK"))
+    return DeployResult(True, log.lines)

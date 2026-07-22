@@ -383,6 +383,7 @@ def deploy(
             expect_name=expect_name,
             expect_version=expect_version,
             root=root,
+            on_progress=on_progress,
         )
 
     log = ProgressLog(on_progress)

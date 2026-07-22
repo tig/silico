@@ -63,6 +63,15 @@ def plan_first_flash(
     size_s = format_bytes(size) if size >= 0 else "?"
 
     if uf2_dest is not None:
+        if image.suffix.lower() != ".uf2":
+            return FirstFlashResult(
+                False,
+                [
+                    f"FAIL: --uf2-dest requires a .uf2 image (got {image.name}).",
+                    "Do not copy raw .bin firmware to an RP2040 boot volume.",
+                    "For ESP32 images use --port with esptool (omit --uf2-dest).",
+                ],
+            )
         dest = Path(uf2_dest)
         return Uf2FlashPlan(
             image=image,

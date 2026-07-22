@@ -38,10 +38,12 @@ Bench-proven on MicroPython **v1.28 ESP32_GENERIC** (classic ESP32, speaker on G
 
 | Sequence | Result |
 |----------|--------|
-| Hard reset → first `DAC(25)` | **OK** |
-| First DAC `deinit()` / drop / GPIO remux → second `DAC(25)` | **`OSError` / `ESP_ERR_INVALID_STATE` (-259)** until **hard** reset |
-| PWM (LEDC) on GPIO25 (even after PWM `deinit`) → later `DAC(25)` | **FAIL** for the rest of that boot |
+| Hard reset → first `DAC(Pin(25))` | **OK** |
+| First DAC `deinit()` / drop / GPIO remux → second `DAC(Pin(25))` | **`OSError` / `ESP_ERR_INVALID_STATE` (-259)** until **hard** reset |
+| PWM (LEDC) on GPIO25 (even after PWM `deinit`) → later `DAC(Pin(25))` | **FAIL** for the rest of that boot |
 | Soft reboot alone after the above | **Does not** restore DAC open |
+
+MicroPython call shape is `from machine import DAC, Pin` then `DAC(Pin(25))` (or the board speaker pin). Tables below use that form; do not write bare `DAC(25)`.
 
 So: **the first successful DAC open is precious.** Releasing the DAC object or taking the pin for PWM is a one-way trip to “PWM-only or silence” until RTS/en hard reset (or power cycle that hard-resets the chip).
 
@@ -87,11 +89,26 @@ This path is good enough for short boot riffs and simple mono songs when I2S is 
 ### Pacing
 
 - Pace with **`time.ticks_us` busy-wait**, not only `time.sleep_us`.
-- **Do not floor-divide the period.** Rates like 11_025 Hz do not divide 1_000_000 evenly.
-  - Bad: `period = 1_000_000 // sample_hz` → at 11025 Hz this is **90 µs** (~11111 Hz), about **0.78% fast** (audibly sharp; track finishes early).
-  - Good (integer nearest µs): `period = (1_000_000 + sample_hz // 2) // sample_hz` → **91 µs** at 11025 Hz.
-  - Better long-term pitch: keep a **fractional phase** or accumulate error (e.g. add `1_000_000` to a residual each sample and emit a sample when residual ≥ `sample_hz`, subtract `sample_hz`) so average rate tracks the true `sample_hz` without cumulative drift from a fixed rounded period alone.
-- Maintain a `t_next` deadline: write sample → `t_next += period` (or advance from the fractional scheduler) → spin while `ticks_diff(t_next, now) > 0`.
+- **Do not floor-divide a fixed period and leave it.** Rates like 11_025 Hz do not divide 1_000_000 evenly.
+  - Bad: `period = 1_000_000 // sample_hz` → at 11025 Hz this is always **90 µs** (~11111 Hz), about **0.78% fast** (audibly sharp; track finishes early).
+  - OK short riff (integer nearest µs): `period = (1_000_000 + sample_hz // 2) // sample_hz` → **91 µs** at 11025 Hz (still slightly off long-term).
+  - **Preferred long-term pitch:** Bresenham-style **remainder accumulator** so average sample period is exactly `1_000_000 / sample_hz` µs:
+
+```text
+base = 1_000_000 // sample_hz          # floor µs between samples
+rem  = 1_000_000 %  sample_hz          # leftover that must be distributed
+err  = 0
+for each sample:
+    period = base
+    err += rem
+    if err >= sample_hz:
+        period += 1
+        err -= sample_hz
+    wait period µs (ticks_us deadline)
+```
+
+    At 11025 Hz: `base=90`, `rem=10000`; most steps are 90 µs, some are 91 µs, average = 1e6/11025.
+- Maintain a `t_next` deadline: write sample → `t_next += period` → spin while `ticks_diff(t_next, now) > 0`.
 - If the loop falls behind (`ticks_diff` largely negative), **resync** `t_next` to now; do not spiral late forever (prevents multi-second “catch-up mute” then a dump of late samples).
 - Long `machine.disable_irq()` around multi-second audio can trip the watchdog — prefer tight per-sample timing without multi-second IRQ off.
 
@@ -162,9 +179,9 @@ Keep results in the GCU (script + notes). Promote durable bullets **here**.
 - `sleep_us` DAC loops sounded crunchy; `ticks_us` busy-wait improved riffs.
 - Hard-zeroing u8 PCM then GPIO mute clicked; fade to mid (128), hold, ramp, then soft-park is softer.
 - Ancient UIFlow images reported language `3.4.0`; never map that to mpy-cross.
-- MicroPython ESP32: first `DAC(25)` after hard reset OK; reopen after deinit/GPIO remux/PWM → `ESP_ERR_INVALID_STATE` until hard reset; soft reboot does not restore (measured 2026-07, MP 1.28 GENERIC).
+- MicroPython ESP32: first `DAC(Pin(25))` after hard reset OK; reopen after deinit/GPIO remux/PWM → `ESP_ERR_INVALID_STATE` until hard reset; soft reboot does not restore (measured 2026-07, MP 1.28 GENERIC).
 - Keeping one DAC session across boot riff + later full-song stream restored “boot riff quality” for the longer track; reopening failed closed or fell back to harsh PWM.
 - `emergency_silence` / GPIO remux after a soft-parked riff reintroduced a harsh cutoff and killed DAC reopen for the song path.
 - NeoPixel side-strip updates interleaved with DAC sample loops coupled noise into the amp; static sides during long PCM helped.
 - Streaming u8 mono from flash in ~1 KiB chunks with button polls between/inside chunks allows pause without loading the whole file into RAM.
-- `period = 1_000_000 // 11025` floors to 90 µs (~0.78% fast); use rounded integer period or fractional accumulator for correct pitch/duration.
+- `period = 1_000_000 // 11025` floors to 90 µs (~0.78% fast); use rounded period or remainder-accumulator (`base` + distribute `1e6 % hz`) for correct pitch/duration.

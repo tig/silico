@@ -10,9 +10,9 @@ The human interface is a coding agent; not an installation guide or shell tutori
 
 First, you need a spec for your device (which Silco calls GCUs). See these repos for example specs that will give you some idea of what's in a spec useful to Silico:
 
-- [Xuss](tig/xuss)
-- [Xuss-C](tig/xuss-c)
-- [Xuss-Lame](tig/xuss)
+- [Xuss](tig/xuss) - A demo device based on the [M5Stack M5GO IoT Starter Kit v2.7](https://shop.m5stack.com/products/m5go-iot-starter-kit-v2-7), using [MicroPython](https://github.com/micropython). Intentionally specifies a simple implementation using Python to illustrate that path.
+- [Xuss-C](tig/xuss-c) - A demo device based on the [M5Stack M5GO IoT Starter Kit v2.7](https://shop.m5stack.com/products/m5go-iot-starter-kit-v2-7), using C and native ESP32 development. Intentionally specifies a more sophisticated implementation with higher performance and usability to illustrate that path.
+- [Xuss-Lame](tig/xuss) A demo device based on the [M5Stack M5GO IoT Starter Kit v2.7](https://shop.m5stack.com/products/m5go-iot-starter-kit-v2-7), that is **intentionally** under-specified. This demonstrates Silco's ability to interview the human to refine the spec and requirements interactively. 
 
 Get the spec into a Github Repo you control. 
 

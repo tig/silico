@@ -9,6 +9,9 @@ This file is **not** a fork of the Bedside principles.
 | First-flash detail (UF2 / esptool) | `silico/knowledge/first-flash.md` |
 | ESP32 USB duplex / console lockout | `silico/knowledge/esp32-usb-serial.md` |
 | ESP32 audio / DAC / PWM silence | `silico/knowledge/esp32-audio.md` |
+| SPI IPS color / partial blit | `silico/knowledge/esp32-lcd-ips.md` |
+| Large binary asset deploy | `silico/knowledge/deploy-assets.md` |
+| M5GO / Core v2.7 power button | `silico/knowledge/m5go-power.md` |
 | This file | metal-host glossary only — do **not** also reload the full contract if AGENTS already pinned it |
 
 ## Operator language (pointer)

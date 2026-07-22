@@ -86,8 +86,12 @@ This path is good enough for short boot riffs and simple mono songs when I2S is 
 
 ### Pacing
 
-- Pace with **`time.ticks_us` busy-wait** toward `period = 1_000_000 // sample_hz` (with rounding), not only `time.sleep_us`.
-- Maintain a `t_next` deadline: write sample → `t_next += period` → spin while `ticks_diff(t_next, now) > 0`.
+- Pace with **`time.ticks_us` busy-wait**, not only `time.sleep_us`.
+- **Do not floor-divide the period.** Rates like 11_025 Hz do not divide 1_000_000 evenly.
+  - Bad: `period = 1_000_000 // sample_hz` → at 11025 Hz this is **90 µs** (~11111 Hz), about **0.78% fast** (audibly sharp; track finishes early).
+  - Good (integer nearest µs): `period = (1_000_000 + sample_hz // 2) // sample_hz` → **91 µs** at 11025 Hz.
+  - Better long-term pitch: keep a **fractional phase** or accumulate error (e.g. add `1_000_000` to a residual each sample and emit a sample when residual ≥ `sample_hz`, subtract `sample_hz`) so average rate tracks the true `sample_hz` without cumulative drift from a fixed rounded period alone.
+- Maintain a `t_next` deadline: write sample → `t_next += period` (or advance from the fractional scheduler) → spin while `ticks_diff(t_next, now) > 0`.
 - If the loop falls behind (`ticks_diff` largely negative), **resync** `t_next` to now; do not spiral late forever (prevents multi-second “catch-up mute” then a dump of late samples).
 - Long `machine.disable_irq()` around multi-second audio can trip the watchdog — prefer tight per-sample timing without multi-second IRQ off.
 
@@ -100,9 +104,9 @@ This path is good enough for short boot riffs and simple mono songs when I2S is 
 
 ### Cooperative multi-tasking while streaming
 
-- A pure busy-wait sample loop monopolizes the core: face animation and serial will stall. That may be acceptable for a short boot riff.
-- For longer tracks, **yield often enough** to poll pause/stop inputs (e.g. every N samples or between file chunks). Document the product UI honestly (Now Playing while audio owns the loop is fine).
-- Escape hatch (`repl` / `reboot`) should remain reachable within a human-reasonable bound, or document a short deferred window.
+- A pure busy-wait sample loop monopolizes the core: face animation and serial will stall. That may be acceptable for a **short** boot riff.
+- For longer tracks, **yield often enough** to: poll pause/stop (and product UI buttons), and **service the USB serial link** (at least `identity` / `repl` / `reboot`) unless the **product spec** explicitly allows a deferred escape hatch. Multi-minute deafness to the link is a product defect when the spec requires mid-play `repl`.
+- Document the product UI honestly (Now Playing while audio owns most of the loop is fine if inputs and link still get slices).
 
 ### Amp / bus coupling
 
@@ -163,3 +167,4 @@ Keep results in the GCU (script + notes). Promote durable bullets **here**.
 - `emergency_silence` / GPIO remux after a soft-parked riff reintroduced a harsh cutoff and killed DAC reopen for the song path.
 - NeoPixel side-strip updates interleaved with DAC sample loops coupled noise into the amp; static sides during long PCM helped.
 - Streaming u8 mono from flash in ~1 KiB chunks with button polls between/inside chunks allows pause without loading the whole file into RAM.
+- `period = 1_000_000 // 11025` floors to 90 µs (~0.78% fast); use rounded integer period or fractional accumulator for correct pitch/duration.

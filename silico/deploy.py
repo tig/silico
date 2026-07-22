@@ -302,12 +302,9 @@ def deploy(
         if r.returncode != 0:
             lines.append("FAIL: version verify (import version failed)")
             if r.stderr:
+                # Recovery recipe only when run_mpremote confirmed raw-REPL
+                # lockout (already in stderr). Do not invent erase for other fails.
                 lines.append(r.stderr.strip())
-            err_l = (r.stderr or "").lower()
-            if "erase-flash" not in err_l and "owns the console" not in err_l:
-                from silico.mpremote_util import LOCKOUT_RECOVERY
-
-                lines.append(LOCKOUT_RECOVERY)
             return DeployResult(False, lines)
         blob = (r.stdout or "").strip()
         lines.append("Device reported: " + " ".join(blob.splitlines()))

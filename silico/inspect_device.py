@@ -152,13 +152,10 @@ def inspect(
     if r.returncode != 0:
         lines.append("FAIL: could not talk to device (unplugged, wrong port, or held by another program)")
         if r.stderr:
+            # LOCKOUT_RECOVERY is attached by run_mpremote only when raw REPL
+            # failed after a protocol-door knock (#49/#62) — not for port-busy
+            # or other transport errors (do not suggest erase on those).
             lines.append(r.stderr.strip())
-        # stderr may already include LOCKOUT_RECOVERY from run_mpremote (#49/#62).
-        err_l = (r.stderr or "").lower()
-        if "lockout" not in err_l and "erase-flash" not in err_l and "owns the console" not in err_l:
-            from silico.mpremote_util import LOCKOUT_RECOVERY
-
-            lines.append(LOCKOUT_RECOVERY)
         return InspectReport(False, p, lines)
     repl_out = (r.stdout or "").strip() or "(no output)"
     lines.append("REPL:")

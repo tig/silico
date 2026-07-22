@@ -23,7 +23,7 @@ Same operator verbs (`doctor`, `wait-device`, `inspect`, `deploy`, `gate`, …).
 | **ESP32-class** | MicroPython | esptool (once) | `mpremote` file copy | default `gcu` + ESP board pin |
 | **ESP32-class** | **C / ESP-IDF** | esptool / `idf.py flash` | same image path | `silico scaffold . --plate gcu-c` |
 
-Default for new GCUs remains **MicroPython**. C on ESP-IDF is opt-in when a product needs native firmware against the same host path (see [issue #53](https://github.com/tig/silico/issues/53)).
+Default for new GCUs remains **MicroPython**. C on ESP-IDF is opt-in when a product needs native firmware against the same host path.
 
 ### Not silico dual-runtime paths (yet)
 

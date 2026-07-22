@@ -8,7 +8,7 @@ The human interface is a coding agent; not an installation guide or shell tutori
 
 ## Gettings Started 
 
-First, you need a spec for your GCU. See these repos for example specs that will give you some idea of what's in a spec useful to Silico:
+First, you need a spec for your device (which Silco calls GCUs). See these repos for example specs that will give you some idea of what's in a spec useful to Silico:
 
 - [Xuss](tig/xuss)
 - [Xuss-C](tig/xuss-c)

@@ -15,6 +15,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 from silico.config_toml import read_product_defaults_path
+from silico.runtime import resolve_runtime
 
 
 @dataclass
@@ -26,13 +27,21 @@ class ProductPathReport:
 
 
 def resolve_defaults_path(root: Path | None = None) -> Path | None:
-    """Locate the shipped-defaults module (toml override or plate convention)."""
+    """Locate the shipped-defaults file (toml override or language-aware convention)."""
     root = (root or Path.cwd()).resolve()
     configured = read_product_defaults_path(root)
     if configured:
         p = (root / configured).resolve()
         return p if p.is_file() else None
-    # Convention: firmware/defaults.py
+    cfg = resolve_runtime(root)
+    if cfg.language == "c":
+        for alt in (
+            root / "include" / "gcu" / "defaults.h",
+            root / "src" / "defaults.c",
+        ):
+            if alt.is_file():
+                return alt
+        return None
     cand = root / "firmware" / "defaults.py"
     return cand if cand.is_file() else None
 
@@ -173,10 +182,74 @@ def scan_literal_controller_overrides(sim_path: Path) -> list[str]:
     return smells
 
 
+def _host_c_files(root: Path) -> list[Path]:
+    host = root / "host"
+    if not host.is_dir():
+        return []
+    out: list[Path] = []
+    for pat in ("**/*.c", "**/*.h", "**/*.cpp"):
+        out.extend(p for p in host.glob(pat) if p.is_file())
+    return sorted(set(out))
+
+
+def _strip_c_comments_and_strings(text: str) -> str:
+    """Remove // and /* */ comments so greps cannot pass on comment-only mentions."""
+    # Block comments first
+    text = re.sub(r"/\*.*?\*/", " ", text, flags=re.DOTALL)
+    # Line comments
+    text = re.sub(r"//.*?$", " ", text, flags=re.MULTILINE)
+    return text
+
+
+def _c_file_uses_defaults(text: str, defaults_path: Path) -> bool:
+    """True if source *code* includes defaults and uses a shipped symbol.
+
+    Comments do not count. Bare ``#include`` without using a symbol does not count.
+    """
+    code = _strip_c_comments_and_strings(text)
+    stem = defaults_path.stem
+    name = defaults_path.name
+    include_hit = (
+        f'#include "{name}"' in code
+        or f"#include <{name}>" in code
+        or f'#include "gcu/{name}"' in code
+        or f"#include <gcu/{name}>" in code
+        or f'#include "{stem}.h"' in code
+        or f'#include "gcu/{stem}.h"' in code
+    )
+    if not include_hit:
+        return False
+    # Must use a shipped table/symbol in code (not only include for side effects).
+    symbols = (
+        "GCU_DEFAULTS",
+        "GCU_TICK_SLEEP_MS",
+        "gcu_defaults",
+        "defaults_table",
+    )
+    if stem.isidentifier() and stem.upper() not in symbols:
+        symbols = (*symbols, stem.upper())
+    return any(s in code for s in symbols)
+
+
+def count_c_defaults_references(root: Path, defaults_path: Path) -> tuple[int, list[str]]:
+    hits = 0
+    details: list[str] = []
+    for path in _host_c_files(root):
+        try:
+            text = path.read_text(encoding="utf-8")
+        except OSError:
+            continue
+        if _c_file_uses_defaults(text, defaults_path):
+            hits += 1
+            details.append(str(path.relative_to(root)))
+    return hits, details
+
+
 def run_product_path_check(root: Path | None = None) -> ProductPathReport:
-    """Report whether sim exercises shipped defaults when a defaults module exists."""
+    """Report whether host tests exercise shipped defaults when a defaults module exists."""
     root = (root or Path.cwd()).resolve()
     lines: list[str] = []
+    cfg = resolve_runtime(root)
     declared = read_product_defaults_path(root)
     path = resolve_defaults_path(root)
 
@@ -196,13 +269,34 @@ def run_product_path_check(root: Path | None = None) -> ProductPathReport:
 
     if path is None:
         lines.append(
-            "INFO: no firmware/defaults.py (and no [host].product_defaults) — "
-            "product-path check skipped. For control loops, add a defaults module "
-            "with shipped gains/setpoints and at least one sim scenario that loads it."
+            "INFO: no shipped defaults file (and no [host].product_defaults) — "
+            "product-path check skipped. Add firmware/defaults.py (mpy) or "
+            "include/.../defaults.h (C) and at least one host test that uses it."
         )
         return ProductPathReport(ok=True, lines=lines, defaults_path=None, sim_refs=0)
 
     lines.append(f"Shipped defaults: {path.relative_to(root)}")
+
+    # --- C / language=c only (do not branch on file suffix alone) ---
+    if cfg.language == "c":
+        refs, detail = count_c_defaults_references(root, path)
+        lines.append(f"Host C files using shipped defaults (compiled use): {refs}")
+        for d in detail:
+            lines.append(f"  ref: {d}")
+        ok = True
+        if refs == 0:
+            ok = False
+            lines.append(
+                "FAIL: defaults file exists but no host C test uses it. "
+                "At least one host test must #include the defaults header and "
+                "reference a shipped symbol in code (e.g. GCU_DEFAULTS). "
+                "Comments and bare includes do not count."
+            )
+        else:
+            lines.append(f"OK: {refs} host C file(s) exercise shipped defaults.")
+        return ProductPathReport(ok=ok, lines=lines, defaults_path=path, sim_refs=refs)
+
+    # --- MicroPython / pytest path ---
     defaults = load_shipped_defaults(root)
     if defaults:
         preview = ", ".join(f"{k}={v!r}" for k, v in list(defaults.items())[:8])

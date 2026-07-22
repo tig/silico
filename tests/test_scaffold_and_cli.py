@@ -11,6 +11,23 @@ def test_plate_root_exists():
     assert (root / ".gitignore").is_file()
 
 
+def test_plate_root_gcu_c_exists():
+    root = plate_root("gcu-c")
+    assert (root / "silico.toml").is_file()
+    assert (root / "include" / "gcu" / "defaults.h").is_file()
+    assert (root / "host" / "CMakeLists.txt").is_file()
+    assert (root / "firmware" / "main" / "main.c").is_file()
+
+
+def test_scaffold_gcu_c(tmp_path: Path):
+    dest = tmp_path / "hello-c"
+    lines = scaffold(dest, plate="gcu-c")
+    assert (dest / "silico.toml").is_file()
+    assert "language = \"c\"" in (dest / "silico.toml").read_text(encoding="utf-8")
+    assert (dest / "src" / "domain.c").is_file()
+    assert any("gcu-c" in x or "Plate: gcu-c" in x for x in lines)
+
+
 def test_scaffold_into_empty(tmp_path: Path):
     dest = tmp_path / "gcu"
     lines = scaffold(dest)
@@ -190,7 +207,7 @@ def test_scaffold_writes_when_plate_lives_under_a_venv_path(tmp_path, monkeypatc
     (fake_plate / "firmware" / "main.py").write_text("# plate\n", encoding="utf-8")
     (fake_plate / "silico.toml").write_text("[deploy]\ncore = []\n", encoding="utf-8")
 
-    monkeypatch.setattr(sc, "plate_root", lambda: fake_plate)
+    monkeypatch.setattr(sc, "plate_root", lambda _plate="gcu": fake_plate)
     dest = tmp_path / "gcu"
     lines = sc.scaffold(dest)
 
@@ -206,7 +223,7 @@ def test_scaffold_zero_writes_on_fresh_dest_warns(tmp_path, monkeypatch):
     (fake_plate / "__pycache__").mkdir(parents=True)
     (fake_plate / "__pycache__" / "junk.py").write_text("x", encoding="utf-8")
 
-    monkeypatch.setattr(sc, "plate_root", lambda: fake_plate)
+    monkeypatch.setattr(sc, "plate_root", lambda _plate="gcu": fake_plate)
     lines = sc.scaffold(tmp_path / "fresh")
 
     assert any(l.startswith("WARN:") for l in lines)

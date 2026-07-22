@@ -2,12 +2,15 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
 import re
 import time
 from pathlib import Path
 
+from silico.backend import BACKEND_IDF, BACKEND_INVALID, backend_kind
 from silico.config_toml import read_deploy_core
+from silico.deploy_idf import deploy_idf, plan_idf_deploy
+from silico.deploy_types import DeployPlan, DeployResult
+from silico.identity import match_expected, parse_identity_blob
 from silico.mpremote_util import cp_to_device, exec_on_device, ls_device, mpremote_available, run_mpremote
 from silico.ports import IDENTITY_HINT, pick_best_port, port_is_listed
 from silico.progress import (
@@ -19,20 +22,10 @@ from silico.progress import (
     stage_header,
 )
 from silico.pull_device import _parse_ls_names
+from silico.runtime import resolve_runtime
 
-
-@dataclass
-class DeployPlan:
-    port: str
-    files: list[tuple[Path, str]]  # local path, remote name
-    lines: list[str] = field(default_factory=list)
-    prune_remotes: list[str] = field(default_factory=list)
-
-
-@dataclass
-class DeployResult:
-    ok: bool
-    lines: list[str] = field(default_factory=list)
+# Re-export for callers that import from silico.deploy
+__all__ = ["DeployPlan", "DeployResult", "deploy", "plan_deploy", "resolve_deploy_files"]
 
 
 
@@ -103,6 +96,30 @@ def plan_deploy(
     prune: bool = False,
     root: Path | None = None,
 ) -> DeployPlan | DeployResult:
+    root = root or Path.cwd()
+    cfg = resolve_runtime(root)
+    kind = backend_kind(cfg)
+    if kind == BACKEND_INVALID:
+        return DeployResult(False, list(cfg.errors) or ["FAIL: invalid runtime config"])
+    if kind == BACKEND_IDF:
+        if files:
+            return DeployResult(
+                False,
+                [
+                    "FAIL: language=c / idf-flash deploy does not take file args.",
+                    "Build and flash the IDF project ([deploy].project); omit file paths.",
+                ],
+            )
+        if prune:
+            return DeployResult(
+                False,
+                [
+                    "FAIL: --prune is MicroPython-only (file copy). "
+                    "C deploy overwrites the application image."
+                ],
+            )
+        return plan_idf_deploy(port=port, root=root, cfg=cfg)
+
     if not mpremote_available():
         return DeployResult(False, ["FAIL: mpremote not available (pip install mpremote)"])
 
@@ -197,6 +214,7 @@ def plan_deploy(
         files=pairs,
         lines=lines,
         prune_remotes=prune_remotes,
+        kind="mpy",
     )
 
 
@@ -214,6 +232,34 @@ def deploy(
     root: Path | None = None,
     on_progress: ProgressCallback | None = None,
 ) -> DeployResult:
+    root = root or Path.cwd()
+    cfg = resolve_runtime(root)
+    kind = backend_kind(cfg)
+    if kind == BACKEND_INVALID:
+        return DeployResult(False, list(cfg.errors) or ["FAIL: invalid runtime config"])
+    if kind == BACKEND_IDF:
+        if verify_import:
+            return DeployResult(
+                False,
+                [
+                    "FAIL: --verify-import is MicroPython-only. "
+                    "Use --verify for serial identity on C images."
+                ],
+            )
+        if prune:
+            return DeployResult(
+                False,
+                ["FAIL: --prune is MicroPython-only for language=c deploys."],
+            )
+        return deploy_idf(
+            port=port,
+            yes=yes,
+            verify=verify,
+            expect_name=expect_name,
+            expect_version=expect_version,
+            root=root,
+        )
+
     planned = plan_deploy(files, port=port, prune=prune, root=root)
     if isinstance(planned, DeployResult):
         if on_progress:
@@ -340,8 +386,12 @@ def deploy(
             )
 
     if verify:
-        emit(lines, stage_header("verify", "import version on device"), on_progress=on_progress)
-        code = "import version\nprint(version.FW_NAME)\nprint(version.FW_VERSION)\n"
+        # Same identity grammar as language=c (fw_name=… fw_version=…).
+        emit(lines, stage_header("verify", "identity on device"), on_progress=on_progress)
+        code = (
+            "import version\n"
+            "print('fw_name=%s fw_version=%s' % (version.FW_NAME, version.FW_VERSION))\n"
+        )
         r = exec_on_device(planned.port, code)
         if r.returncode != 0:
             time.sleep(1.0)
@@ -351,23 +401,18 @@ def deploy(
             if r.stderr:
                 emit(lines, r.stderr.strip(), on_progress=on_progress)
             return DeployResult(False, lines)
-        out = (r.stdout or "").strip().splitlines()
-        emit(lines, "Device reported: " + " ".join(out), on_progress=on_progress)
-        got_name = out[0].strip() if out else None
-        got_version = out[1].strip() if len(out) > 1 else None
-        if expect_name and got_name != expect_name:
-            emit(
-                lines,
-                f"FAIL: FW_NAME want {expect_name!r} got {got_name!r}",
-                on_progress=on_progress,
-            )
+        blob = (r.stdout or "").strip()
+        emit(lines, "Device reported: " + " ".join(blob.splitlines()), on_progress=on_progress)
+        got = parse_identity_blob(blob)
+        if got is None or not got.complete:
+            emit(lines, "FAIL: could not parse identity line from device", on_progress=on_progress)
             return DeployResult(False, lines)
-        if expect_version and got_version != expect_version:
-            emit(
-                lines,
-                f"FAIL: FW_VERSION want {expect_version!r} got {got_version!r}",
-                on_progress=on_progress,
-            )
+        fails = match_expected(
+            got, expect_name=expect_name, expect_version=expect_version
+        )
+        if fails:
+            for fail in fails:
+                emit(lines, fail, on_progress=on_progress)
             return DeployResult(False, lines)
         emit(lines, "OK: version verify", on_progress=on_progress)
 

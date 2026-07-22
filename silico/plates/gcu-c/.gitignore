@@ -1,0 +1,11 @@
+build/
+.venv/
+venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.silico/
+sdkconfig
+sdkconfig.old
+dependencies.lock
+managed_components/

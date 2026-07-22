@@ -1,5 +1,6 @@
 recursive-include silico/plates *
 recursive-include silico/knowledge *
+global-include silico/plates/**/CMakeLists.txt
 global-exclude *.py[cod]
 global-exclude __pycache__
 global-exclude *.so

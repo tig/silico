@@ -5,17 +5,33 @@ on:
     branches: [main, master, develop]
   pull_request:
 
+# Layout matches Day 1 host pin in requirements-dev.txt (-e ../silico):
+#   $GITHUB_WORKSPACE/gcu      ← this product repo
+#   $GITHUB_WORKSPACE/silico   ← tig/silico host spine
 jobs:
   host-gate:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: gcu
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout GCU
+        uses: actions/checkout@v4
+        with:
+          path: gcu
+      - name: Checkout silico (sibling host spine)
+        uses: actions/checkout@v4
+        with:
+          repository: tig/silico
+          path: silico
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
       - name: Install host deps
         run: |
           python -m pip install -U pip
+          # Same pin as Day 1: requirements-dev.txt has -e ../silico
           python -m pip install -r requirements-dev.txt
+          python -m pip install -e ../silico/third_party/bedside
       - name: Host gate
         run: python -m pytest -q

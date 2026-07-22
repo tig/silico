@@ -398,7 +398,7 @@ mpy-cross==<pin matching device MicroPython major.minor — see below>
 | Why not git+https pip pins | Every install re-talks to GitHub; auth/rate-limit/offline failures; wrong mental model (“Install silico” from the network). |
 | Package version (e.g. `0.1.4` in `pyproject.toml`) | Dist metadata only. `silico doctor` saying `tig-silico 0.1.4` does **not** mean invent `@v0.1.4`. |
 | Git tags `v0.1.3` and earlier | Pre-rename (`name=silico`); do not use as a `tig-silico` pin. |
-| CI / immutable remote pin | Only when the operator/CI truly needs a remote ref — and only a **real** tag/SHA that ships `tig-silico`. Not the Day 1 default. |
+| CI host gate | Plate ships `.github/workflows/ci.yml` that checks out the GCU and **`tig/silico` as siblings** (`path: gcu` + `path: silico`) so `pip install -r requirements-dev.txt` still uses `-e ../silico`. **Do not** invent `silico-src` workarounds or skip `requirements-dev.txt` on the runner. |
 
 If clone or editable install fails, **stop**, say what broke, and file/fix on `tig/silico`. Do **not** vendor host tooling into the GCU. Do **not** thrash invented version tags or remote pip URLs as a workaround.
 

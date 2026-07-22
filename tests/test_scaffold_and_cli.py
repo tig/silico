@@ -40,6 +40,46 @@ def test_scaffold_into_empty(tmp_path: Path):
     assert not any(p.name == "__pycache__" for p in dest.rglob("*"))
 
 
+def test_plate_host_pin_is_sibling_local_clone():
+    """Day 1 + CI both use sibling ../silico — not a git+https pip URL."""
+    root = plate_root()
+    req_lines = [
+        ln.strip()
+        for ln in (root / "requirements-dev.txt").read_text(encoding="utf-8").splitlines()
+        if ln.strip() and not ln.strip().startswith("#")
+    ]
+    assert any(ln == "-e ../silico" or ln.startswith("-e ../silico") for ln in req_lines)
+    assert not any("git+https://github.com/tig/silico" in ln for ln in req_lines)
+
+
+def test_plate_ci_sibling_silico_layout():
+    """CI must place silico as a sibling so `pip install -r` can use -e ../silico.
+
+    Anti-pattern (broke Day 1 GCUs): checkout only the GCU, then
+    ``pip install -r requirements-dev.txt`` → missing ../silico on the runner.
+    """
+    root = plate_root()
+    ci = root / ".github" / "workflows" / "ci.yml"
+    assert ci.is_file(), "plate must ship host-gate CI"
+    text = ci.read_text(encoding="utf-8")
+    assert "path: gcu" in text
+    assert "path: silico" in text
+    assert "repository: tig/silico" in text
+    assert "working-directory: gcu" in text
+    assert "pip install -r requirements-dev.txt" in text
+    # Do not invent a silico-src path that diverges from the Day 1 pin.
+    assert "silico-src" not in text
+
+
+def test_scaffold_ships_ci_workflow(tmp_path: Path):
+    dest = tmp_path / "gcu"
+    scaffold(dest)
+    assert (dest / ".github" / "workflows" / "ci.yml").is_file()
+    assert "path: silico" in (dest / ".github" / "workflows" / "ci.yml").read_text(
+        encoding="utf-8"
+    )
+
+
 def test_scaffold_merges_without_clobbering_product_readme(tmp_path: Path):
     dest = tmp_path / "gcu"
     dest.mkdir()

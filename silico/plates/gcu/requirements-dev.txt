@@ -1,10 +1,12 @@
 # Host-only. Package distribution name is tig-silico; CLI entry point is still `silico`.
 # Do not `pip install silico` (unrelated package on PyPI).
 #
-# Day 1 pin: local clone of tig/silico, editable. Agent clones if missing
-# (usual layout: sibling ../silico next to this GCU). Do not use
-# git+https://github.com/tig/silico.git@… for bootstrap — that re-hits
-# GitHub on every pip install. Do not invent tags from package version.
+# Pin: editable local clone as a sibling of this GCU (../silico).
+# Day 1: agent clones tig/silico beside the GCU if missing, then pip install -e.
+# CI: plate .github/workflows/ci.yml checks out GCU + silico as siblings so
+#     `pip install -r requirements-dev.txt` works unchanged — do not invent a
+#     separate silico-src path or skip this file on the runner.
+# Do not use git+https://…@… for bootstrap. Do not invent tags from package version.
 -e ../silico
 pytest>=8
 # mpy-cross ABI: Silico owns the pin. After the board talks:

@@ -56,9 +56,10 @@ Full text: [specs/tenets.md](specs/tenets.md) (unless you know better ones).
 5. **Edge that just works is hard.**
 6. **Vertical teams are the customer.**
 7. **Prompt for metal.**
-8. **Host first.**
-9. **Apps stay apps.**
-10. **Extract, then open.**
+8. **Default is a product choice, not a quality ranking.**
+9. **Host first.**
+10. **Apps stay apps.**
+11. **Extract, then open.**
 
 ## Help the operator (Bedside)
 

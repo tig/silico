@@ -22,10 +22,12 @@ Tenets are the written rules that distinguish good behavior from unwelcome behav
 
 7. **Prompt for metal.** Silico exists so teams can prompt agents such that what they *care about* lands on edge devices reliably, safely, and repeatedly. The experience we work backwards from: agent on a Mac, device working end-to-end the next day, potential customer's hand the day after, silico still foundational after that. Host gates, version verify, and agent docs are the product surface for that prompt. Folklore is not. The human's job is domain judgment and confirmation, not typing C or MicroPython into a blank file or memorizing serial folklore.
 
+8. **Default is a product choice, not a quality ranking.** Default runtime means "open this door first for most GCUs," not "this language is better." Supported backends share the same excellence bar. A weak path is unfinished silico, not a ranking.
+
 ## Aspirational
 
-8. **Host first.** Done means the host gate is green before anyone treats a device flash as proof. Metal confirms. Metal does not define done. That is how a non-expert knows the agent's work is true.
+9. **Host first.** Done means the host gate is green before anyone treats a device flash as proof. Metal confirms. Metal does not define done. That is how a non-expert knows the agent's work is true.
 
-9. **Apps stay apps.** Domain IP and product brands stay private to each GCU. Silico is the spine, not the product, not a company SKU, and not platform cosplay. Promote a pattern into silico only when a second GCU needs it. Public silico docs refer to starter GCUs only by codenames ([gcu-codenames.md](./gcu-codenames.md)).
+10. **Apps stay apps.** Domain IP and product brands stay private to each GCU. Silico is the spine, not the product, not a company SKU, and not platform cosplay. Promote a pattern into silico only when a second GCU needs it. Public silico docs refer to starter GCUs only by codenames ([gcu-codenames.md](./gcu-codenames.md)).
 
-10. **Extract, then open.** We grow the spine from real field GCUs, not from imaginary third parties. Three GCUs in the field prove extraction. Adoption and "it actually works" prove the rest. We do not claim the second proof when we only have the first.
+11. **Extract, then open.** We grow the spine from real field GCUs, not from imaginary third parties. Three GCUs in the field prove extraction. Adoption and "it actually works" prove the rest. We do not claim the second proof when we only have the first.

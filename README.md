@@ -13,8 +13,6 @@ See https://github.com/tig/silico. Follow the getting started instructions for a
 The agent owns the host path: prerequisites, GitHub setup, scaffolding, testing, device discovery, deployment, and verification. You own the
 product judgment and confirm physical or irreversible actions. 
 
-Agents write the firmware. You own the judgment.
-
 ## We work backwards from this:
 
 > With just Claude Code on my Mac, I had the device working end-to-end the next day, and in a potential customer's hand the day after that. Silico is now a foundational piece of our company's technology.
@@ -23,7 +21,7 @@ Agents write the firmware. You own the judgment.
 
 A **GCU** (General Contact Unit) is one shippable edge product. Silico is the spine those products pin on the host - not the product itself.
 
-### Supported platforms (host spine)
+## Supported platforms (host spine)
 
 Same operator verbs (`doctor`, `wait-device`, `inspect`, `deploy`, `gate`, …). Runtime is selected in `silico.toml` / plate.
 
@@ -43,6 +41,8 @@ These may appear *inside* a GCU’s own tree; they are **not** first-class silic
 - **PlatformIO** as the silico deploy path.
 - **Pico SDK (C)** as a silico language peer (only if an RP2040 GCU forces it later).
 - **`language = cpp`** as a third peer next to MicroPython and C (C++ may live in ESP-IDF board TUs; host-gated domain stays portable C by default).
+
+## More Info
 
 | Doc | Who |
 |-----|-----|

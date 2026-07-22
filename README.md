@@ -13,7 +13,26 @@ See https://github.com/tig/silico. Follow the getting started instructions for a
 The agent owns the host path: prerequisites, GitHub setup, scaffolding, testing, device discovery, deployment, and verification. You own the
 product judgment and confirm physical or irreversible actions. 
 
-Silico v1 targets RP2040-class devices running MicroPython. The spine is designed to add other GCU platforms and runtimes (including Arduino-class plates) when real products force them.
+### Supported platforms (host spine)
+
+Same operator verbs (`doctor`, `wait-device`, `inspect`, `deploy`, `gate`, …). Runtime is selected in `silico.toml` / plate.
+
+| MCU class | Device runtime | First flash | App update | Plate |
+|-----------|----------------|-------------|------------|--------|
+| **RP2040-class** | MicroPython | UF2 (once) | `mpremote` file copy | `silico scaffold .` (default `gcu`) |
+| **ESP32-class** | MicroPython | esptool (once) | `mpremote` file copy | default `gcu` + ESP board pin |
+| **ESP32-class** | **C / ESP-IDF** | esptool / `idf.py flash` | same image path | `silico scaffold . --plate gcu-c` |
+
+Default for new GCUs remains **MicroPython**. C on ESP-IDF is opt-in when a product needs native firmware against the same host path (see [issue #53](https://github.com/tig/silico/issues/53)).
+
+### Not silico dual-runtime paths (yet)
+
+These may appear *inside* a GCU’s own tree; they are **not** first-class silico plates or `[runtime].language` values:
+
+- **Arduino** core / `arduino-cli` as the Day 1 deploy backend ([issue #59](https://github.com/tig/silico/issues/59)).
+- **PlatformIO** as the silico deploy path.
+- **Pico SDK (C)** as a silico language peer (only if an RP2040 GCU forces it later).
+- **`language = cpp`** as a third peer next to MicroPython and C (C++ may live in ESP-IDF board TUs; host-gated domain stays portable C by default).
 
 Agents write the firmware. You own the judgment.
 

@@ -422,7 +422,7 @@ Then: do **not** claim the product is fully specified; implement the current sli
 
 **Anti-patterns:** block forever on a perfect spec; invent vertical moat without judgment; free-text choice walls; skip metal poll when metal is in scope; leave recovery only in chat.
 
-**Fixture (private):** [tig/xuss-lame](https://github.com/tig/xuss-lame) is a deliberately lame contract for practicing this mode. Agents working **there** must **not** open `tig/xuss` or `tig/xuss-c` to cheat (see that repo’s AGENTS anti-cheat).
+**Practice GCU (maintainers / interview dry-run):** private [tig/xuss-lame](https://github.com/tig/xuss-lame) is a thin, messy first-draft product tree (not labeled as a test in-repo). When Day 1 is aimed at that checkout, product truth is **only** that tree + the operator — do **not** open `tig/xuss` or `tig/xuss-c` (or use prior knowledge of them) to “complete” the contract. Detail: [silico/knowledge/spec-interview.md](silico/knowledge/spec-interview.md).
 
 ### Phase D - Talk to real hardware (hello metal)
 

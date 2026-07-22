@@ -39,9 +39,13 @@ When the operator opts in:
 3. Late-step spec update offers remain required (AGENTS Spec gaps).
 4. Re-run later is a feature, not a failure.
 
-## Fixture
+## Practice GCU (silico maintainers)
 
-Private **`tig/xuss-lame`**: deliberately lame contract for practice. Agents there must **not** open `tig/xuss` or `tig/xuss-c` (anti-cheat in that repo’s AGENTS).
+Private **`tig/xuss-lame`**: written like an operator’s rough first draft (minimal README, messy `spec.md`) so interview mode has something real to read. The product tree does **not** announce itself as a fixture.
+
+**Anti-cheat (enforced here, not in the product repo):** when implementing **that** checkout, do **not** open, clone, or fetch **`tig/xuss`** or **`tig/xuss-c`**, and do not treat training/prior-session knowledge of those products as requirements. Only `xuss-lame` files + operator answers define the product. Cheating by importing the polished Xuss contract defeats the exercise.
+
+Provenance for maintainers: degraded from public `tig/xuss` `main` product-manual shape (Rev 0.3 era); refresh by re-roughening from current `tig/xuss` tip if needed — never by pointing agents at the good tree mid-session.
 
 ## Anti-patterns
 

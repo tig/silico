@@ -14,7 +14,7 @@ Operator manners follow **Bedside** (pinned in silico; see silico `BEDSIDE.md` /
 
 Day 1 is **host gate + device USB talk/prep**, not host-only. After scaffold and green pytest, continue into `wait-device` / `inspect` / REPL (or UF2) unless the operator explicitly defers metal.
 
-**Spec quality:** if product `spec.md` is way under-specified or contradictory, enter silico **spec interview mode** (root AGENTS + `silico/knowledge/spec-interview.md`) or take the operator’s **interactive path** (build while improving the spec; re-run later). Do not invent domain moat. Do not open sibling product repos to “fix” a fixture contract.
+**Spec quality:** if product `spec.md` is way under-specified or contradictory, enter silico **spec interview mode** (root AGENTS + `silico/knowledge/spec-interview.md`) or take the operator’s **interactive path** (build while improving the spec; re-run later). Do not invent domain moat. Product truth is **this** checkout + the operator — not a sibling GCU repo with a similar name.
 
 ## Help the operator
 

@@ -14,7 +14,7 @@ Host gate is **CMake + CTest**, not pytest (unless you add Python tests separate
 
 ## Spec quality
 
-If product `spec.md` is way under-specified or contradictory, follow silico root **Spec interview mode** (`silico/knowledge/spec-interview.md`). Interactive path (build while the spec improves; re-run later) is valid. Do not invent domain moat. Do not open sibling product repos to fix a fixture contract.
+If product `spec.md` is way under-specified or contradictory, follow silico root **Spec interview mode** (`silico/knowledge/spec-interview.md`). Interactive path (build while the spec improves; re-run later) is valid. Do not invent domain moat. Product truth is **this** checkout + the operator.
 
 ## Host gate
 

@@ -81,6 +81,11 @@ build that is unreachable afterward. Verify-after-reset is not proof of
 reachability; the door is. (tig/silico#49, found the hard way on a bench
 board that needed a physical replug.)
 
+**Order matters (#62):** do not call `kbd_intr(-1)` until host→device
+**round-trip** works and `repl` re-opens mpremote. TX/telem alone is not
+duplex. If locked out: recover **once** (stock MicroPython), do not thrash
+deploy — see silico `knowledge/esp32-usb-serial.md`.
+
 ## Product path
 
 Shipped gains/setpoints/timings live in `firmware/defaults.py` and are what the board runs. At least one sim test must import that module and drive `init`/`tick` (or the control law) with those values. Test-local gains that only work on a synthetic plant are not vehicle-tuned gains — see silico AGENTS **Product path**.

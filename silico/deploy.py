@@ -303,6 +303,11 @@ def deploy(
             lines.append("FAIL: version verify (import version failed)")
             if r.stderr:
                 lines.append(r.stderr.strip())
+            err_l = (r.stderr or "").lower()
+            if "erase-flash" not in err_l and "owns the console" not in err_l:
+                from silico.mpremote_util import LOCKOUT_RECOVERY
+
+                lines.append(LOCKOUT_RECOVERY)
             return DeployResult(False, lines)
         blob = (r.stdout or "").strip()
         lines.append("Device reported: " + " ".join(blob.splitlines()))
@@ -347,9 +352,9 @@ def deploy(
             "Prefer including --reset on write, then soft-reset again after verify if the product face is dead."
         )
         lines.append(
-            "If cp/inspect failed with 'could not enter raw repl': the app owns CDC "
-            "(Ctrl-C is data). Open the product protocol door (`repl`) or catch the "
-            "boot window, then redeploy."
+            "If raw REPL fails after write: files may already be on device — "
+            "do not thrash redeploy. Knock `repl` or recover once (stock MP); "
+            "see silico/knowledge/esp32-usb-serial.md (#49 #62)."
         )
 
     return DeployResult(True, lines)

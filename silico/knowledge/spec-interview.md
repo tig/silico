@@ -18,7 +18,7 @@ If the contract is good enough: **do not** interview.
 
 Prefer structured chooser (`bedside ask` / host picker):
 
-1. **Interview now** (recommended when contradictions block a honest first slice).
+1. **Interview now** (recommended when contradictions block an honest first slice).
 2. **Proceed interactively** — build with explicit assumptions; improve `spec.md` as you go; operator may re-run the agent later to rebuild as the contract improves.
 3. Adjust / stop.
 
@@ -29,6 +29,7 @@ Prefer structured chooser (`bedside ask` / host picker):
 3. Free text only for open domain judgment.
 4. Propose durable `spec.md` edits only after **yes**; else issues / ambiguity log.
 5. Do not invent vertical moat without operator judgment.
+6. Do not write product identity (`firmware/version.py`, `silico.toml`) from unresolved or conflicting identity fields — assess / interview first (root AGENTS Phase C).
 
 ## Interactive path
 

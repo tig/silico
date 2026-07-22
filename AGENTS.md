@@ -309,7 +309,7 @@ Example shape:
 >
 > **Day 1 map:** (A) machine tools → (B) workspace locked → (C) **plate** (standard project template) via **scaffold**, then **host gate** (automated tests on this computer) green → (D) board talks over USB and a confirmed first deploy. We do not stop at host-only.
 >
-> **Next after go:** install/pin Silico on this host and scaffold/merge the plate here — that gives us the maintainable repo layout and a honest host test path before we touch the board.
+> **Next after go:** install/pin Silico on this host and scaffold/merge the plate here — that gives us the maintainable repo layout and an honest host test path before we touch the board.
 >
 > Do you want me to start? Or should I adjust something?
 
@@ -392,11 +392,12 @@ silico scaffold .
 # --force overwrites non-protected plate files only (not README/spec)
 ```
 
-3. Set product identity in `firmware/version.py` and `silico.toml` from **product files** when present (README title, `spec.md` identity lines); plate defaults are generic only.
-4. If `spec.md` exists: **assess contract quality** (see **Spec interview mode**). If the spec is good enough, host gate proves the **plate + product path** first; domain behavior comes from the **product** spec/AGENTS (not invented in silico). Open host knowledge topics only when the product needs board caps (e.g. `silico/knowledge/esp32-audio.md` for DAC/speaker work).
-5. Run host gate until green: `python -m pytest -q` (or `silico doctor` then pytest / `silico gate` / `silico product-path`).
-6. Commit and push (or open **one** PR if the repo uses PRs for CI). Further Day 1 work continues as **more commits on the same branch/PR** — see **One PR by default**. Confirm CI/Actions is on.
-7. **Do not stop here.** Host gate green is a checkpoint. **Immediately continue into Phase D**.
+3. If `spec.md` exists: **assess contract quality first** (see **Spec interview mode**). When thin or contradictory, run the interview / interactive-path gate **before** treating the contract as product truth for identity or domain. Do **not** invent moat or pick winners among conflicting fields.
+4. Set product identity in `firmware/version.py` and `silico.toml` from **product files** when present (README title, `spec.md` identity lines) **only after** identity-relevant contradictions are resolved, **or** the operator chose interactive path and named an **explicit** identity assumption. Until then leave plate defaults; do not persist a guessed name/version from an unresolved contract.
+5. If the contract (post-interview / settled assumptions) is good enough for the current slice: host gate proves the **plate + product path** first; domain behavior comes from the **product** spec/AGENTS (not invented in silico). Open host knowledge topics only when the product needs board caps (e.g. `silico/knowledge/esp32-audio.md` for DAC/speaker work).
+6. Run host gate until green: `python -m pytest -q` (or `silico doctor` then pytest / `silico gate` / `silico product-path`).
+7. Commit and push (or open **one** PR if the repo uses PRs for CI). Further Day 1 work continues as **more commits on the same branch/PR** — see **One PR by default**. Confirm CI/Actions is on.
+8. **Do not stop here.** Host gate green is a checkpoint. **Immediately continue into Phase D**.
 
 ### Spec interview mode (under-specified or contradictory `spec.md`)
 
@@ -412,7 +413,8 @@ After go, when you read product `spec.md` (or the product says the contract live
 2. **Gate with the operator** (structured chooser first): recommended path **interview gaps now**, or **proceed interactively and improve the spec as we build**, or adjust.
 3. **Interview:** one gap (or tight cluster) at a time; recommended option first when plate/parts/knowledge give a defensible default; free text only for open domain judgment.
 4. **Capture:** propose `spec.md` edits only after operator **yes**; or durable issues / ambiguity log if they prefer. Chat alone is not enough when the next agent will re-guess.
-5. **Exit interview when:** blocking fights resolved, **or** operator chose interactive path, **or** remaining gaps are named follow-ups.
+5. **Do not persist product identity** into `firmware/version.py` / `silico.toml` from conflicting or unresolved identity fields — assess and settle (or take an explicit interactive assumption) first (Phase C steps 3–4).
+6. **Exit interview when:** blocking fights resolved, **or** operator chose interactive path, **or** remaining gaps are named follow-ups.
 
 **Interactive path (operator opt-in)** — they may say roughly:
 

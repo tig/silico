@@ -104,7 +104,7 @@ Do **not** open with unexplained jargon (“scaffold the plate, pin the spine, g
 
 #### Define silico terms on first use
 
-Anytime you use a **silico term** for the **first time in the session**, define it inline in plain language (parenthetical or short clause). After that, the short form is fine for the rest of the session.
+Anytime you use a **silico term** for the **first time in the session**, define it inline in plain language (parenthetical or short clause). After that, keep using the **canonical lexicon name** without redefining — still the full term, not a nickname.
 
 | Term (define on first use) | Operator-facing sense (from lexicon; do not invent softer meanings) |
 |----------------------------|----------------------------------------------------------------------|
@@ -115,13 +115,28 @@ Anytime you use a **silico term** for the **first time in the session**, define 
 | **gate** | A named checkpoint: usually the **host gate** (automated tests on the host) or an **operator gate** (yes/no or physical confirm before a scary step) |
 | **host gate** | The named host command (typically `pytest -q` / `silico gate`) that must be green before claiming host-done |
 | **metal** | The real board / hardware path (confirms; does not alone define done) |
+| **product face** | What the operator is supposed to **see or hear** when the product app is running (status LEDs, light pattern, boot sound, etc.) — not a serial version string or a random module GPIO |
 | **pin** | Locking Silico (or another package) to a known version in the product’s host deps |
 | **deploy** | Writing product files to the board (only after identity + write confirmation) |
 
 If you need a fuller definition, open [specs/lexicon.md](specs/lexicon.md) for that term only — do not dump the whole lexicon into chat.
 
+#### No invented short forms for lexicon terms
+
+Do **not** mint nicknames, abbreviations, or clipped forms for lexicon items in operator-facing prose (or in agent docs you write). Use the **canonical name** from [specs/lexicon.md](specs/lexicon.md).
+
+| Forbidden short form | Use instead |
+|----------------------|-------------|
+| bare **face** | **product face** |
+| “the gate” when ambiguous | **host gate** or **operator gate** (name which) |
+| other ad-hoc clips of multi-word terms | full lexicon phrase |
+
+This is bedside manners for silico jargon: inventing “face” for **product face** strands operators the same way unexplained shell does. Product brand names and board part names (e.g. “M5 front panel”) stay ordinary English; do not rebrand them as silico short codes.
+
 **Anti-pattern:** “The GCU will get the plate scaffolded and the host gate will go green” with no definitions.  
-**Better:** “Your GCU (GCU stands for General Contact Unit — Silico’s term for this shippable edge product) will get a **plate** (the standard project template) via **scaffold**, then we run the **host gate** (automated tests on this computer) until green.”
+**Anti-pattern:** “Confirm the face is alive” (undefined clip of **product face**).  
+**Better:** “Your GCU (GCU stands for General Contact Unit — Silico’s term for this shippable edge product) will get a **plate** (the standard project template) via **scaffold**, then we run the **host gate** (automated tests on this computer) until green.”  
+**Better:** “Confirm the **product face** (what you should see or hear when the app runs — here, the M5 status LEDs) is alive.”
 
 #### Big steps: why + where in the process
 
@@ -140,7 +155,7 @@ Keep it short. Do not re-teach the whole playbook every time — only the local 
 | A | Machine tools | Git, Python 3.11+, gh, pip ready on this host |
 | B | Product workspace | GCU root locked; GitHub identity if needed |
 | C | Plate + host gate | Silico pinned; plate scaffolded; `pytest -q` (host gate) green |
-| D | Hello metal | Board talks over USB; prepped; confirmed deploy; app face visible |
+| D | Hello metal | Board talks over USB; prepped; confirmed deploy; product face confirmed |
 | E | CI proves a metal change | Issue → change → CI green → confirmed flash |
 | F | Domain work | Product behavior under test-first / host-first |
 
@@ -350,7 +365,7 @@ silico scaffold .
 
 **Where we are:** Phase D — hello metal. Host plate and host gate are behind you; Day 1 is not done until the board talks, a confirmed deploy runs, and the **operator can see or hear** the product doing something that matches documented “good.”
 
-**Required for Day 1 exit** (not optional polish). Goal: board **talks over USB**, is **prepped** (REPL when that is the runtime), then a **distinct, documented, operator-observable** face/app; reconnect is **repeatable**.
+**Required for Day 1 exit** (not optional polish). Goal: board **talks over USB**, is **prepped** (REPL when that is the runtime), then a **distinct, documented, operator-observable product face** (what the operator sees or hears when the app runs); reconnect is **repeatable**.
 
 Metal COM / first-flash / identity / deploy rules: **[BEDSIDE.md](BEDSIDE.md)** + **[silico/knowledge/first-flash.md](silico/knowledge/first-flash.md)**. Prefer tools: `silico wait-device`, `inspect`, `pull`, `deploy`, `monitor`, and `bedside ask` / `bedside step`. Every physical or overwrite prompt uses **Big steps: why + where**.
 
@@ -373,35 +388,35 @@ Deploy verify + `FW_VERSION` match prove the **host wrote this build**. They do 
 
 **Metal is honest only when:**
 
-1. There is a documented **“good”** the operator can **see or hear** without serial folklore (product `spec.md` / `install/` face: LEDs, boot riff, status pattern, etc.).
-2. After soft-reset so the app runs, you **ask the operator** (structured gate or one plain yes/no they answer from the world in front of them) whether that good is true.
-3. If product docs name a face (e.g. M5 face/side LEDs, speaker riff) and the plate only toggles a generic/dev-board pin (e.g. XIAO GPIO LED that is not the product face): **that is HW confusion, not Day 1 done.** Resolve it with the operator — map pins from product parts/spec/board knowledge, fix `firmware/` / HAL defaults, host-test, redeploy, re-confirm observe. Filing a GitHub issue is a tracker, not acceptance.
-4. Product face gaps that block observe are **in-scope Day 1 metal work**. Silico exists to help the operator through this. Do not label the session “on the metal” / “Day 1 complete” while an open issue still says the visible/audible face is unproven.
+1. There is a documented **product face** — the **“good”** the operator can **see or hear** without serial folklore (product `spec.md` / `install/`: LEDs, boot riff, status pattern, etc.). Define **product face** on first use if not already defined this session.
+2. After soft-reset so the app runs, you **ask the operator** (structured gate or one plain yes/no they answer from the world in front of them) whether that product face is true.
+3. If product docs name a product face (e.g. M5 front-panel / side LEDs, speaker riff) and the plate only toggles a generic/dev-board pin (e.g. XIAO GPIO LED that is not the product face): **that is HW confusion, not Day 1 done.** Resolve it with the operator — map pins from product parts/spec/board knowledge, fix `firmware/` / HAL defaults, host-test, redeploy, re-confirm observe. Filing a GitHub issue is a tracker, not acceptance.
+4. Product face gaps that block observe are **in-scope Day 1 metal work**. Silico exists to help the operator through this. Do not label the session “on the metal” / “Day 1 complete” while an open issue still says the product face is unproven.
 
-##### GPIO / pin / face ambiguity → **stop and ask** (mandatory)
+##### GPIO / pin / product face ambiguity → **stop and ask** (mandatory)
 
-When you notice (or should notice) that the **pin, LED, speaker, or “good” face** in firmware does not clearly match the **product board / spec**, you **must not** quietly assume, monologue an “Honesty” paragraph, or only open a GitHub issue.
+When you notice (or should notice) that the **pin, LED, speaker, or product face “good”** in firmware does not clearly match the **product board / spec**, you **must not** quietly assume, monologue an “Honesty” paragraph, or only open a GitHub issue. Never call this bare “face.”
 
 **Required path:**
 
 1. **Stop advancing** Phase E/F claims. Stay in Phase D metal acceptance.
-2. **State the mismatch in plain language** (what the code drives vs what the product docs / board face look like).
-3. **Ask the operator to clarify** with a **structured chooser** (`bedside ask` or host picker) — or one focused free-text question only if the answer is open (e.g. “which LED on the M5 face is the product status light?”). Put the **recommended** guess first when you have one from parts/spec/knowledge.
+2. **State the mismatch in plain language** (what the code drives vs what the product docs say the product face should look/sound like).
+3. **Ask the operator to clarify** with a **structured chooser** (`bedside ask` or host picker) — or one focused free-text question only if the answer is open (e.g. “which LED on the M5 front panel is the product face status light?”). Put the **recommended** guess first when you have one from parts/spec/knowledge.
 4. Only after their answer: implement the mapping, host-test, redeploy, then **confirm observe** (“Do you see/hear X?”).
 5. Optional: file/update an issue **as a tracker after or while** you are driving the clarify → fix loop — never instead of asking.
 
 Example gate shape (use host picker / `bedside ask`, not a free-text `1/2/3` wall):
 
 ```text
-bedside ask --id clarify-face-led \
-  --prompt "Plate hello blinks GPIO16 (often a small module LED). Xuss spec wants the M5 face/side lights. Which should we treat as Day-1 good on this board?" \
-  --choices "m5-face-led,m5-side-led,gpio16-ok-for-now,operator-will-point" \
-  --default m5-face-led
+bedside ask --id clarify-product-face \
+  --prompt "Plate hello blinks GPIO16 (often a small module LED). Product docs want M5 front-panel or side lights as the product face. Which should we treat as Day-1 good on this board?" \
+  --choices "m5-front-panel-led,m5-side-led,gpio16-ok-for-now,operator-will-point" \
+  --default m5-front-panel-led
 ```
 
-**Anti-pattern:** agent notices wrong GPIO, writes “Honesty: not the M5 face LED,” files `#5`, and asks “merge PR or start domain?” without ever asking the operator which light/sound is correct. That **strands** the operator and violates Help the operator / scary surfaces.
+**Anti-pattern:** agent notices wrong GPIO, writes “Honesty: not the M5 product face LED,” files `#5`, and asks “merge PR or start domain?” without ever asking the operator which light/sound is correct. That **strands** the operator and violates Help the operator / scary surfaces.
 
-**Anti-pattern (forbidden claim):** title or summary like “GCU is on the metal” + an “Honesty” section that admits the product face/light/sound was **not** proven. That is layered lying: call the layer you proved (`deployed` / `REPL ready`) and leave metal-acceptance open.
+**Anti-pattern (forbidden claim):** title or summary like “GCU is on the metal” + an “Honesty” section that admits the product face was **not** proven. That is layered lying: call the layer you proved (`deployed` / `REPL ready`) and leave metal-acceptance open.
 
 **Allowed partial claim (honest):** “Board talks on COM7; deploy verified XUSS 0.0.1; product face LED mapping is unclear — I need you to clarify which light is Day-1 good before we call metal done.” Then run the clarify gate **in that same turn**, not later.
 
@@ -416,9 +431,9 @@ bedside ask --id clarify-face-led \
 4. Optional backup: `silico pull <dir> --port COMx`.
 5. Dry plan: `silico deploy --port COMx` → confirm-deploy → `silico deploy --port COMx --yes --verify --reset`.
 6. Soft-reset so **main.py runs as the app** (deploy verify uses REPL and parks the loop). If raw REPL fails: product `repl` door or boot window (Ctrl-C may be data).
-7. **Operator-observable check:** document what “good” should look/sound like; confirm with the operator from the bench. If product face ≠ plate generic pin (or mapping is unclear): **clarify with the operator first** (structured ask), then fix, redeploy, re-confirm observe — do not stop at version match or issue-only.
+7. **Operator-observable check:** document the **product face** “good”; confirm with the operator from the bench. If product face ≠ plate generic pin (or mapping is unclear): **clarify with the operator first** (structured ask), then fix, redeploy, re-confirm observe — do not stop at version match or issue-only.
 8. Optional: `silico monitor --port COMx --duration 10`.
-9. Document `install/` leave-behind (Day-2 one-liner + LED/face/audio “good”).
+9. Document `install/` leave-behind (Day-2 one-liner + product face “good”: LEDs/audio/etc.).
 
 Non-Python deploy assets (e.g. audio riffs) may appear in `[deploy].core`; host hygiene skips them as copy-only.
 
@@ -448,7 +463,7 @@ While coding, you will find product `spec.md` items that are lacking, confusing,
 
 | Gap type | Rule |
 |----------|------|
-| **Blocks see/hear acceptance** (which LED is face, pin map for this board, boot riff, “what good looks like”) | **In-scope now.** **Ask the operator to clarify** (structured gate) as soon as you notice the mismatch — do not only monologue or file an issue. Then parts.toml / knowledge / board docs / implement + confirm. Spec rewrite can still wait, but **bench truth cannot**. |
+| **Blocks see/hear acceptance** (which LED is the product face, pin map for this board, boot riff, “what good looks like”) | **In-scope now.** **Ask the operator to clarify** (structured gate) as soon as you notice the mismatch — do not only monologue or file an issue. Then parts.toml / knowledge / board docs / implement + confirm. Spec rewrite can still wait, but **bench truth cannot**. |
 | **Domain polish / later product depth** (full protocol, vehicle appendix, extra modes) | Do not block the current host-green slice. Note the gap; **late step** offer a proposed `spec.md` edit after host gate is green or at a phase boundary. |
 
 For non-blocking gaps:
@@ -463,7 +478,7 @@ For non-blocking gaps:
 Metal bar detail: [BEDSIDE.md](BEDSIDE.md). Spine/DoD: layered table below.
 
 - [ ] **Device talks over USB** (`silico inspect` / REPL) and was **prepped** (runtime once if needed).
-- [ ] **Operator-observable metal:** after confirmed deploy + app running, the operator can **see or hear** documented “good” for **this** product (not only a plate pin that is not the product face). Agent worked through HW confusion; did not stop at version match + issue filed.
+- [ ] **Operator-observable metal:** after confirmed deploy + app running, the operator can **see or hear** the documented **product face** for **this** product (not only a plate pin that is not the product face). Agent worked through HW confusion; did not stop at version match + issue filed.
 - [ ] Host gate green locally and on GitHub.
 - [ ] Device `FW_VERSION` matches host.
 - [ ] One documented update path (BEDSIDE Day-2 leave-behind) that states what good looks/sounds like.
@@ -471,7 +486,7 @@ Metal bar detail: [BEDSIDE.md](BEDSIDE.md). Spine/DoD: layered table below.
 - [ ] Operator helped through first flash/serial without assumed ops expertise.
 - [ ] Any “what next?” phase fork used a **structured chooser**, not a free-text numbered menu.
 
-**Not exit criteria:** host gate alone; scaffold alone; deploy verify / version match alone; deferred metal with no poll/inspect; “honesty” note that face is unproven while the title says on-the-metal; issue filed instead of resolving observe.
+**Not exit criteria:** host gate alone; scaffold alone; deploy verify / version match alone; deferred metal with no poll/inspect; “honesty” note that the product face is unproven while the title says on-the-metal; issue filed instead of resolving observe.
 
 **Day 2:** same update path; unit to potential customer or field trial.
 
@@ -485,7 +500,7 @@ Host-first is **not** host-only. Claims must name the layer they prove:
 | **Metal I/O** | Sensing or actuation on pins | Inject/measure on **named** pins (or harness signature), not only LED blink or version import. |
 | **Vehicle / field** | Product acceptance on real plant | Product Appendix / field procedure; not bench buzz alone. |
 | **Deployed** | Board runs this build | Device `FW_VERSION` matches host after confirmed write; optional harness OK. **Not** the same as product metal acceptance. |
-| **Metal accepted (Day 1)** | Product on the bench | Operator **sees or hears** documented good for this GCU; pin/face/audio confusion resolved or explicitly deferred as **not Day 1 complete**. |
+| **Metal accepted (Day 1)** | Product on the bench | Operator **sees or hears** documented **product face** for this GCU; pin / product face confusion resolved or explicitly deferred as **not Day 1 complete**. |
 | **Issue fixed** | Ticket closed | Proof matching the issue's **stated layer**. CI green alone is not enough for a metal/vehicle claim. |
 
 ### HAL seam (Silico-owned pattern)
@@ -505,8 +520,9 @@ Enforce with `silico gate` (deploy-set CPython import + machine allowlist). Do n
   1. land metal code that proves the pin path, or
   2. leave a **blocking metal follow-up** open (title/status makes metal-TODO obvious) and do not narrate the product as metal-ready.
 - Do **not** mark vehicle/Appendix acceptance done without the vehicle procedure (or explicit defer with open tracker).
-- Do **not** mark Day 1 / “on the metal” done when the operator cannot see or hear product “good,” even if deploy verify and version match passed. Filing “face LED wrong pin” and moving to Phase F is a forbidden close.
-- Do **not** notice GPIO/face/audio mismatch and skip asking the operator to clarify (honesty note or issue alone is not a clarify gate).
+- Do **not** mark Day 1 / “on the metal” done when the operator cannot see or hear the **product face**, even if deploy verify and version match passed. Filing “product face LED wrong pin” and moving to Phase F is a forbidden close.
+- Do **not** notice GPIO / product face mismatch and skip asking the operator to clarify (honesty note or issue alone is not a clarify gate).
+- Do **not** invent short forms of lexicon terms (e.g. bare “face” for **product face**) in operator-facing prose.
 - Do **not** present phase forks as free-text `1. / 2. / 3.` menus in chat when a structured chooser exists (or `bedside ask` is available).
 - Prefer issue titles like `host-done / metal-TODO` when splitting layers is honest — and **never** put “on the metal” in the same message as metal-TODO.
 

@@ -60,6 +60,16 @@ Everything agents and humans run on the [host](#host) to set up, prove, deploy, 
 
 See also: [gobbledygook](#gobbledygook), [Help the operator](#help-the-operator).
 
+### product face
+
+The **human-observable product indication** on the [GCU](#gcu) after the app is running: what the [operator](#operator) is supposed to **see or hear** without reading a serial terminal (status LEDs, light pattern, boot riff / speaker, screen cue, etc.). Documented in product `spec.md` / `install/` “good.”
+
+**Not** the same as: deploy verify success, `FW_VERSION` over REPL, or a generic [plate](#plate) hello on a module GPIO that is not the product’s intended signal.
+
+Always say the full term **product face**. Never shorten to bare “face.” On first use in a session, define it (see silico `AGENTS.md` operator language). Day 1 [metal](#metal) acceptance requires the operator to confirm the product face, not only a version string.
+
+See also: [metal](#metal), [host gate](#host-gate), [Help the operator](#help-the-operator).
+
 ---
 
 ## Done, gates, and honesty
@@ -129,7 +139,7 @@ See also: [host-first](#host-first), [metal](#metal).
 
 Also **bedside manners.** Assume low ops literacy; do the work when you can; one step at a time for physical/browser steps; never dump a wall of unexplained shell. Violating this violates Agents operate the host path.
 
-In **silico**, agent docs add domain operator language on top of Bedside (not a fork of the nine principles): (1) the **first prompt** reminds what Silico is and summarizes **this** [GCU](#gcu); (2) silico terms ([GCU](#gcu), [host](#host), [plate](#plate), [scaffold](#scaffold), [gate](#gate), [host gate](#host-gate), [metal](#metal), [pin](#pin), …) are **defined on first use** in a session; (3) big human steps include **why** and **where** on the Day 1 map. Canonical rules: silico root `AGENTS.md` → Operator language.
+In **silico**, agent docs add domain operator language on top of Bedside (not a fork of the nine principles): (1) the **first prompt** reminds what Silico is and summarizes **this** [GCU](#gcu); (2) silico terms ([GCU](#gcu), [host](#host), [plate](#plate), [scaffold](#scaffold), [gate](#gate), [host gate](#host-gate), [metal](#metal), [product face](#product-face), [pin](#pin), …) are **defined on first use** and spoken as their **canonical lexicon names** (no invented short forms such as bare “face” for product face); (3) big human steps include **why** and **where** on the Day 1 map. Canonical rules: silico root `AGENTS.md` → Operator language.
 
 See also: [operator](#operator), [Grady](#grady).
 

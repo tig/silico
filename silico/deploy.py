@@ -292,7 +292,7 @@ def deploy(
         lines.append(
             "INFO: deploy verify talks over the REPL and parks the app loop. "
             "Soft-reset once more (or power cycle) so main.py runs as the product. "
-            "Prefer including --reset on write, then soft-reset again after verify if the face is dead."
+            "Prefer including --reset on write, then soft-reset again after verify if the product face is dead."
         )
         lines.append(
             "If cp/inspect failed with 'could not enter raw repl': the app owns CDC "

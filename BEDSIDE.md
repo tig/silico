@@ -28,13 +28,14 @@ Host tools and Day-1 **phase order** live in **AGENTS.md**. Metal-specific once-
 4. Operator confirms this port is the product board before any write (`bedside ask --id confirm-board`, recommended default **no** if unsure).
 5. Deploy overwrite only after `bedside ask --id confirm-deploy` (or host UI same contract).
 6. After `--verify`, **soft-reset again** so the product boot entry runs (verify parks the app loop).
-7. **Operator-observable good:** confirm the human can **see or hear** the documented face/status for **this** product board (not only `FW_VERSION` over REPL). Plate generic LED on the wrong pin is not acceptance.
-8. **Pin/face mismatch → ask first:** if GPIO, LED, or audio face is unclear vs product docs/board, **stop and clarify with the operator** (`bedside ask` / host picker) before assuming, filing-only, or advancing phases. Then fix → redeploy → re-confirm observe.
+7. **Operator-observable good:** confirm the human can **see or hear** the documented **product face** for **this** product board (not only `FW_VERSION` over REPL). Always say **product face**, never bare “face.” Plate generic LED on the wrong pin is not acceptance.
+8. **Pin / product face mismatch → ask first:** if GPIO, LED, or audio that makes up the product face is unclear vs product docs/board, **stop and clarify with the operator** (`bedside ask` / host picker) before assuming, filing-only, or advancing phases. Then fix → redeploy → re-confirm observe.
 9. App updates after first-flash: no re-teaching UF2/esptool.
 
 Do **not** stop Day 1 after host gate green unless the operator explicitly defers metal.  
-Do **not** claim “on the metal” while product face/audio is unproven or only tracked as an open issue.  
-Do **not** monologue HW confusion without asking the operator to clarify.
+Do **not** claim “on the metal” while the product face is unproven or only tracked as an open issue.  
+Do **not** monologue HW confusion without asking the operator to clarify.  
+Do **not** invent short forms of lexicon terms (bare “face” for product face).
 
 ## Scary surfaces (metal glossary)
 
@@ -56,10 +57,10 @@ Do **not** monologue HW confusion without asking the operator to clarify.
 ```text
 pytest -q
 silico deploy --port COMx --yes --verify --reset
-# soft-reset once more if the app face/loop is not running
+# soft-reset once more if the product face / app loop is not running
 ```
 
-Good: host gate green; device `FW_VERSION` matches host; **operator-confirmed** LED/status/audio for this product (and silence after stop if the product has a speaker). Version match alone is not “good.”
+Good: host gate green; device `FW_VERSION` matches host; **operator-confirmed product face** (LED/status/audio for this product; silence after stop if the product has a speaker). Version match alone is not “good.”
 
 ## Customer 0 → tig/bedside
 

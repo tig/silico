@@ -15,6 +15,10 @@ When you learn a new host truth on a bench, **add a bullet here** (or a sibling 
 
 Board schematics differ (amp enable, AC couple). Always ground in the product’s `parts.toml` / board docs before claiming metal audio.
 
+## Operator forewarning (manners)
+
+Before deploy/reset that may play a boot riff, long tone, or other non-trivial audio: **state it in agent chat first** (what, how long, what “done” sounds like). See silico root `AGENTS.md` → *Announce surprising metal effects*. Permission to overwrite firmware is not permission to startle.
+
 ## Tones vs samples
 
 | Need | Prefer | Avoid |

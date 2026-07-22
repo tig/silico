@@ -34,7 +34,13 @@ See also: [silico](#silico), [gobbledygook](#gobbledygook).
 
 The **template** [GCU](#gcu) repo layout and conventions (folders, `AGENTS.md`, `silico.toml`, host [pin](#pin), CI that runs the [host gate](#host-gate)). Scaffolding a GCU means following the plate, not inventing a parallel tree.
 
-See also: [spine](#spine).
+See also: [spine](#spine), [scaffold](#scaffold).
+
+### scaffold
+
+Also **scaffolding.** The host verb (`silico scaffold`) and the act of **laying down the [plate](#plate)** into a product checkout: standard folders, `silico.toml`, host [pin](#pin), HAL/sim stubs, and CI hooks. Scaffold merges into an existing [GCU](#gcu) without overwriting product `README.md` / `spec.md`. It is not writing domain firmware and not inventing a parallel repo layout.
+
+See also: [plate](#plate), [pin](#pin).
 
 ### metal
 
@@ -54,9 +60,30 @@ Everything agents and humans run on the [host](#host) to set up, prove, deploy, 
 
 See also: [gobbledygook](#gobbledygook), [Help the operator](#help-the-operator).
 
+### product face
+
+The **human-observable product indication** on the [GCU](#gcu) after the app is running: what the [operator](#operator) is supposed to **see or hear** without reading a serial terminal (status LEDs, light pattern, boot riff / speaker, screen cue, etc.). Documented in product `spec.md` / `install/` “good.”
+
+**Not** the same as: deploy verify success, `FW_VERSION` over REPL, or a generic [plate](#plate) hello on a module GPIO that is not the product’s intended signal.
+
+Always say the full term **product face**. Never shorten to bare “face.” On first use in a session, define it (see silico `AGENTS.md` operator language). Day 1 [metal](#metal) acceptance requires the operator to confirm the product face, not only a version string.
+
+See also: [metal](#metal), [host gate](#host-gate), [Help the operator](#help-the-operator).
+
 ---
 
 ## Done, gates, and honesty
+
+### gate
+
+A **named checkpoint** that must pass before the agent claims progress or advances. In silico talk this usually means either:
+
+1. **[Host gate](#host-gate)** — automated proof on the [host](#host) (pytest / `silico gate` / product-path). Green means the change is claimable as host-done.
+2. **Operator gate** — a structured yes/no or physical confirm (`bedside ask` / `bedside step`, or the agent host's picker) before a scary or irreversible act (board identity, deploy overwrite, plug cable).
+
+Do not say "the gate" to an operator without saying *which* gate and what green/pass means in plain language. On first use in a session, define the term (see silico `AGENTS.md` operator language).
+
+See also: [host gate](#host-gate), [Help the operator](#help-the-operator).
 
 ### host-first
 
@@ -111,6 +138,8 @@ See also: [host-first](#host-first), [metal](#metal).
 ### Help the operator
 
 Also **bedside manners.** Assume low ops literacy; do the work when you can; one step at a time for physical/browser steps; never dump a wall of unexplained shell. Violating this violates Agents operate the host path.
+
+In **silico**, agent docs add domain operator language on top of Bedside (not a fork of the nine principles): (1) the **first prompt** reminds what Silico is and summarizes **this** [GCU](#gcu); (2) silico terms ([GCU](#gcu), [host](#host), [plate](#plate), [scaffold](#scaffold), [gate](#gate), [host gate](#host-gate), [metal](#metal), [product face](#product-face), [pin](#pin), …) are **defined on first use** and spoken as their **canonical lexicon names** (no invented short forms such as bare “face” for product face); (3) big human steps include **why** and **where** on the Day 1 map. Canonical rules: silico root `AGENTS.md` → Operator language.
 
 See also: [operator](#operator), [Grady](#grady).
 

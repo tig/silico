@@ -41,5 +41,5 @@ silico inspect --port COMx --apply-mpy-pin
 silico deploy --port COMx   # dry plan
 # operator confirm →
 silico deploy --port COMx --yes --verify --reset
-# soft-reset again if the face/app loop is not running after verify
+# soft-reset again if the product face / app loop is not running after verify
 ```

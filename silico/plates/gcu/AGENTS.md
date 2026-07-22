@@ -8,13 +8,29 @@ Host path comes from **silico** (https://github.com/tig/silico). Pin as host-onl
 
 Start: *See https://github.com/tig/silico. Follow the getting started instructions for agents.*
 
-That playbook begins with **Phase 0** (welcome the operator, recap what you know, name the next step, get a clear go) **before** any tooling. Operator manners follow **Bedside** (pinned in silico; see silico `BEDSIDE.md` / vendored contract).
+That playbook begins with **Phase 0** **before** any tooling. The first message must **orient** the operator: what Silico is, what a **GCU** is, and a short summary of **this** product from `README.md` / `spec.md` / this file. Then recap machine readiness, name the Day 1 map (tools → workspace → plate + host tests → board talk), name the next mutating step, and get a clear go.
+
+Operator manners follow **Bedside** (pinned in silico; see silico `BEDSIDE.md` / vendored contract). Silico-specific operator language (define jargon on first use; big steps need why + where-we-are) lives in silico root `AGENTS.md` → **Operator language**.
 
 Day 1 is **host gate + device USB talk/prep**, not host-only. After scaffold and green pytest, continue into `wait-device` / `inspect` / REPL (or UF2) unless the operator explicitly defers metal.
 
 ## Help the operator
 
-Assume low ops literacy. Prefer doing over dumping shell. **Poll USB** after asking for a data cable - do not ask humans to announce plug-in. **Confirm device identity** every session. **Never write the device without explicit operator confirmation.** Portable manners gaps: file on **tig/bedside**; metal spine gaps: **tig/silico**.
+Assume low ops literacy. Prefer doing over dumping shell. **Poll USB** after asking for a data cable - do not ask humans to announce plug-in. **Confirm device identity** every session. **Never write the device without explicit operator confirmation.**
+
+**First-use terms:** the first time in a session you say GCU, host, plate, scaffold, gate / host gate, metal, **product face**, pin, or deploy — define it in plain language (parenthetical). Full book: silico `specs/lexicon.md`. Use **canonical lexicon names** only — never invent short forms (e.g. bare “face” for product face).
+
+**Big steps:** when asking the human to install, log in, plug hardware, first-flash, or confirm overwrite — one sentence **why**, one line **where we are** on Day 1 (phase + done vs next), then the single act.
+
+**Next-step forks:** use a structured chooser (`bedside ask` or host picker). Never a free-text `1. / 2.` menu in chat.
+
+**One PR by default:** unless the operator asks to stage work as multiple PRs, keep **one open PR** (or direct commits on `main` if that is the repo workflow) and land phases as **individual commits**. Do not open a PR per phase/issue — that forces the operator to invent merge order. Issues stage work; commits stage history.
+
+**Metal acceptance:** Day 1 is not “on the metal” until the operator can **see or hear** the documented **product face** after deploy. Wrong plate pin / product face LED confusion is work to finish with the operator — not an honesty footnote under a done banner. Trackers do not replace observe. **If the pin / product face mapping is unclear, ask the operator to clarify (structured chooser) in that turn** — do not only file an issue or assume GPIO16 is fine.
+
+**Surprising metal effects:** before deploy, soft-reset, or any board act that may make noise, long tones, bright lights, or motion — **clearly state in chat** what will happen and roughly how long. Not always a new yes/no gate; always a forewarning. Never silent-deploy a screaming boot riff.
+
+Portable manners gaps: file on **tig/bedside**; metal spine gaps: **tig/silico**.
 
 ## Definition of done
 
@@ -22,9 +38,10 @@ Assume low ops literacy. Prefer doing over dumping shell. **Poll USB** after ask
 |-------|--------|
 | `firmware/` change done | `pytest -q` green (host gate). CI green if remote exists. |
 | Deployed | `silico deploy … --port COMx --yes --verify` after operator confirmed identity + write. |
+| On the metal (Day 1) | Deployed **and** operator sees/hears documented **product face** for this GCU (not only version string). |
 | Issue fixed | CI green **and** metal matches the issue. |
 
-Never treat "I flashed something" as done.
+Never treat "I flashed something" as done. Never claim on-the-metal while the product face is unproven.
 
 ## Host gate
 

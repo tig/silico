@@ -25,6 +25,7 @@ Context is finite. **Do not** open every manners file into the active window.
 | Nine principles, anti-patterns, portable persona | **tig/bedside** `contract/` | One short summary + pin (no kinder soft-fork) |
 | Operator gates (`ask` / `step`) | **tig/bedside** surface + CLI | One short pointer here; agent host pickers OK if same contract |
 | Day 1 phases, silico verbs, plate, mpy-cross, deploy manifest | **silico AGENTS** + code | Not bedside |
+| Operator language (first prompt orient, first-use term defs, big-step why/where) | **silico AGENTS** + [lexicon](specs/lexicon.md) | Not bedside principles; domain on top of contract |
 | COM / first-flash (UF2 **or** esptool) / board identity / metal deploy | **silico BEDSIDE.md** + `silico/knowledge/first-flash.md` + CLI | AGENTS Day 1 may point here; avoid full restatement |
 | Board/host capability notes (audio, bridges, …) | **silico/knowledge/** (self-improving) | Product must not soft-fork; agents **append** host truths here |
 | Eval rubric / fixtures | **tig/bedside** `eval/` | Run CLI; do not paste rubric into context |
@@ -84,6 +85,87 @@ Silico domain (metal / host path) details: **BEDSIDE.md** and Day 1 phases below
 
 Prove manners: `bedside doctor` and `bedside eval` (vendored fixtures include `operator-gate-ask` / `operator-gate-step`).
 
+### Operator language (silico domain — not a second contract)
+
+These rules sit **on top of** Bedside for this product. They do not soften or replace the nine principles. Phrase book: [specs/lexicon.md](specs/lexicon.md).
+
+#### First prompt orients the operator
+
+The **first operator-facing message** of a Day 1 (or “getting started”) session must help them understand **what they started**, not only what you will do next. Required shape (tone may vary; skeleton may not):
+
+1. **What Silico is** — one or two plain sentences (open host-first spine / “prompt for metal”: agents build and maintain shippable edge products on real boards; Silico is the host tooling and plate, not the product brand).
+2. **What a GCU is** — define on first use, then **summarize this GCU** from product truth (`README.md`, `spec.md`, product `AGENTS.md`, workspace markers). Name intent, not codename theater. If product docs are thin, say what is known and what you will clarify after go.
+3. **Your role** — you will step them through host setup, plate, proof on the computer, then the board talking over USB.
+4. **What you know now** — machine readiness + workspace mode + whether a board is already talking (read-only discovery only).
+5. **Where Day 1 is headed** — one short map (host tools → product workspace → plate/host tests → board talk → optional domain loop).
+6. **Next mutating step** + **start gate** (structured yes/adjust when available).
+
+Do **not** open with unexplained jargon (“scaffold the plate, pin the spine, green the host gate”) before those words have been defined.
+
+#### Define silico terms on first use
+
+Anytime you use a **silico term** for the **first time in the session**, define it inline in plain language (parenthetical or short clause). After that, keep using the **canonical lexicon name** without redefining — still the full term, not a nickname.
+
+| Term (define on first use) | Operator-facing sense (from lexicon; do not invent softer meanings) |
+|----------------------------|----------------------------------------------------------------------|
+| **GCU** | General Contact Unit — Silico’s name for one shippable edge product (app + board), not Silico itself |
+| **host** | This developer/CI computer (not the board) |
+| **plate** | The standard GCU repo template Silico lays down (layout, pin, host tests, HAL/sim stubs) |
+| **scaffold** | Running `silico scaffold` / laying that plate into the product checkout |
+| **gate** | A named checkpoint: usually the **host gate** (automated tests on the host) or an **operator gate** (yes/no or physical confirm before a scary step) |
+| **host gate** | The named host command (typically `pytest -q` / `silico gate`) that must be green before claiming host-done |
+| **metal** | The real board / hardware path (confirms; does not alone define done) |
+| **product face** | What the operator is supposed to **see or hear** when the product app is running (status LEDs, light pattern, boot sound, etc.) — not a serial version string or a random module GPIO |
+| **pin** | Locking Silico (or another package) to a known version in the product’s host deps |
+| **deploy** | Writing product files to the board (only after identity + write confirmation) |
+
+If you need a fuller definition, open [specs/lexicon.md](specs/lexicon.md) for that term only — do not dump the whole lexicon into chat.
+
+#### No invented short forms for lexicon terms
+
+Do **not** mint nicknames, abbreviations, or clipped forms for lexicon items in operator-facing prose (or in agent docs you write). Use the **canonical name** from [specs/lexicon.md](specs/lexicon.md).
+
+| Forbidden short form | Use instead |
+|----------------------|-------------|
+| bare **face** | **product face** |
+| “the gate” when ambiguous | **host gate** or **operator gate** (name which) |
+| other ad-hoc clips of multi-word terms | full lexicon phrase |
+
+This is bedside manners for silico jargon: inventing “face” for **product face** strands operators the same way unexplained shell does. Product brand names and board part names (e.g. “M5 front panel”) stay ordinary English; do not rebrand them as silico short codes.
+
+**Anti-pattern:** “The GCU will get the plate scaffolded and the host gate will go green” with no definitions.  
+**Anti-pattern:** “Confirm the face is alive” (undefined clip of **product face**).  
+**Better:** “Your GCU (GCU stands for General Contact Unit — Silico’s term for this shippable edge product) will get a **plate** (the standard project template) via **scaffold**, then we run the **host gate** (automated tests on this computer) until green.”  
+**Better:** “Confirm the **product face** (what you should see or hear when the app runs — here, the M5 status LEDs) is alive.”
+
+#### Big steps: why + where in the process
+
+Whenever you prompt the operator for a **big** step (install tools, log into GitHub, create/open the product repo, scaffold/overwrite plate files, plug USB, first-flash, confirm board identity, confirm deploy overwrite, open a metal-proving issue), always include **both**:
+
+1. **Why** — one crisp sentence on what fails or stays blocked without this step.
+2. **Where we are** — phase letter/name + one line of done vs next on the Day 1 map (below). Do not assume they track phase letters; restate in plain words.
+
+Keep it short. Do not re-teach the whole playbook every time — only the local map.
+
+**Day 1 map** (use when saying “where we are”):
+
+| Phase | Plain name | Done looks like |
+|-------|------------|-----------------|
+| 0 | Welcome / start gate | Operator understands Silico + this GCU; clear go |
+| A | Machine tools | Git, Python 3.11+, gh, pip ready on this host |
+| B | Product workspace | GCU root locked; GitHub identity if needed |
+| C | Plate + host gate | Silico pinned; plate scaffolded; `pytest -q` (host gate) green |
+| D | Hello metal | Board talks over USB; prepped; confirmed deploy; product face confirmed |
+| E | CI proves a metal change | Issue → change → CI green → confirmed flash |
+| F | Domain work | Product behavior under test-first / host-first |
+
+Example big-step shape:
+
+> **Where we are:** Day 1 Phase D (hello metal). Host tools, workspace, and the host gate (automated tests on this computer) are done. We still need the board talking over USB before any firmware write.  
+> **Why this step:** Without a data USB cable I cannot discover or talk to the board.  
+> **Your step:** Plug a data USB cable into the product board.  
+> **What I will do next:** Poll for a new serial port, then inspect it with you confirming identity.
+
 ### Operator gates: `bedside ask` / `bedside step` (not multi-choice free text)
 
 Do **not** restate long "how to ask the human" essays. Prefer tools:
@@ -105,6 +187,49 @@ Exit codes (agents): **0** recommended path / step confirmed; **10** declined, o
 **Also OK:** the agent product's **structured question UI** (pickers, `AskUserQuestion`, etc.) when it implements the same contract: one gate, recommended first, no multi-option free-text walls. Free text remains for open domain judgment only.
 
 Non-interactive / CI: `--answer` on `ask`, `--confirm` / `--decline` / `--no-wait` on `step` (see `bedside ask --help`).
+
+**Choice walls are contract violations** (Bedside principle 2 / 4), including at phase boundaries. Do **not** end a status message with a free-text numbered menu such as:
+
+> Say when you want to:  
+> 1. Review/merge the PR  
+> 2. Start domain work from the spec  
+
+That is a multi-choice wall. Use `bedside ask` or the host **structured chooser** (recommended option first). One open free-text question is fine only when the answer is open domain judgment the picker cannot capture — not for “pick next phase fork.”
+
+#### One PR by default (do not PR-spam the operator)
+
+Opening many pull requests as Day 1 proceeds **adds mental burden the operator does not need**: merge order, base-branch graphs, overlapping titles, and “which one is real?” confusion. That is a bedside manners failure (Help the operator / never leave them at a cliff of process).
+
+**Default (unless the operator explicitly asks to stage work as multiple PRs):**
+
+1. Prefer **one open PR** per product session / Day 1 arc (or keep working on `main` with direct pushes if that is already the repo’s workflow and the operator is fine with it).
+2. Land progress as **individual, reviewable commits** on that single branch/PR (scaffold → host gate → metal face → domain slice, etc.). Commit history is the staging; the PR list is not.
+3. Update the same PR as work continues (push more commits). Do **not** open a second PR for the next phase of the same Day 1.
+4. Issues remain fine for tracking intent; **issues ≠ a PR each**.
+
+**Only open multiple PRs when** the operator clearly asks to stage, split review, or stack work (e.g. “separate PRs per issue,” Graphite stack, etc.). Then say in plain language how they relate and merge order — do not invent a multi-PR plan unprompted.
+
+**Anti-pattern:** five open PRs titled variations of “Day 1 scaffold,” “L0 product face,” “L0 domain,” “L1 spine” with no operator request to split. Operator should never have to ask “which order do I merge these?”
+
+#### Announce surprising metal effects (before they happen)
+
+Anything done **to the GCU / board** that may **surprise** the operator — loud or long tones, music, sudden LEDs, motor/actuator motion, first-flash erase, deploy that boots a noisy app, soft-reset that restarts sound — must be **clearly stated in agent output first**.
+
+This is **not** always an extra confirm gate (deploy overwrite already has `confirm-deploy`). It **is** a required **forewarning in plain language** so the human is not startled or left guessing what the device is doing.
+
+**Required before the surprising act** (in the same turn, before the tool/command runs):
+
+1. **What** you are about to do (deploy, soft-reset, first-flash, start app loop, …).
+2. **What they may notice** — see/hear/feel (e.g. “the speaker may play a ~15s tone,” “status LEDs will blink,” “board will reboot and reappear on a new COM”).
+3. **How long** if non-trivial (seconds, until reset, until stop).
+4. **What “done / good” looks like** if relevant (silence after stop, LED pattern ends, version matches).
+
+Do **not** bury this only in code comments, issue text, or a post-hoc “by the way.” Do **not** wait until after the scream.
+
+**Anti-pattern:** `silico deploy … --yes --verify --reset` with no operator-facing line, then a 15-second boot tone with no warning.  
+**Better (before deploy/reset):** “I’m about to write firmware to COM7 and soft-reset so the app runs. On this build the product face includes a boot tone for about 15 seconds — you should hear that, then silence when the idle state is reached. Ready; deploying now.”
+
+Irreversible writes still need **operator gate** confirmation. Surprising **effects** need **announcement** even when write permission was already granted earlier in the session (permission ≠ “no heads-up on loud audio”).
 
 Violating Bedside on the operator path violates **Agents operate the host path**.
 
@@ -146,7 +271,7 @@ Run this playbook under **Help the operator**. Confirm each phase with them befo
 
 ### Phase 0 - Welcome the operator (proactive, safe)
 
-Be **proactive in a safe way.** Before the start gate, **do** read-only discovery so your welcome is grounded - do **not** wait for the human to ask whether Git exists.
+Be **proactive in a safe way.** Before the start gate, **do** read-only discovery so your welcome is grounded - do **not** wait for the human to ask whether Git exists. Follow **Operator language** above: orient first, define jargon on first use, never open with an unexplained term soup.
 
 **Allowed before start gate** (read-only / non-destructive):
 
@@ -161,27 +286,41 @@ Be **proactive in a safe way.** Before the start gate, **do** read-only discover
 - Destructive git (reset --hard, force-push) unless the operator already ordered that work
 - Walls of shell for the human to paste when you could run the check yourself
 
-Then speak in plain language. Structure (tone may vary; skeleton may not):
+Then speak in plain language. Structure (tone may vary; **skeleton may not** — see **First prompt orients the operator**):
 
-1. **Welcome** to Silico.
-2. **Role:** you are here to get their GCU shipped and will step them through it.
-3. **What you know now** - product intent **and** machine readiness (what is already OK vs what will need install after go), including **workspace mode** (GCU root vs silico package vs unknown) and **whether a preferred USB board is already talking**.
-4. **Next step** in one short sentence (the first *mutating* step after go). Frame Day 1 as **host plate + device talk** - not host-only.
-5. **Start gate:** ask whether to start or adjust something. Prefer the agent product's **structured question UI** when available (not a multi-option free-text paragraph).
+1. **What Silico is** (remind them what they started).
+2. **GCU defined + this product summarized** from product docs (or honest “thin docs” note).
+3. **Role:** you step them through shipping it on this host and then on the board.
+4. **What you know now** — machine readiness **and** workspace mode (GCU root vs silico package vs unknown) **and** whether a preferred USB board is already talking.
+5. **Where Day 1 is headed** — short map: machine tools → product workspace → plate + host tests → board talk over USB (then domain work). Frame Day 1 as **host plate + device talk**, not host-only.
+6. **Next mutating step** in one short sentence (first step after go), with **why** if it is a big step.
+7. **Start gate:** ask whether to start or adjust something. Prefer the agent product's **structured question UI** when available (not a multi-option free-text paragraph).
 
 Example shape:
 
-> Welcome to Silico. I'm here to get your GCU shipped and will step you through it all.
-> Here's what I know now about what you want: …
-> On this machine I already checked: Git OK, Python 3.12 OK, gh logged in; workspace mode=gcu; preferred board not on USB yet (only a demoted adapter).
-> The next step is pin silico, scaffold/merge the plate here, get host tests green, then get the board talking over USB before we write anything.
+> Welcome. **Silico** is the open host-first spine for building shippable edge products: I (the agent) own setup, tests, and deploy on this computer; you own product judgment and confirm physical or irreversible steps.
+>
+> You are building a **GCU** (GCU stands for General Contact Unit — Silico’s term for one shippable edge product: app + board). From your product docs, this GCU is: …
+>
+> I'm here to get it shipped and will step you through it.
+>
+> On this machine I already checked: Git OK, Python 3.12 OK, gh logged in; workspace mode=gcu (we stay in this product checkout); preferred board not on USB yet (only a demoted adapter).
+>
+> **Day 1 map:** (A) machine tools → (B) workspace locked → (C) **plate** (standard project template) via **scaffold**, then **host gate** (automated tests on this computer) green → (D) board talks over USB and a confirmed first deploy. We do not stop at host-only.
+>
+> **Next after go:** install/pin Silico on this host and scaffold/merge the plate here — that gives us the maintainable repo layout and a honest host test path before we touch the board.
+>
 > Do you want me to start? Or should I adjust something?
 
 Only after a clear **go** (or after applying their adjustments and re-confirming) may you begin **mutating** Phase A work (installs, scaffold, repo create, device paths).
 
 **Anti-pattern:** promising to stop after host gate and "check back before we go near the board." Host gate is a checkpoint, not Day 1 done. After go, you drive through Phase D prep (USB talk + REPL) unless the operator explicitly defers metal.
 
+**Anti-pattern:** first message that only lists tooling status with no Silico explanation and no GCU summary.
+
 ### Phase A - Machine prerequisites
+
+When a human must install or approve something, use **Big steps: why + where** (Phase A — machine tools on this host; next is locking the product workspace).
 
 1. Detect OS (Windows / macOS / Linux). Tell them what you detected in one sentence.
 2. Ensure **Git** is installed and on PATH. Install if missing; verify with a version command you run.
@@ -191,6 +330,8 @@ Only after a clear **go** (or after applying their adjustments and re-confirming
 6. Summarize ready vs needs a human click. Stop cleanly if an installer UI requires them.
 
 ### Phase B - Workspace lock (GCU root) and GitHub identity
+
+**Where we are:** Phase B — product workspace (after machine tools). Goal: one clear GCU root; no second invented repo.
 
 **B0 — Lock the product workspace (do this before inventing a repo):**
 
@@ -207,6 +348,8 @@ Only after a clear **go** (or after applying their adjustments and re-confirming
 4. Remind them: silico stays `github.com/tig/silico`; **their product** is the GCU repo.
 
 ### Phase C - Pin silico and scaffold the GCU
+
+**Where we are:** Phase C — pin Silico, **scaffold** the **plate**, green the **host gate**. Next after green: Phase D (board talk), not “done.”
 
 **Do not hand-invent a parallel spine.** Use the package + plate. **Always `silico scaffold .` from the product root** (Phase B0), never from a silico package checkout.
 
@@ -251,14 +394,16 @@ silico scaffold .
 3. Set product identity in `firmware/version.py` and `silico.toml` from **product files** when present (README title, `spec.md` identity lines); plate defaults are generic only.
 4. If `spec.md` exists: host gate proves the **plate + product path** first; domain behavior comes from the **product** spec/AGENTS (not invented in silico). Open host knowledge topics only when the product needs board caps (e.g. `silico/knowledge/esp32-audio.md` for DAC/speaker work).
 5. Run host gate until green: `python -m pytest -q` (or `silico doctor` then pytest / `silico gate` / `silico product-path`).
-6. Commit and push. Confirm CI/Actions is on.
+6. Commit and push (or open **one** PR if the repo uses PRs for CI). Further Day 1 work continues as **more commits on the same branch/PR** — see **One PR by default**. Confirm CI/Actions is on.
 7. **Do not stop here.** Host gate green is a checkpoint. **Immediately continue into Phase D**.
 
 ### Phase D - Talk to real hardware (hello metal)
 
-**Required for Day 1 exit** (not optional polish). Goal: board **talks over USB**, is **prepped** (REPL when that is the runtime), then a **distinct, documented** blink/app; reconnect is **repeatable**.
+**Where we are:** Phase D — hello metal. Host plate and host gate are behind you; Day 1 is not done until the board talks, a confirmed deploy runs, and the **operator can see or hear** the product doing something that matches documented “good.”
 
-Metal COM / first-flash / identity / deploy rules: **[BEDSIDE.md](BEDSIDE.md)** + **[silico/knowledge/first-flash.md](silico/knowledge/first-flash.md)**. Prefer tools: `silico wait-device`, `inspect`, `pull`, `deploy`, `monitor`, and `bedside ask` / `bedside step`.
+**Required for Day 1 exit** (not optional polish). Goal: board **talks over USB**, is **prepped** (REPL when that is the runtime), then a **distinct, documented, operator-observable product face** (what the operator sees or hears when the app runs); reconnect is **repeatable**.
+
+Metal COM / first-flash / identity / deploy rules: **[BEDSIDE.md](BEDSIDE.md)** + **[silico/knowledge/first-flash.md](silico/knowledge/first-flash.md)**. Prefer tools: `silico wait-device`, `inspect`, `pull`, `deploy`, `monitor`, and `bedside ask` / `bedside step`. Every physical or overwrite prompt uses **Big steps: why + where**.
 
 #### Phase D0 - Device talks (prep) before any deploy plan
 
@@ -273,6 +418,44 @@ Until true, device is **not** prepped:
 
 **Anti-pattern:** host gate green + "hardware later" with no wait-device/inspect/REPL proof.
 
+#### Phase D1 - Operator-observable acceptance (not version-string theater)
+
+Deploy verify + `FW_VERSION` match prove the **host wrote this build**. They do **not** alone prove Day 1 metal.
+
+**Metal is honest only when:**
+
+1. There is a documented **product face** — the **“good”** the operator can **see or hear** without serial folklore (product `spec.md` / `install/`: LEDs, boot riff, status pattern, etc.). Define **product face** on first use if not already defined this session.
+2. After soft-reset so the app runs, you **ask the operator** (structured gate or one plain yes/no they answer from the world in front of them) whether that product face is true.
+3. If product docs name a product face (e.g. M5 front-panel / side LEDs, speaker riff) and the plate only toggles a generic/dev-board pin (e.g. XIAO GPIO LED that is not the product face): **that is HW confusion, not Day 1 done.** Resolve it with the operator — map pins from product parts/spec/board knowledge, fix `firmware/` / HAL defaults, host-test, redeploy, re-confirm observe. Filing a GitHub issue is a tracker, not acceptance.
+4. Product face gaps that block observe are **in-scope Day 1 metal work**. Silico exists to help the operator through this. Do not label the session “on the metal” / “Day 1 complete” while an open issue still says the product face is unproven.
+
+##### GPIO / pin / product face ambiguity → **stop and ask** (mandatory)
+
+When you notice (or should notice) that the **pin, LED, speaker, or product face “good”** in firmware does not clearly match the **product board / spec**, you **must not** quietly assume, monologue an “Honesty” paragraph, or only open a GitHub issue. Never call this bare “face.”
+
+**Required path:**
+
+1. **Stop advancing** Phase E/F claims. Stay in Phase D metal acceptance.
+2. **State the mismatch in plain language** (what the code drives vs what the product docs say the product face should look/sound like).
+3. **Ask the operator to clarify** with a **structured chooser** (`bedside ask` or host picker) — or one focused free-text question only if the answer is open (e.g. “which LED on the M5 front panel is the product face status light?”). Put the **recommended** guess first when you have one from parts/spec/knowledge.
+4. Only after their answer: implement the mapping, host-test, redeploy, then **confirm observe** (“Do you see/hear X?”).
+5. Optional: file/update an issue **as a tracker after or while** you are driving the clarify → fix loop — never instead of asking.
+
+Example gate shape (use host picker / `bedside ask`, not a free-text `1/2/3` wall):
+
+```text
+bedside ask --id clarify-product-face \
+  --prompt "Plate hello blinks GPIO16 (often a small module LED). Product docs want M5 front-panel or side lights as the product face. Which should we treat as Day-1 good on this board?" \
+  --choices "m5-front-panel-led,m5-side-led,gpio16-ok-for-now,operator-will-point" \
+  --default m5-front-panel-led
+```
+
+**Anti-pattern:** agent notices wrong GPIO, writes “Honesty: not the M5 product face LED,” files `#5`, and asks “merge PR or start domain?” without ever asking the operator which light/sound is correct. That **strands** the operator and violates Help the operator / scary surfaces.
+
+**Anti-pattern (forbidden claim):** title or summary like “GCU is on the metal” + an “Honesty” section that admits the product face was **not** proven. That is layered lying: call the layer you proved (`deployed` / `REPL ready`) and leave metal-acceptance open.
+
+**Allowed partial claim (honest):** “Board talks on COM7; deploy verified XUSS 0.0.1; product face LED mapping is unclear — I need you to clarify which light is Day-1 good before we call metal done.” Then run the clarify gate **in that same turn**, not later.
+
 **Phase D steps (order only — details in BEDSIDE + knowledge/first-flash):**
 
 1. Data cable (`bedside step --id plug-usb …` if needed) → long `silico wait-device`.
@@ -282,10 +465,11 @@ Until true, device is **not** prepped:
    - ESP32-class: esptool erase + `ESP32_GENERIC` (or board variant) at `0x1000` (see knowledge/first-flash).
    - Re-inspect until talk; then `--apply-mpy-pin` only on non-ancient MP.
 4. Optional backup: `silico pull <dir> --port COMx`.
-5. Dry plan: `silico deploy --port COMx` → confirm-deploy → `silico deploy --port COMx --yes --verify --reset`.
-6. Soft-reset so **main.py runs as the app** (deploy verify uses REPL and parks the loop). If raw REPL fails: product `repl` door or boot window (Ctrl-C may be data).
-7. Optional: `silico monitor --port COMx --duration 10`.
-8. Document `install/` leave-behind (Day-2 one-liner + LED/face “good”).
+5. Dry plan: `silico deploy --port COMx` → confirm-deploy → **announce surprising product face effects** (tones, long audio, bright LEDs, motion — see **Announce surprising metal effects**) → `silico deploy --port COMx --yes --verify --reset`.
+6. Soft-reset so **main.py runs as the app** (deploy verify uses REPL and parks the loop). If the soft-reset itself will start sound/motion, announce that **before** the reset. If raw REPL fails: product `repl` door or boot window (Ctrl-C may be data).
+7. **Operator-observable check:** document the **product face** “good”; confirm with the operator from the bench. If product face ≠ plate generic pin (or mapping is unclear): **clarify with the operator first** (structured ask), then fix, redeploy, re-confirm observe — do not stop at version match or issue-only.
+8. Optional: `silico monitor --port COMx --duration 10`.
+9. Document `install/` leave-behind (Day-2 one-liner + product face “good”: LEDs/audio/etc.).
 
 Non-Python deploy assets (e.g. audio riffs) may appear in `[deploy].core`; host hygiene skips them as copy-only.
 
@@ -293,7 +477,7 @@ Non-Python deploy assets (e.g. audio riffs) may appear in `[deploy].core`; host 
 
 1. Ask the human to open a GitHub Issue on the **GCU** repo (or create with `gh` after approve). Title example: `Change the firmware blink pattern (distinct A vs B)`.
 2. Implement: firmware behavior change **and** host tests/CI green. Domain follows product `spec.md` when present.
-3. Push or PR. Watch CI; fix red builds.
+3. Push commits to the **existing** Day 1 branch/PR (or open the first PR if none yet). Do **not** open a new PR per phase. Watch CI; fix red builds.
 4. Deploy only after operator confirmation again if overwriting; confirm the visible/audible acceptance matches the issue.
 5. Close the issue with a short note linking the commit/PR.
 
@@ -303,17 +487,26 @@ Closed loop: **issue → agent → host gate → CI → metal**.
 
 1. Human points at domain intent (docs, notes, rough brief). You do **not** invent the vertical moat.
 2. Write detailed specs, tests, and `firmware/` under test-first and host-first rules.
-3. Staged plan as **cross-linked, tagged GitHub Issues** for proprietary work.
+3. Staged plan as **cross-linked, tagged GitHub Issues** for proprietary work — **issues stage work, not a PR per issue** unless the operator asked for multi-PR staging.
 4. Host gate green locally before claiming done. Flash only confirms.
-5. Push; CI matches local. Change requests arrive as GitHub Issues. Implement them without requiring the human to know git branches unless they want to.
+5. Push more commits to the same branch/PR; CI matches local. Change requests arrive as GitHub Issues. Implement them without requiring the human to know git branches unless they want to.
 
-#### Spec gaps (late step only)
+#### Spec gaps
 
 While coding, you will find product `spec.md` items that are lacking, confusing, or wrong.
 
-1. **Do not block the current slice** on rewriting the spec. Prefer configurable defaults, explicit assumptions in code/issue comments, and host tests.
+**Split by whether the gap blocks operator-observable metal:**
+
+| Gap type | Rule |
+|----------|------|
+| **Blocks see/hear acceptance** (which LED is the product face, pin map for this board, boot riff, “what good looks like”) | **In-scope now.** **Ask the operator to clarify** (structured gate) as soon as you notice the mismatch — do not only monologue or file an issue. Then parts.toml / knowledge / board docs / implement + confirm. Spec rewrite can still wait, but **bench truth cannot**. |
+| **Domain polish / later product depth** (full protocol, vehicle appendix, extra modes) | Do not block the current host-green slice. Note the gap; **late step** offer a proposed `spec.md` edit after host gate is green or at a phase boundary. |
+
+For non-blocking gaps:
+
+1. Prefer configurable defaults, explicit assumptions in code/issue comments, and host tests.
 2. Quietly note gaps (issue comment or checklist).
-3. **Late step** — after the current issue's host gate is green, or at a phase boundary — prompt the operator: what was wrong/missing, a proposed edit, and ask whether to update the spec **now**.
+3. **Late step** — prompt the operator: what was wrong/missing, a proposed edit, and ask (structured chooser) whether to update the spec **now**.
 4. Edit the product spec only after a clear **yes**.
 
 ### Day 1 exit criteria (before Day 2)
@@ -321,14 +514,15 @@ While coding, you will find product `spec.md` items that are lacking, confusing,
 Metal bar detail: [BEDSIDE.md](BEDSIDE.md). Spine/DoD: layered table below.
 
 - [ ] **Device talks over USB** (`silico inspect` / REPL) and was **prepped** (runtime once if needed).
-- [ ] Device works end-to-end on the bench (hello-metal or app after confirmed deploy).
+- [ ] **Operator-observable metal:** after confirmed deploy + app running, the operator can **see or hear** the documented **product face** for **this** product (not only a plate pin that is not the product face). Agent worked through HW confusion; did not stop at version match + issue filed.
 - [ ] Host gate green locally and on GitHub.
 - [ ] Device `FW_VERSION` matches host.
-- [ ] One documented update path (BEDSIDE Day-2 leave-behind).
+- [ ] One documented update path (BEDSIDE Day-2 leave-behind) that states what good looks/sounds like.
 - [ ] Silico pinned as host dependency.
 - [ ] Operator helped through first flash/serial without assumed ops expertise.
+- [ ] Any “what next?” phase fork used a **structured chooser**, not a free-text numbered menu.
 
-**Not exit criteria:** host gate alone, scaffold alone, or deferred metal with no poll/inspect.
+**Not exit criteria:** host gate alone; scaffold alone; deploy verify / version match alone; deferred metal with no poll/inspect; “honesty” note that the product face is unproven while the title says on-the-metal; issue filed instead of resolving observe.
 
 **Day 2:** same update path; unit to potential customer or field trial.
 
@@ -341,7 +535,8 @@ Host-first is **not** host-only. Claims must name the layer they prove:
 | **Host** | Domain logic / sim / plate | Named host gate green (default: `pytest -q`). CI green if remote exists. |
 | **Metal I/O** | Sensing or actuation on pins | Inject/measure on **named** pins (or harness signature), not only LED blink or version import. |
 | **Vehicle / field** | Product acceptance on real plant | Product Appendix / field procedure; not bench buzz alone. |
-| **Deployed** | Board runs this build | Device `FW_VERSION` matches host; optional harness OK. |
+| **Deployed** | Board runs this build | Device `FW_VERSION` matches host after confirmed write; optional harness OK. **Not** the same as product metal acceptance. |
+| **Metal accepted (Day 1)** | Product on the bench | Operator **sees or hears** documented **product face** for this GCU; pin / product face confusion resolved or explicitly deferred as **not Day 1 complete**. |
 | **Issue fixed** | Ticket closed | Proof matching the issue's **stated layer**. CI green alone is not enough for a metal/vehicle claim. |
 
 ### HAL seam (Silico-owned pattern)
@@ -374,7 +569,13 @@ Default plate stays MicroPython. Arduino is not this path (see issue #59). First
   1. land metal code that proves the pin path, or
   2. leave a **blocking metal follow-up** open (title/status makes metal-TODO obvious) and do not narrate the product as metal-ready.
 - Do **not** mark vehicle/Appendix acceptance done without the vehicle procedure (or explicit defer with open tracker).
-- Prefer issue titles like `host-done / metal-TODO` when splitting layers is honest.
+- Do **not** mark Day 1 / “on the metal” done when the operator cannot see or hear the **product face**, even if deploy verify and version match passed. Filing “product face LED wrong pin” and moving to Phase F is a forbidden close.
+- Do **not** notice GPIO / product face mismatch and skip asking the operator to clarify (honesty note or issue alone is not a clarify gate).
+- Do **not** invent short forms of lexicon terms (e.g. bare “face” for **product face**) in operator-facing prose.
+- Do **not** present phase forks as free-text `1. / 2. / 3.` menus in chat when a structured chooser exists (or `bedside ask` is available).
+- Do **not** open a fan-out of PRs for sequential Day 1 / same-session work unless the operator asked to stage multi-PR. One PR + individual commits is the default.
+- Do **not** deploy, soft-reset, or otherwise drive metal that may play loud/long audio, flash bright patterns, or move actuators without a clear operator-facing forewarning of what will happen and for how long.
+- Prefer issue titles like `host-done / metal-TODO` when splitting layers is honest — and **never** put “on the metal” in the same message as metal-TODO.
 
 Never treat "I flashed something" or "pytest green" as metal/vehicle done.
 
@@ -434,11 +635,13 @@ Starter products are confidential. In public silico docs and commits use **Zakal
 4. Do not dump unexplained command walls; do not say "run this" when you could run it.
 5. Do not skip host gate or CI because metal "looked fine."
 6. Do not use blind serial auto-connect on multi-device hosts.
-7. Do not deploy host `sim/` or silico package modules to the board.
-8. Do not claim external adoption or platform status without scoreboard evidence.
-9. Do not rewrite PR titles, Grady quotes, or Tig quotes unless the human asks.
-10. Do not start Arduino / multi-runtime work unless a GCU forces it (v2).
-11. Do not burn an hour recovering from silico friction and leave no issue or doc fix for the next agent.
+7. Do not open many PRs for one Day 1 arc unless the operator asked to stage multi-PR (one PR, many commits).
+8. Do not surprise the operator with metal effects (loud/long tones, motion, sudden reboot loops) without clearly announcing what will happen first.
+9. Do not deploy host `sim/` or silico package modules to the board.
+10. Do not claim external adoption or platform status without scoreboard evidence.
+11. Do not rewrite PR titles, Grady quotes, or Tig quotes unless the human asks.
+12. Do not start Arduino / multi-runtime work unless a GCU forces it (v2).
+13. Do not burn an hour recovering from silico friction and leave no issue or doc fix for the next agent.
 
 ## Commands (host)
 

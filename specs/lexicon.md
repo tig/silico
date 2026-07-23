@@ -1,6 +1,6 @@
 # Silico lexicon
 
-Short definitions for phrases that carry load in Silico docs. Prefer this file when an agent or human is stuck on jargon. For rules of behavior, see [tenets.md](./tenets.md). For the build target, see [silicov1.md](./silicov1.md). For the Fall 2026 ambition, see [wb-2026-fall-three-gcus.md](./wb-2026-fall-three-gcus.md).
+Short definitions for phrases that carry load in Silico docs. Prefer this file when an agent or human is stuck on jargon. For rules of behavior, see [tenets.md](./tenets.md). For the build target, see [silicov1.md](./silicov1.md). For the Fall 2026 ambition, see [prfaq.md](./prfaq.md).
 
 Jump: [Core](#core-product-words) · [Done & gates](#done-gates-and-honesty) · [Agents](#prompt-agents-operators) · [Dependency & architecture](#dependency-and-architecture)
 

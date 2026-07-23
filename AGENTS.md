@@ -2,7 +2,7 @@
 
 Canonical guidance for AI coding agents (Claude Code, Grok Build, Copilot, Codex, and kin) working in **silico** or scaffolding a **GCU** that depends on it.
 
-Human overview: [README.md](README.md). Tenets: [specs/tenets.md](specs/tenets.md). Phrase book: [specs/lexicon.md](specs/lexicon.md). first-ship narrative: [specs/wb-2026-fall-three-gcus.md](specs/wb-2026-fall-three-gcus.md) FAQ 4. Build target: [specs/silicov1.md](specs/silicov1.md).
+Human overview: [README.md](README.md). Tenets: [specs/tenets.md](specs/tenets.md). Phrase book: [specs/lexicon.md](specs/lexicon.md). first-ship narrative: [specs/prfaq.md](specs/prfaq.md) FAQ 5. Build target: [specs/silicov1.md](specs/silicov1.md).
 
 
 ## Agent context load path (read once)
@@ -735,7 +735,7 @@ Check: `silico product-path` (also run from plate tests). Anti-pattern: "14 host
 | `third_party/bedside/` | Vendored Bedside (contract, surface, eval, CLI); not a submodule |
 | `bedside.toml` / `BEDSIDE.md` | Bedside pin + silico domain notes |
 | `specs/tenets.md` | Tenets |
-| `specs/wb-2026-fall-three-gcus.md` | v1 Working Backwards (PR + FAQ) |
+| `specs/prfaq.md` | v1 Working Backwards (PR + FAQ) |
 | `specs/silicov1.md` | v1 build spec |
 | `specs/gcu-codenames.md` | Public GCU codenames only |
 | `specs/lexicon.md` | Phrase book |

@@ -2,14 +2,14 @@
 
 **Status:** Draft spec for build.
 **Steward:** Tig Kindel (github.com/tig/silico). Not a company product line.
-**Scope:** The spine required by three starter GCUs, with supported MCU/runtime paths as of dual-runtime (#53): RP2040 + MicroPython (default plate), ESP32-class + MicroPython, ESP32-class + C/ESP-IDF (`gcu-c` plate). See [v1 WB FAQ 3](./wb-2026-fall-three-gcus.md) and root README.
-**Non-scope:** Industry default. Category marketing. Cloud fleet. Built-in phone-home for all GCUs. Arduino-class plates as a silico deliverable ([issue #59](https://github.com/tig/silico/issues/59)). PlatformIO or Pico SDK as silico dual-runtime peers. Company branding of the spine. Full v2 narrative (longer-term vision lives in [wb-2026-fall-three-gcus.md](./wb-2026-fall-three-gcus.md) FAQ 38).
+**Scope:** The spine required by three starter GCUs, with supported MCU/runtime paths as of dual-runtime (#53): RP2040 + MicroPython (default plate), ESP32-class + MicroPython, ESP32-class + C/ESP-IDF (`gcu-c` plate). See [v1 WB FAQ 3](./prfaq.md) and root README.
+**Non-scope:** Industry default. Category marketing. Cloud fleet. Built-in phone-home for all GCUs. Arduino-class plates as a silico deliverable ([issue #59](https://github.com/tig/silico/issues/59)). PlatformIO or Pico SDK as silico dual-runtime peers. Company branding of the spine. Full v2 narrative (longer-term vision lives in [prfaq.md](./prfaq.md) FAQ 38).
 
-Related: [tenets.md](./tenets.md) (including **Default is a product choice, not a quality ranking**), [lexicon.md](./lexicon.md), [gcu-codenames.md](./gcu-codenames.md), [wb-2026-fall-three-gcus.md](./wb-2026-fall-three-gcus.md).
+Related: [tenets.md](./tenets.md) (including **Default is a product choice, not a quality ranking**), [lexicon.md](./lexicon.md), [gcu-codenames.md](./gcu-codenames.md), [prfaq.md](./prfaq.md).
 
 ## 0. Why this exists
 
-We work backwards from the Grady experience ([v1 WB](./wb-2026-fall-three-gcus.md)):
+We work backwards from the Grady experience ([v1 WB](./prfaq.md)):
 
 > With just Claude Code on my Mac and my hardware spec, I had the device working end-to-end in a few hours, and in a field test the day after that. Silico is now a foundational piece of our company's technology.
 
@@ -107,7 +107,7 @@ Public repo contains:
 4. **One thin public example GCU** (not Zakalwe domain) green in CI.
 5. **CI** for the spine itself.
 
-Private GCU repos pin silico as a **host** dependency and follow the plate. Device `firmware/` never imports silico. Full first ship checklist (Grady or anyone discovering this repo): [v1 WB FAQ 4](./wb-2026-fall-three-gcus.md).
+Private GCU repos pin silico as a **host** dependency and follow the plate. Device `firmware/` never imports silico. Full first ship checklist (Grady or anyone discovering this repo): [v1 PRFAQ FAQ 5](./prfaq.md).
 
 ```text
 # GCU depends on silico (host / CI only)

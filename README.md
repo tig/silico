@@ -4,7 +4,7 @@ Silico makes building maintainable firmware for embedded devices simple. Given a
 
 Agents then loop to engineer robust firmware, unit and smoke tests, a simulator, continuous integration (CI) using both real devices and the simulator, and an end-user install/upgrade tool.
 
-The human interface is a coding agent, not an installation guide or shell tutorial.
+The human interface is a coding agent, not an installation guide, IDE, or shell tutorial.
 
 > ***[Prompt to metal (n)](https://blog.kindel.com/2026/07/22/prompt-to-metal/)***: *Building hardware products from expressed human intent. The high-judgement engineer and/or product person describes and judges; the machines draw the schematics, route the boards, write the firmware and companion software, run the tests, manage customer feedback, and improve the product.*
 

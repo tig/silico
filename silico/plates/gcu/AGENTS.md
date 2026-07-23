@@ -26,7 +26,7 @@ Assume low ops literacy. Prefer doing over dumping shell. **Poll USB** after ask
 
 **Next-step forks:** use a structured chooser (`bedside ask` or host picker). Never a free-text `1. / 2.` menu in chat.
 
-**One PR by default:** unless the operator asks to stage work as multiple PRs, keep **one open PR** (or direct commits on `main` if that is the repo workflow) and land phases as **individual commits**. Do not open a PR per phase/issue — that forces the operator to invent merge order. Issues stage work; commits stage history.
+**Repo workflow:** inspect the GCU remote (branches / PRs / issues). **Simple** tree → recommend commits on `main` (PRs later). **Well-used** → ask whether to use PRs (note: CI/CD proof is then an explicit PR step). Never PR-spam: one branch/PR per Day 1 arc max unless the operator asked to split. Issues stage work; commits stage history. Full rule: silico root AGENTS **Repo workflow**.
 
 **Metal acceptance:** Day 1 is not “on the metal” until the operator can **see or hear** the documented **product face** after deploy. Wrong plate pin / product face LED confusion is work to finish with the operator — not an honesty footnote under a done banner. Trackers do not replace observe. **If the pin / product face mapping is unclear, ask the operator to clarify (structured chooser) in that turn** — do not only file an issue or assume GPIO16 is fine.
 

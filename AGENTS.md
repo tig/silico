@@ -197,20 +197,38 @@ Non-interactive / CI: `--answer` on `ask`, `--confirm` / `--decline` / `--no-wai
 
 That is a multi-choice wall. Use `bedside ask` or the host **structured chooser** (recommended option first). One open free-text question is fine only when the answer is open domain judgment the picker cannot capture — not for “pick next phase fork.”
 
-#### One PR by default (do not PR-spam the operator)
+#### Repo workflow: inspect, then choose main vs PRs
 
-Opening many pull requests as Day 1 proceeds **adds mental burden the operator does not need**: merge order, base-branch graphs, overlapping titles, and “which one is real?” confusion. That is a bedside manners failure (Help the operator / never leave them at a cliff of process).
+Before the first push of Day 1 (or when locking the product workspace), **inspect the GCU remote** — do not assume a PR workflow.
 
-**Default (unless the operator explicitly asks to stage work as multiple PRs):**
+**Lightweight signals** (use `gh`; a few checks, not a research project):
 
-1. Prefer **one open PR** per product session / Day 1 arc (or keep working on `main` with direct pushes if that is already the repo’s workflow and the operator is fine with it).
-2. Land progress as **individual, reviewable commits** on that single branch/PR (scaffold → host gate → metal face → domain slice, etc.). Commit history is the staging; the PR list is not.
-3. Update the same PR as work continues (push more commits). Do **not** open a second PR for the next phase of the same Day 1.
-4. Issues remain fine for tracking intent; **issues ≠ a PR each**.
+| Signal | How (examples) |
+|--------|----------------|
+| Branches | `gh api repos/{owner}/{repo}/branches --jq 'length'` (or list names) |
+| Open / recent PRs | `gh pr list --limit 5`; `gh pr list --state all --limit 10` |
+| Issues | `gh issue list --limit 5`; issue count / activity |
+| Default branch protection / required checks | only if already visible; do not dig for policy theater |
 
-**Only open multiple PRs when** the operator clearly asks to stage, split review, or stack work (e.g. “separate PRs per issue,” Graphite stack, etc.). Then say in plain language how they relate and merge order — do not invent a multi-PR plan unprompted.
+**Simple repo** (typical early GCU / Day 1 practice tree): few or no extra branches, little or no PR history, thin issue tracker.
 
-**Anti-pattern:** five open PRs titled variations of “Day 1 scaffold,” “L0 product face,” “L0 domain,” “L1 spine” with no operator request to split. Operator should never have to ask “which order do I merge these?”
+1. **Recommend committing and pushing straight to `main`** (or the default branch).
+2. Say in plain language: PRs can wait until the product is more active; direct-to-main keeps CI on every push without merge-queue overhead.
+3. Use a **structured chooser** if they might prefer PRs anyway; recommended option first: **commit to main**.
+4. Land Day 1 as **individual, reviewable commits** on that branch. Issues stage intent; **issues ≠ a PR each**.
+
+**Well-used repo** (active branches, open or recent PRs, non-trivial issue history, or operator already works via PR):
+
+1. **Do not silently force direct-to-main.**
+2. **Verify with the operator** (structured chooser) whether changes should go through **PRs** or **direct commits to the default branch**.
+3. **If they choose PRs, say explicitly:** CI/CD proof becomes an **extra step** — open/update the PR, wait for Actions (or equivalent) green, then merge. Host gate green locally is not the same as merge-path green until that loop runs.
+4. Prefer **one open PR** per product session / Day 1 arc — not a PR per phase. Land progress as commits on that single PR. Do **not** open a second PR for the next phase of the same Day 1 unless they asked to stage multi-PR.
+
+**Only open multiple PRs when** the operator clearly asks to stage, split review, or stack work (e.g. “separate PRs per issue,” Graphite stack). Then say how they relate and merge order — do not invent a multi-PR plan unprompted.
+
+**Anti-pattern:** invent a PR workflow on a quiet repo that only needed `main` commits.  
+**Anti-pattern:** five open PRs titled variations of “Day 1 scaffold,” “L0 product face,” … with no operator request to split.  
+**Anti-pattern:** choose PRs and never watch CI — that skips the reason PRs exist for that team.
 
 #### Announce surprising metal effects (before they happen)
 
@@ -347,6 +365,7 @@ When a human must install or approve something, use **Big steps: why + where** (
 2. If cwd is already a git GCU with `origin`, use it.
 3. If create new: confirm a product or codename (**not** `silico`); `gh` create private; clone **or** init in the empty cwd.
 4. Remind them: silico stays `github.com/tig/silico`; **their product** is the GCU repo.
+5. Once the GCU remote is known: **inspect repo workflow** (branches / PRs / issues) and apply **Repo workflow: inspect, then choose main vs PRs** before the first push.
 
 ### Phase C - Local silico checkout, pin, and scaffold the GCU
 
@@ -425,7 +444,7 @@ silico scaffold .
 4. Set product identity in `firmware/version.py` and `silico.toml` from **product files** when present (README title, `spec.md` identity lines) **only after** identity-relevant contradictions are resolved, **or** the operator chose interactive path and named an **explicit** identity assumption. Until then leave plate defaults; do not persist a guessed name/version from an unresolved contract.
 5. If the contract (post-interview / settled assumptions) is good enough for the current slice: host gate proves the **plate + product path** first; domain behavior comes from the **product** spec/AGENTS (not invented in silico). Open host knowledge topics only when the product needs board caps (e.g. `silico/knowledge/esp32-audio.md` for DAC/speaker work).
 6. Run host gate until green: `python -m pytest -q` (or `silico doctor` then pytest / `silico gate` / `silico product-path`).
-7. Commit and push (or open **one** PR if the repo uses PRs for CI). Further Day 1 work continues as **more commits on the same branch/PR** — see **One PR by default**. Confirm CI/Actions is on.
+7. Commit and push using the **repo workflow** you already inspected (see **Repo workflow: inspect, then choose main vs PRs**): simple repos → recommend **main**; well-used → confirm PRs vs main with the operator. Further Day 1 work continues as **more commits on that same branch/PR**. Confirm CI/Actions is on; if on a PR path, **watch CI green** before treating remote as proven.
 8. **Do not stop here.** Host gate green is a checkpoint. **Immediately continue into Phase D**.
 
 ### Spec interview mode (under-specified or contradictory `spec.md`)
@@ -644,7 +663,7 @@ Default plate stays MicroPython. Arduino is not this path (see issue #59). First
 - Do **not** notice GPIO / product face mismatch and skip asking the operator to clarify (honesty note or issue alone is not a clarify gate).
 - Do **not** invent short forms of lexicon terms (e.g. bare “face” for **product face**) in operator-facing prose.
 - Do **not** present phase forks as free-text `1. / 2. / 3.` menus in chat when a structured chooser exists (or `bedside ask` is available).
-- Do **not** open a fan-out of PRs for sequential Day 1 / same-session work unless the operator asked to stage multi-PR. One PR + individual commits is the default.
+- Do **not** invent a PR workflow on a quiet/simple GCU without asking — recommend **main** first (see **Repo workflow**). Do **not** open a fan-out of PRs for sequential Day 1 / same-session work unless the operator asked to stage multi-PR.
 - Do **not** deploy, soft-reset, or otherwise drive metal that may play loud/long audio, flash bright patterns, or move actuators without a clear operator-facing forewarning of what will happen and for how long.
 - Do **not** claim metal serial OK from identity/telem TX alone, or enable `kbd_intr(-1)` before round-trip + working `repl` re-entry (see serial readiness ladder; #62).
 - Do **not** thrash full-erase/redeploy when the console is locked; recover once, park stock MP, stop.
@@ -708,7 +727,7 @@ Starter products are confidential. In public silico docs and commits use **Zakal
 4. Do not dump unexplained command walls; do not say "run this" when you could run it.
 5. Do not skip host gate or CI because metal "looked fine."
 6. Do not use blind serial auto-connect on multi-device hosts.
-7. Do not open many PRs for one Day 1 arc unless the operator asked to stage multi-PR (one PR, many commits).
+7. Do not invent a PR workflow on a simple/quiet GCU without asking (recommend main first); do not open many PRs for one Day 1 arc unless the operator asked to stage multi-PR.
 8. Do not surprise the operator with metal effects (loud/long tones, motion, sudden reboot loops) without clearly announcing what will happen first.
 9. Do not deploy host `sim/` or silico package modules to the board.
 10. Do not claim external adoption or platform status without scoreboard evidence.

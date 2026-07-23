@@ -45,6 +45,9 @@ silico gate
 silico product-path
 ```
 
+Plate ships `.github/workflows/ci.yml` that runs the same cmake host gate on
+`push` / `pull_request` (no silico sibling checkout required for C host tests).
+
 ## Metal
 
 ```text

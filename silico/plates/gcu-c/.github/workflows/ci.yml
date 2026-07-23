@@ -1,0 +1,19 @@
+name: ci
+
+on:
+  push:
+    branches: [main, master, develop]
+  pull_request:
+
+# C / ESP-IDF plate host gate is pure CMake+CTest (no Python / silico sibling on the runner).
+# Matches silico.toml [host].gate and plate AGENTS: cmake -S host -B build/host && cmake --build … host_test
+jobs:
+  host-gate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout GCU
+        uses: actions/checkout@v4
+      - name: Configure host tests
+        run: cmake -S host -B build/host
+      - name: Host gate
+        run: cmake --build build/host --target host_test

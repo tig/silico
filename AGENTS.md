@@ -736,7 +736,6 @@ Check: `silico product-path` (also run from plate tests). Anti-pattern: "14 host
 | `bedside.toml` / `BEDSIDE.md` | Bedside pin + silico domain notes |
 | `specs/tenets.md` | Tenets |
 | `specs/wb-2026-fall-three-gcus.md` | v1 Working Backwards (PR + FAQ) |
-| `specs/wb-2027-defacto-edge-spine.md` | Short 2027 aspiration |
 | `specs/silicov1.md` | v1 build spec |
 | `specs/gcu-codenames.md` | Public GCU codenames only |
 | `specs/lexicon.md` | Phrase book |

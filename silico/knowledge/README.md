@@ -10,6 +10,7 @@ Product domain (idle control, drone songs, vehicle acceptance) stays in the **GC
 |------|------|
 | ESP32 / DAC / speaker / PWM tone / sample playback | [esp32-audio.md](esp32-audio.md) |
 | SPI IPS color / INVON / partial paint | [esp32-lcd-ips.md](esp32-lcd-ips.md) |
+| M5GO / Core face pins, buttons, MPU6886 temp | [m5-core.md](m5-core.md) |
 | Large binary assets (PCM, images) deploy verify | [deploy-assets.md](deploy-assets.md) |
 | M5GO / Core v2.7 power button | [m5go-power.md](m5go-power.md) |
 | first-ship product-face pin packs / board profiles | [board-profiles.md](board-profiles.md) |

@@ -126,6 +126,19 @@ def resolve_profile_id(root: Path | None = None) -> str | None:
     return None
 
 
+def _format_face_section(name: str, section: object, *, indent: str = "  ") -> list[str]:
+    """Pretty-print a nested product_face subsection (display / buttons / i2c)."""
+    if not isinstance(section, dict) or not section:
+        return []
+    lines = [f"{indent}{name}:"]
+    for k, v in section.items():
+        if isinstance(v, dict):
+            lines.extend(_format_face_section(str(k), v, indent=indent + "  "))
+        else:
+            lines.append(f"{indent}  {k}: {v}")
+    return lines
+
+
 def show_profile_lines(profile: BoardProfile) -> list[str]:
     lines = [
         f"Board profile: {profile.id} — {profile.name}",
@@ -147,6 +160,10 @@ def show_profile_lines(profile: BoardProfile) -> list[str]:
         lines.append(
             f"  SPEAKER_PIN candidate: {face['speaker_pin']} ({role})"
         )
+    # Nested face packs (display / buttons / i2c) — field report #79
+    for key in ("display", "buttons", "i2c", "imu"):
+        if key in face and isinstance(face[key], dict):
+            lines.extend(_format_face_section(key, face[key]))
     if profile.defaults_candidates:
         lines.append("  defaults.py candidates (seed with board-profile seed):")
         for k, v in profile.defaults_candidates.items():

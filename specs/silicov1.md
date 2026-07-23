@@ -3,7 +3,7 @@
 **Status:** Draft spec for build.
 **Steward:** Tig Kindel (github.com/tig/silico). Not a company product line.
 **Scope:** The spine required by three starter GCUs, with supported MCU/runtime paths as of dual-runtime (#53): RP2040 + MicroPython (default plate), ESP32-class + MicroPython, ESP32-class + C/ESP-IDF (`gcu-c` plate). See [v1 WB FAQ 3](./wb-2026-fall-three-gcus.md) and root README.
-**Non-scope:** Industry default. Category marketing. Cloud fleet. Built-in phone-home for all GCUs. Arduino-class plates as a silico deliverable ([issue #59](https://github.com/tig/silico/issues/59)). PlatformIO or Pico SDK as silico dual-runtime peers. Company branding of the spine. Full v2 narrative (longer-term vision lives in [wb-2026-fall-three-gcus.md](./wb-2026-fall-three-gcus.md) FAQ 37).
+**Non-scope:** Industry default. Category marketing. Cloud fleet. Built-in phone-home for all GCUs. Arduino-class plates as a silico deliverable ([issue #59](https://github.com/tig/silico/issues/59)). PlatformIO or Pico SDK as silico dual-runtime peers. Company branding of the spine. Full v2 narrative (longer-term vision lives in [wb-2026-fall-three-gcus.md](./wb-2026-fall-three-gcus.md) FAQ 38).
 
 Related: [tenets.md](./tenets.md) (including **Default is a product choice, not a quality ranking**), [lexicon.md](./lexicon.md), [gcu-codenames.md](./gcu-codenames.md), [wb-2026-fall-three-gcus.md](./wb-2026-fall-three-gcus.md).
 
@@ -216,7 +216,7 @@ This is the minimum **Prompt to metal** / **Host first** bar. Soften it and a no
 
 1. **Required:** scriptable path from a product checkout.
 2. **Target:** release zip per GCU (no git required).
-3. **Not required for first ship–2:** MSI/GUI installer, OTA, full signing PKI, fleet CD with automatic rollback (FAQ 37).
+3. **Not required for first ship–2:** MSI/GUI installer, OTA, full signing PKI, fleet CD with automatic rollback (FAQ 38).
 4. **Not required for update path alpha:** update integrity protection beyond version identity — see month-later beta horizon and integrity spike.
 5. **Open (spike):** what "protecting integrity" means for beta units (hash manifest, signing, provenance, CRA hooks, …).
 
@@ -287,7 +287,7 @@ Machine-readable config declares at least:
 8. Requiring human hand-authorship of firmware as the blessed path.
 9. Pico SDK C or `language = cpp` as additional silico language peers (C++ may appear in ESP-IDF board TUs).
 
-### 14.1 Later (not v1; see also v1 WB FAQ 37)
+### 14.1 Later (not v1; see also v1 WB FAQ 38)
 
 1. Phone-home through silico when a second GCU needs Quilan's app loop; USB remains always available.
 2. Further multi-target plates when a GCU forces them (Arduino-class, Pico SDK C, …). ESP32 MicroPython and ESP-IDF C are already on the spine.

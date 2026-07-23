@@ -28,6 +28,52 @@ def test_scaffold_gcu_c(tmp_path: Path):
     assert any("gcu-c" in x or "Plate: gcu-c" in x for x in lines)
 
 
+def test_gcu_c_host_gate_target_is_not_reserved_test_name():
+    """#72: CMake reserves target name ``test`` when CTest is enabled.
+
+    Plate must use ``host_test`` and ``[host].gate`` must match. A bare
+    ``add_custom_target(test …)`` fails ``cmake -S host -B build/host`` on
+    Windows (and anywhere enable_testing() is on).
+    """
+    root = plate_root("gcu-c")
+    cmake = (root / "host" / "CMakeLists.txt").read_text(encoding="utf-8")
+    toml = (root / "silico.toml").read_text(encoding="utf-8")
+    assert "add_custom_target(host_test" in cmake
+    assert "add_custom_target(test\n" not in cmake
+    assert "add_custom_target(test " not in cmake
+    assert "--target host_test" in toml
+    assert "--target test\"" not in toml
+    assert "--target test'" not in toml
+
+
+def test_scaffold_gcu_c_cmake_configure_accepts_host_test(tmp_path: Path):
+    """Regression for #72: configure the plate host tree (cmake -S/-B).
+
+    Skips when cmake is not on PATH (CI images without a C toolchain).
+    """
+    import shutil
+    import subprocess
+
+    if shutil.which("cmake") is None:
+        import pytest
+
+        pytest.skip("cmake not on PATH")
+
+    dest = tmp_path / "gcu-c-cmake"
+    scaffold(dest, plate="gcu-c")
+    build = dest / "build" / "host"
+    proc = subprocess.run(
+        ["cmake", "-S", str(dest / "host"), "-B", str(build)],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    out = (proc.stdout or "") + (proc.stderr or "")
+    assert proc.returncode == 0, out
+    assert "target name \"test\" is reserved" not in out
+    assert "target name 'test' is reserved" not in out
+
+
 def test_scaffold_into_empty(tmp_path: Path):
     dest = tmp_path / "gcu"
     lines = scaffold(dest)

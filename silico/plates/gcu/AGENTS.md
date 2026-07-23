@@ -2,15 +2,28 @@
 
 Guidance for AI coding agents in **this product repo**.
 
+## FIRST ACTION (first ship / getting started) — do this before any status dump
+
+When the human says *follow silico getting started* (or first ship / Day 1):
+
+**Do not** open with tooling narration, COM folklore, PR strategy, or a start-gate chooser.
+
+```text
+bedside doctor          # if fail: fix bedside.toml paths / pip install -e ../silico/third_party/bedside — do not invent a parallel manners path
+silico welcome          # orientation source (read-only)
+```
+
+1. **0a:** Paste/adapt `silico welcome` output as your **first** operator-facing chat message (minimal adapt only). That skeleton is the orientation — do not hand-build a multi-section status report instead.
+2. **0b:** Only after 0a is in chat, open the start gate: `bedside ask --id start-first-ship --prompt "Start first ship on this machine?" --choices yes,adjust --default yes` **or** the host structured picker under the **same contract** (short prompt, recommended first, decline = halt). Prefer the CLI when it can reach the operator; when stdin is unreachable in the agent harness, the host picker is the **sanctioned** shell — say once that you are using it.
+3. **Decline / exit 10:** halt writes; one short reply; re-gate or stop. Do not commit/push/scaffold past a no.
+
+Full playbook (stages A–F, metal rules): https://github.com/tig/silico `AGENTS.md`. This file does not soft-fork it.
+
 ## Spine
 
 Host path comes from **silico** (https://github.com/tig/silico). Pin as host-only. Device `firmware/` never imports silico.
 
-Start: *See https://github.com/tig/silico. Follow the getting started instructions for agents.*
-
-That playbook begins with **Stage 0** **before** any tooling. The first message must **orient** the operator: what Silico is, what a **GCU** is, and a short summary of **this** product from `README.md` / `spec.md` / this file. Then recap machine readiness, name the first-ship map (tools → workspace → plate + host tests → board talk), name the next mutating step, and get a clear go.
-
-Operator manners follow **Bedside** (pinned in silico; see silico `BEDSIDE.md` / vendored contract). Silico-specific operator language (define jargon on first use; big steps need why + where-we-are) lives in silico root `AGENTS.md` → **Operator language**.
+Operator manners follow **Bedside** (`bedside.toml` in this repo points at the sibling silico vendor paths). Metal notes: `BEDSIDE.md` here + silico `BEDSIDE.md` / knowledge. Silico-specific operator language (define jargon on first use; big steps need why + where-we-are) lives in silico root `AGENTS.md` → **Operator language**.
 
 first ship is **host gate + device USB talk/prep**, not host-only. After scaffold and green pytest, continue into `wait-device` / `inspect` / REPL (or UF2) unless the operator explicitly defers metal.
 

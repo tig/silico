@@ -43,6 +43,35 @@ def run_doctor(*, root: Path | None = None) -> DoctorReport:
         lines.append(
             "INFO: this tree looks like a GCU product root — scaffold/merge plate here (silico scaffold .)."
         )
+        bedside_toml = (ws.root / "bedside.toml") if ws.root else (Path.cwd() / "bedside.toml")
+        if not bedside_toml.is_file():
+            lines.append(
+                "WARN: bedside.toml missing in GCU root — manners pin absent; "
+                "scaffold plate (ships bedside.toml) or copy from silico plates; "
+                "do not invent a parallel operator path."
+            )
+        else:
+            try:
+                import tomllib
+
+                data = tomllib.loads(bedside_toml.read_text(encoding="utf-8"))
+                cpath = data.get("contract_path", "")
+                resolved = (ws.root / cpath).resolve() if cpath and ws.root else None
+                if resolved is not None and not (
+                    resolved.is_dir() and (resolved / "README.md").is_file()
+                ):
+                    lines.append(
+                        f"WARN: bedside contract not found at {cpath} "
+                        f"(resolved {resolved}) — clone silico as sibling or fix paths; "
+                        "then `bedside doctor`. Do not skip ask/step."
+                    )
+                else:
+                    lines.append(
+                        f"OK: bedside.toml present (pin={data.get('pin', '?')}; "
+                        "run `bedside doctor` before gates)."
+                    )
+            except Exception as e:
+                lines.append(f"WARN: bedside.toml unreadable ({e})")
     else:
         lines.append(
             "INFO: workspace unknown — if the operator started you inside a product checkout, "

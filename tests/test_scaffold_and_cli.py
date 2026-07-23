@@ -118,6 +118,37 @@ def test_scaffold_gcu_c_cmake_configure_accepts_host_test(tmp_path: Path):
         pytest.skip(f"cmake configure failed (non-#72): {snippet}")
 
 
+def test_plates_ship_bedside_pin_and_stage0_front_matter():
+    """GCU roots must get a bedside pin + Stage 0 tool sequence agents see first.
+
+    Harness failures: missing bedside.toml -> invent parallel path;
+    plate AGENTS only soft-pointed at silico essay -> tooling dump before welcome.
+    """
+    for plate in ("gcu", "gcu-c"):
+        root = plate_root(plate)
+        assert (root / "bedside.toml").is_file(), plate
+        toml = (root / "bedside.toml").read_text(encoding="utf-8")
+        assert "contract_path" in toml
+        assert "third_party/bedside/contract" in toml.replace("\\", "/")
+        assert (root / "BEDSIDE.md").is_file(), plate
+        agents = (root / "AGENTS.md").read_text(encoding="utf-8")
+        head = agents[:1200]
+        assert "silico welcome" in head, plate
+        assert "bedside doctor" in head, plate
+        assert "start-first-ship" in head or "start gate" in head.lower(), plate
+        assert "FIRST ACTION" in head or "first action" in head.lower(), plate
+
+
+def test_scaffold_ships_bedside_pin(tmp_path: Path):
+    dest = tmp_path / "gcu"
+    scaffold(dest)
+    assert (dest / "bedside.toml").is_file()
+    assert (dest / "BEDSIDE.md").is_file()
+    dest_c = tmp_path / "gcu-c"
+    scaffold(dest_c, plate="gcu-c")
+    assert (dest_c / "bedside.toml").is_file()
+
+
 def test_scaffold_into_empty(tmp_path: Path):
     dest = tmp_path / "gcu"
     lines = scaffold(dest)

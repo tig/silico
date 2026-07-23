@@ -1,0 +1,14 @@
+# Bedside pin for this GCU (portable operator manners).
+# Paths assume the first-ship sibling layout:
+#   parent/
+#     silico/     # local clone: pip install -e ./silico and ./silico/third_party/bedside
+#     this-gcu/   # product root (cwd for bedside / silico)
+# If Silico lives elsewhere, adjust the three paths below (or set absolute paths).
+# Keep pin in sync with the silico checkout's bedside.toml when you re-vendor.
+
+pin = "868e3b8"
+contract_path = "../silico/third_party/bedside/contract"
+surface_path = "../silico/third_party/bedside/surface"
+eval_path = "../silico/third_party/bedside/eval"
+domain_notes = "BEDSIDE.md"
+agents_stub = true

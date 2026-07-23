@@ -28,9 +28,29 @@ from silico.scaffold import scaffold
 from silico.wait_device import TIMEOUT_SOP, format_port_snapshot, wait_for_board
 
 
+def _ensure_stdio_utf8() -> None:
+    """Prefer UTF-8 on stdio so Windows cp1252 consoles do not crash on arrows."""
+    for stream in (sys.stdout, sys.stderr):
+        reconf = getattr(stream, "reconfigure", None)
+        if not callable(reconf):
+            continue
+        try:
+            reconf(encoding="utf-8", errors="replace")
+        except Exception:
+            pass
+
+
 def _out(msg: str) -> None:
-    """Operator-facing line (flush so multi-minute flash/deploy is not silent)."""
-    print(msg, flush=True)
+    """Operator-facing line (flush so multi-minute flash/deploy is not silent).
+
+    Safe on Windows legacy code pages: never raise UnicodeEncodeError mid-welcome.
+    """
+    try:
+        print(msg, flush=True)
+    except UnicodeEncodeError:
+        enc = getattr(sys.stdout, "encoding", None) or "ascii"
+        safe = msg.encode(enc, errors="replace").decode(enc, errors="replace")
+        print(safe, flush=True)
 
 
 def _print_lines(lines: list[str]) -> None:
@@ -448,6 +468,7 @@ def build_parser() -> argparse.ArgumentParser:
 
 
 def main(argv: list[str] | None = None) -> int:
+    _ensure_stdio_utf8()
     argv = list(sys.argv[1:] if argv is None else argv)
     parser = build_parser()
     if not argv:

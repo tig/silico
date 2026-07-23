@@ -118,7 +118,7 @@ def _first_paragraph(path: Path, *, max_chars: int = 280) -> str:
             break
     text = " ".join(lines).strip()
     if len(text) > max_chars:
-        text = text[: max_chars - 1].rstrip() + "…"
+        text = text[: max_chars - 1].rstrip() + "..."
     return text
 
 
@@ -207,12 +207,18 @@ def build_welcome(*, root: Path | None = None) -> list[str]:
         )
         workspace_line = "workspace not clearly a GCU root yet"
 
+    # ASCII-only punctuation: Windows consoles often use cp1252; U+2192 (→) crashes print.
     lines = [
+        # Agent directive first so tool logs still encode Stage 0 order even if the model
+        # only skims the top of the command output.
+        "AGENT: This block is Stage **0a**. Paste/adapt it as your **first** operator-facing "
+        "chat message. Do **not** send tooling-status dumps or open the start gate before it.",
+        "",
         "Welcome. **Silico** is the open host-first spine for building shippable edge products: "
         "agents build and maintain products on real boards; Silico is the host tooling and plate, "
         "not the product brand. Prompt to metal.",
         "",
-        "This session builds a **GCU** (GCU stands for General Contact Unit — Silico’s term for one "
+        "This session builds a **GCU** (GCU stands for General Contact Unit - Silico's term for one "
         f"shippable edge product: app + board). From the product docs, this GCU is: {summary}",
         "",
         "I'm here to get it shipped. I step through host setup, plate, tests, and the board. "
@@ -221,16 +227,16 @@ def build_welcome(*, root: Path | None = None) -> list[str]:
         "",
         f"What I know now: {readiness} ({workspace_line}).",
         "",
-        "**First-ship map:** (A) machine tools → (B) product workspace locked → (C) **plate** via "
-        "**scaffold**, then **host gate** (automated tests on this computer) green → (D) board "
+        "**First-ship map:** (A) machine tools -> (B) product workspace locked -> (C) **plate** via "
+        "**scaffold**, then **host gate** (automated tests on this computer) green -> (D) board "
         "talks over USB and a confirmed first deploy with operator-observable **product face**. "
         "We do not stop at host-only.",
         "",
-        f"**Next after go:** {next_step} — that gives us a maintainable layout and an honest "
+        f"**Next after go:** {next_step} - that gives us a maintainable layout and an honest "
         "host test path before we touch the board.",
         "",
         "---",
-        "Stage **0a complete** (orientation). **Start gate is next** — do **not** call "
+        "Stage **0a complete** (orientation). **Start gate is next** - do **not** call "
         "`bedside ask` / host chooser for `start-first-ship` until this orientation has been shown "
         "to the operator as a normal chat message. Then open the start gate (0b).",
         "",

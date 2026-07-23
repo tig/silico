@@ -27,6 +27,7 @@ Context is finite. **Do not** open every manners file into the active window.
 | first-ship stages, silico verbs, plate, mpy-cross, deploy manifest | **silico AGENTS** + code | Not bedside |
 | Operator language (first prompt orient, first-use term defs, big-step why/where) | **silico AGENTS** + [lexicon](specs/lexicon.md) | Not bedside principles; domain on top of contract |
 | COM / first-flash (UF2 **or** esptool) / board identity / metal deploy | **silico BEDSIDE.md** + `silico/knowledge/first-flash.md` + CLI | AGENTS first-ship metal sections may point here; avoid full restatement |
+| GCU `bedside.toml` pin (sibling paths to silico vendor) | **plate** ships it; GCU keeps it | Do not leave GCU without a pin and then invent a prose path |
 | Board/host capability notes (audio, bridges, …) | **silico/knowledge/** (self-improving) | Product must not soft-fork; agents **append** host truths here |
 | Eval rubric / fixtures | **tig/bedside** `eval/` | Run CLI; do not paste rubric into context |
 | Product domain (idle, vehicle, tunes-as-product, …) | **GCU repo** | Never silico or bedside |
@@ -236,6 +237,9 @@ Nothing in this file licenses: *system said declined → I still committed, push
 | Host picker ≈ `bedside ask` shell | “Host UI means I skip Bedside forever” |
 | Prefer `bedside ask|step` when CLI works | Note `bedside doctor` fail and never init |
 | Same ids/intent (`start-first-ship`, `confirm-board`, …) | Long chat chooser that re-asks the playbook |
+| Host picker when agent stdin cannot reach the operator | Silent substitution with no mention; free-text multi-choice wall |
+
+**Harness note:** many agent hosts cannot forward a TTY to `bedside ask` stdin. In that case the host structured picker is the **sanctioned** gate shell (same ids/contract). Prefer CLI when it works; when it cannot, use the picker and state once that you are using the host gate shell. Do **not** treat a missing TTY as license to skip gates or monologue past the operator.
 
 Non-interactive / CI: `--answer` on `ask`, `--confirm` / `--decline` / `--no-wait` on `step` (see `bedside ask --help`).
 

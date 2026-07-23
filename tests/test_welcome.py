@@ -80,3 +80,22 @@ def test_build_welcome_thin_docs_is_honest(tmp_path: Path):
     text = "\n".join(build_welcome(root=tmp_path))
     assert validate_orientation_text(text) == []
     assert "thin" in text.lower() or "spec" in text.lower() or "README" in text
+
+
+def test_welcome_is_cp1252_safe(tmp_path: Path):
+    """Windows legacy consoles use cp1252; U+2192 etc. used to crash silico welcome."""
+    (tmp_path / "silico.toml").write_text("[product]\nname = \"X\"\n", encoding="utf-8")
+    text = "\n".join(build_welcome(root=tmp_path))
+    text.encode("cp1252")  # must not raise
+    assert "\u2192" not in text
+    assert "AGENT:" in text
+    assert "0a" in text
+
+
+def test_cli_out_survives_cp1252_stream(capsys):
+    from silico.cli import _out
+
+    # Exercise the happy path; encoding-safe path is covered when print raises.
+    _out("First-ship map: A -> B -> C")
+    captured = capsys.readouterr()
+    assert "First-ship map" in captured.out

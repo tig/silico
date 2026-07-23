@@ -2,7 +2,7 @@
 
 **Prompt for metal.**
 
-Silico makes building maintainable firmware for embedded devices simple. Given a device spec, it first guides AI agents to scaffold a Github repository setup for long-term maintainability. Agents then loop to engineer robust firmware, unit and smoke tests, a simulator, ci/cd using both real devices and the simulator, and an end-user instal/upgrade tool.
+Silico makes building maintainable firmware for embedded devices simple. Given a device spec, it first guides AI agents to scaffold a Github repository setup for long-term maintainability. Agents then loop to engineer robust firmware, unit and smoke tests, a simulator, ci/cd using both real devices and the simulator, and an end-user install/upgrade tool.
 
 The human interface is a coding agent; not an installation guide or shell tutorial. 
 
@@ -16,9 +16,9 @@ Agents write the firmware. The human owns the judgment.
 
 First, the human needs to have written (perhaps with an agent's help) a spec for the device (which Silico calls [GCUs](/docs/lexicon.md)). See these example repos; each contains a spec that has been proven to work with Silico:
 
-- [Xuss](tig/xuss) - A demo device based on the [M5Stack M5GO IoT Starter Kit v2.7](https://shop.m5stack.com/products/m5go-iot-starter-kit-v2-7), using [MicroPython](https://github.com/micropython). Intentionally specifies a simple implementation using Python to illustrate that path.
-- [Xuss-C](tig/xuss-c) - A demo device based on the [M5Stack M5GO IoT Starter Kit v2.7](https://shop.m5stack.com/products/m5go-iot-starter-kit-v2-7), using C and native ESP32 development. Intentionally specifies a more sophisticated implementation with higher performance and usability to illustrate that path.
-- [Xuss-Lame](tig/xuss) A demo device based on the [M5Stack M5GO IoT Starter Kit v2.7](https://shop.m5stack.com/products/m5go-iot-starter-kit-v2-7), that is intentionally under-specified. This demonstrates Silco's ability to interview the human to refine the spec and requirements interactively. 
+- [Xuss](https://github.com/tig/xuss) - A demo device based on the [M5Stack M5GO IoT Starter Kit v2.7](https://shop.m5stack.com/products/m5go-iot-starter-kit-v2-7), using [MicroPython](https://github.com/micropython). Intentionally specifies a simple implementation using Python to illustrate that path.
+- [Xuss-C](https://github.com/tig/xuss-c) - A demo device based on the [M5Stack M5GO IoT Starter Kit v2.7](https://shop.m5stack.com/products/m5go-iot-starter-kit-v2-7), using C and native ESP32 development. Intentionally specifies a more sophisticated implementation with higher performance and usability to illustrate that path.
+- [Xuss-Lame](https://github.com/tig/xuss) A demo device based on the [M5Stack M5GO IoT Starter Kit v2.7](https://shop.m5stack.com/products/m5go-iot-starter-kit-v2-7), that is intentionally under-specified. This demonstrates Silco's ability to interview the human to refine the spec and requirements interactively. 
 
 The human needs to put the spec into a Github Repo, typically named `spec.md`. See the examples above.
 
@@ -45,7 +45,7 @@ That's it. The agent owns the host path: prerequisites, GitHub setup, scaffoldin
 
 The human owns the product judgment and confirm physical or irreversible actions. 
 
-Silico will guide/interview the human using great [Bedside Manners](tig/bedside) along the way until the human is satisifed with the outcome.
+Silico will guide/interview the human using great [bedside](https://github.com/tig/bedside) manners along the way until the human is satisifed with the outcome.
 
 ## Supported platforms (host spine)
 

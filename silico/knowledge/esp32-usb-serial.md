@@ -35,9 +35,9 @@ If inspect/deploy says app owns console / door stayed shut:
 
 `silico inspect` uses serial knock (`identity` + CR/LF), not mpremote.
 
-1. Open with **DTR/RTS deasserted** and knock **without** a reset pulse first (CH9102 / M5GO).
-2. If no `fw_name=` line, optional pulse + boot wait + knock again.
-3. Capture window defaults longer than a single boot greeting (~3s).
+1. Open with **DTR/RTS deasserted** and knock **without** a reset pulse (default; CH9102 / M5GO).
+2. Capture window ~3s (longer than a single boot greeting).
+3. Opt in only if needed: `probe_serial_identity(..., reset=True)` for pulse + boot wait.
 
 Manual check when inspect is empty but the app is alive: open the COM with dtr/rts false, write `identity` and a newline, read the response.
 

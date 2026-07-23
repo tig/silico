@@ -52,5 +52,5 @@ Provenance for maintainers: degraded from public `tig/xuss` `main` product-manua
 
 - Block forever on a perfect spec.
 - Free-text multi-choice walls.
-- Chat-only recovery when the next agent will re-guess.
+- Chat-only recovery that forces the next agent to re-guess.
 - “Hardware later” with no wait-device when metal is in scope.

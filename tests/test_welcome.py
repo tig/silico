@@ -36,9 +36,9 @@ def test_full_skeleton_passes_orientation_eval():
     good = """
 Welcome. **Silico** is the open host-first spine for building shippable edge products.
 
-You are building a **GCU** (General Contact Unit — Silico's term for one shippable edge product).
+This session builds a **GCU** (General Contact Unit — Silico's term for one shippable edge product).
 
-I'm here to get it shipped: I own the host path; you own product judgment and physical/irreversible steps.
+I'm here to get it shipped. I own the host path; the operator owns product judgment and physical/irreversible steps.
 
 What I know now: Git OK, Python OK; workspace mode=gcu; no preferred board on USB yet.
 

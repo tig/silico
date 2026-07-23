@@ -2,16 +2,16 @@
 
 **Status:** Draft spec for build.
 **Steward:** Tig Kindel (github.com/tig/silico). Not a company product line.
-**Scope:** The spine required by three starter GCUs, with supported MCU/runtime paths as of dual-runtime (#53): RP2040 + MicroPython (default plate), ESP32-class + MicroPython, ESP32-class + C/ESP-IDF (`gcu-c` plate). See [v1 WB FAQ 3](./wb-2026-fall-three-gcus.md) and root README.
-**Non-scope:** Industry default. Category marketing. Cloud fleet. Built-in phone-home for all GCUs. Arduino-class plates as a silico deliverable ([issue #59](https://github.com/tig/silico/issues/59)). PlatformIO or Pico SDK as silico dual-runtime peers. Company branding of the spine. Full v2 narrative (longer-term vision lives in [wb-2026-fall-three-gcus.md](./wb-2026-fall-three-gcus.md) FAQ 37).
+**Scope:** The spine required by three starter GCUs, with supported MCU/runtime paths as of dual-runtime (#53): RP2040 + MicroPython (default plate), ESP32-class + MicroPython, ESP32-class + C/ESP-IDF (`gcu-c` plate). See [v1 WB FAQ 3](./prfaq.md) and root README.
+**Non-scope:** Industry default. Category marketing. Cloud fleet. Built-in phone-home for all GCUs. Arduino-class plates as a silico deliverable ([issue #59](https://github.com/tig/silico/issues/59)). PlatformIO or Pico SDK as silico dual-runtime peers. Company branding of the spine. Full v2 narrative (longer-term vision lives in [prfaq.md](./prfaq.md) FAQ 38).
 
-Related: [tenets.md](./tenets.md) (including **Default is a product choice, not a quality ranking**), [lexicon.md](./lexicon.md), [gcu-codenames.md](./gcu-codenames.md), [wb-2026-fall-three-gcus.md](./wb-2026-fall-three-gcus.md).
+Related: [tenets.md](./tenets.md) (including **Default is a product choice, not a quality ranking**), [lexicon.md](./lexicon.md), [gcu-codenames.md](./gcu-codenames.md), [prfaq.md](./prfaq.md).
 
 ## 0. Why this exists
 
-We work backwards from the Grady experience ([v1 WB](./wb-2026-fall-three-gcus.md)):
+We work backwards from the Grady experience ([v1 WB](./prfaq.md)):
 
-> With just Claude Code on my Mac, I had the device working end-to-end the next day, and in a potential customer's hand the day after that. Silico is now a foundational piece of our company's technology.
+> With just Claude Code on my Mac and my hardware spec, I had the device working end-to-end in a few hours, and in a field test the day after that. Silico is now a foundational piece of our company's technology.
 
 Silico tenets: [tenets.md](./tenets.md) (unless you know better ones).
 
@@ -107,7 +107,7 @@ Public repo contains:
 4. **One thin public example GCU** (not Zakalwe domain) green in CI.
 5. **CI** for the spine itself.
 
-Private GCU repos pin silico as a **host** dependency and follow the plate. Device `firmware/` never imports silico. Full first ship checklist (Grady or anyone discovering this repo): [v1 WB FAQ 4](./wb-2026-fall-three-gcus.md).
+Private GCU repos pin silico as a **host** dependency and follow the plate. Device `firmware/` never imports silico. Full first ship checklist (Grady or anyone discovering this repo): [v1 PRFAQ FAQ 5](./prfaq.md).
 
 ```text
 # GCU depends on silico (host / CI only)
@@ -216,7 +216,7 @@ This is the minimum **Prompt to metal** / **Host first** bar. Soften it and a no
 
 1. **Required:** scriptable path from a product checkout.
 2. **Target:** release zip per GCU (no git required).
-3. **Not required for first ship–2:** MSI/GUI installer, OTA, full signing PKI, fleet CD with automatic rollback (FAQ 37).
+3. **Not required for first ship–2:** MSI/GUI installer, OTA, full signing PKI, fleet CD with automatic rollback (FAQ 38).
 4. **Not required for update path alpha:** update integrity protection beyond version identity — see month-later beta horizon and integrity spike.
 5. **Open (spike):** what "protecting integrity" means for beta units (hash manifest, signing, provenance, CRA hooks, …).
 
@@ -287,7 +287,7 @@ Machine-readable config declares at least:
 8. Requiring human hand-authorship of firmware as the blessed path.
 9. Pico SDK C or `language = cpp` as additional silico language peers (C++ may appear in ESP-IDF board TUs).
 
-### 14.1 Later (not v1; see also v1 WB FAQ 37)
+### 14.1 Later (not v1; see also v1 WB FAQ 38)
 
 1. Phone-home through silico when a second GCU needs Quilan's app loop; USB remains always available.
 2. Further multi-target plates when a GCU forces them (Arduino-class, Pico SDK C, …). ESP32 MicroPython and ESP-IDF C are already on the spine.
@@ -323,7 +323,7 @@ Until then, Quilan owns modem, credentials, and uplink protocol in private app c
 Primary (the sentence we work backwards from):
 
 1. A Grady-shaped path is documented and runnable: Claude Code (or equivalent) on a Mac → device end-to-end in about a day with host gate green.
-2. The same path supports putting that unit with a potential customer the next day (install/verify, not heroics).
+2. The same path supports a field test the next day (install/verify, not heroics).
 3. After the demo week, silico is still the update/prove path (foundational).
 
 Supporting:

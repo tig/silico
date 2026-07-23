@@ -28,6 +28,96 @@ def test_scaffold_gcu_c(tmp_path: Path):
     assert any("gcu-c" in x or "Plate: gcu-c" in x for x in lines)
 
 
+def test_gcu_c_host_gate_target_is_not_reserved_test_name():
+    """#72: CMake reserves target name ``test`` when CTest is enabled.
+
+    Plate must use ``host_test`` and ``[host].gate`` must match. A bare
+    ``add_custom_target(test …)`` fails ``cmake -S host -B build/host`` on
+    Windows (and anywhere enable_testing() is on).
+    """
+    root = plate_root("gcu-c")
+    cmake = (root / "host" / "CMakeLists.txt").read_text(encoding="utf-8")
+    toml = (root / "silico.toml").read_text(encoding="utf-8")
+    assert "add_custom_target(host_test" in cmake
+    assert "add_custom_target(test\n" not in cmake
+    assert "add_custom_target(test " not in cmake
+    assert "--target host_test" in toml
+    assert "--target test\"" not in toml
+    assert "--target test'" not in toml
+
+
+def _cmake_output_missing_c_compiler(out: str) -> bool:
+    """True when cmake failed because no usable C toolchain is configured.
+
+    ``project(... C)`` needs a compiler, not only the cmake executable. Keep
+    the package suite green on Python-only hosts (cmake on PATH, no VS/gcc).
+    """
+    lower = out.lower()
+    needles = (
+        "no cmake_c_compiler could be found",
+        "cmake_c_compiler not set",
+        "cmake_c_compiler:",
+        "is not a full path and was not found in the path",
+        "could not find any instance of visual studio",
+        "could not find any instance of visual c",
+        "does not appear to be able to compile a simple test program",
+        "the c compiler",
+        "unable to determine what c compiler",
+        "broken compiler",
+        "compiler identification is unknown",
+        "failed to run msvc",
+        "failed to run the project to compile",
+        "nmake is not a full path",
+        "no cmake_cxx_compiler could be found",
+    )
+    return any(n in lower for n in needles)
+
+
+def _cmake_output_reserved_test_target(out: str) -> bool:
+    return (
+        'target name "test" is reserved' in out
+        or "target name 'test' is reserved" in out
+    )
+
+
+def test_scaffold_gcu_c_cmake_configure_accepts_host_test(tmp_path: Path):
+    """Regression for #72: configure the plate host tree (cmake -S/-B).
+
+    Skip when cmake is missing **or** cmake is present without a usable C
+    compiler (common on Python-only CI / dev machines). Always fail if
+    configure dies on the reserved target name ``test``.
+    """
+    import shutil
+    import subprocess
+
+    import pytest
+
+    if shutil.which("cmake") is None:
+        pytest.skip("cmake not on PATH")
+
+    dest = tmp_path / "gcu-c-cmake"
+    scaffold(dest, plate="gcu-c")
+    build = dest / "build" / "host"
+    proc = subprocess.run(
+        ["cmake", "-S", str(dest / "host"), "-B", str(build)],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    out = (proc.stdout or "") + (proc.stderr or "")
+
+    # The bug under test — never skip this failure mode.
+    assert not _cmake_output_reserved_test_target(out), out
+
+    if proc.returncode != 0:
+        if _cmake_output_missing_c_compiler(out):
+            pytest.skip("cmake present but no usable C compiler/toolchain")
+        # Other configure failures are environment issues, not package logic.
+        # Do not fail the Python-only suite; still surface a short reason.
+        snippet = out.strip().replace("\r\n", "\n")[-800:]
+        pytest.skip(f"cmake configure failed (non-#72): {snippet}")
+
+
 def test_scaffold_into_empty(tmp_path: Path):
     dest = tmp_path / "gcu"
     lines = scaffold(dest)

@@ -1,0 +1,21 @@
+name: ci
+
+on:
+  push:
+    branches: [main, master, develop]
+  pull_request:
+
+# CI scope: cmake host_test only (silico.toml [host].gate).
+# Does NOT run `silico gate` or `silico product-path` — those need a local silico pin
+# (sibling clone). Green Actions here is not full local host-path proof.
+# No Python / silico sibling checkout on the runner.
+jobs:
+  host-gate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout GCU
+        uses: actions/checkout@v4
+      - name: Configure host tests
+        run: cmake -S host -B build/host
+      - name: Host gate
+        run: cmake --build build/host --target host_test

@@ -40,21 +40,64 @@ def _hold_deasserted(ser) -> None:
         pass
 
 
-def _knock(ser) -> None:
+def _knock_once(ser) -> None:
+    """Single identity knock (CR/LF then ``identity``)."""
     ser.write(b"\r\n")
-    time.sleep(0.15)
+    time.sleep(0.05)
     ser.write(b"identity\r\n")
-    time.sleep(0.1)
 
 
-def _listen(ser, listen_s: float) -> bytes:
+def _identity_in_raw(raw: bytes) -> Identity | None:
+    text = raw.decode("utf-8", errors="replace")
+    got = parse_identity_blob(text)
+    if got is None or not (got.fw_name or got.fw_version):
+        return None
+    return got
+
+
+def _listen_with_knock_retries(
+    ser,
+    listen_s: float,
+    *,
+    knock: bool,
+    knock_interval_s: float = 0.45,
+) -> tuple[bytes, int]:
+    """Listen for *listen_s*, re-knocking on an interval so boot greetings cannot
+    permanently bury a one-shot identity line (#79).
+
+    Returns (raw_bytes, knock_count).
+    """
     buf = bytearray()
+    knocks = 0
     t0 = time.time()
+    next_knock = t0  # knock immediately
     while time.time() - t0 < listen_s:
-        chunk = ser.read(512)
+        now = time.time()
+        if knock and now >= next_knock:
+            try:
+                _knock_once(ser)
+                knocks += 1
+            except Exception:  # noqa: BLE001
+                pass
+            next_knock = now + knock_interval_s
+        try:
+            chunk = ser.read(512)
+        except Exception:  # noqa: BLE001
+            chunk = b""
         if chunk:
             buf.extend(chunk)
-    return bytes(buf)
+            if _identity_in_raw(bytes(buf)) is not None:
+                # drain a little more for a complete line, then stop
+                try:
+                    extra = ser.read(256)
+                    if extra:
+                        buf.extend(extra)
+                except Exception:  # noqa: BLE001
+                    pass
+                break
+        else:
+            time.sleep(0.02)
+    return bytes(buf), knocks
 
 
 def _attempt_plans(reset: bool | None) -> list[tuple[str, bool]]:
@@ -77,6 +120,7 @@ def probe_serial_identity(
     boot_wait_s: float = 1.5,
     reset: bool | None = None,
     knock: bool = True,
+    knock_interval_s: float = 0.45,
     expect_name: str | None = None,
     expect_version: str | None = None,
 ) -> SerialIdentityResult:
@@ -84,8 +128,10 @@ def probe_serial_identity(
 
     Default ``reset=None`` (auto): knock with DTR/RTS **deasserted** first — required
     on CH9102-class bridges where a best-effort pulse resets into ROM / misses the
-    app (tig/silico#78). If no identity, optionally pulse and wait for boot, then
-    knock again. ``reset=True`` forces pulse-only; ``reset=False`` never pulses.
+    app (tig/silico#78). Within each attempt, re-knock on *knock_interval_s* for the
+    full *listen_s* window so a boot greeting cannot swallow a single knock (#79).
+    If no identity, optionally pulse and wait for boot, then knock again.
+    ``reset=True`` forces pulse-only; ``reset=False`` never pulses.
 
     Does not use mpremote. Never writes firmware.
     """
@@ -130,22 +176,27 @@ def probe_serial_identity(
             except Exception:  # noqa: BLE001
                 pass
             if knock:
-                lines.append("Knock: CR/LF + identity")
-                try:
-                    _knock(ser)
-                except Exception as e:  # noqa: BLE001
-                    lines.append(f"WARN: knock write failed: {e}")
-            raw = _listen(ser, listen_s)
+                lines.append(
+                    f"Knock: CR/LF + identity (retry every {knock_interval_s:g}s "
+                    f"for {listen_s:g}s)"
+                )
+            raw, n_knocks = _listen_with_knock_retries(
+                ser,
+                listen_s,
+                knock=knock,
+                knock_interval_s=knock_interval_s,
+            )
             last_raw = raw
             raw_all.extend(raw)
+            if knock:
+                lines.append(f"  knocks this attempt: {n_knocks}")
             lines.append(f"Captured {len(raw)} bytes @ {baud}")
             if raw:
                 preview = raw[:160]
                 lines.append(f"  raw: {preview!r}{'…' if len(raw) > 160 else ''}")
 
-            text = raw.decode("utf-8", errors="replace")
-            got = parse_identity_blob(text)
-            if got is None or not (got.fw_name or got.fw_version):
+            got = _identity_in_raw(raw)
+            if got is None:
                 lines.append("No identity line on this attempt.")
                 continue
 
@@ -173,7 +224,8 @@ def probe_serial_identity(
 
     lines.append("RESULT: no identity line found on serial")
     lines.append(
-        "C images must print fw_name=… fw_version=… on boot or answer identity."
+        "C images must answer identity on the link (not boot-print only) — "
+        "print fw_name=… fw_version=… when the host sends the word identity."
     )
     lines.append(
         "Hint: CH9102/M5GO — prefer no DTR/RTS pulse (default auto tries deasserted first)."

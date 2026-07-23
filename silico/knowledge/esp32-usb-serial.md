@@ -36,8 +36,11 @@ If inspect/deploy says app owns console / door stayed shut:
 `silico inspect` uses serial knock (`identity` + CR/LF), not mpremote.
 
 1. Open with **DTR/RTS deasserted** and knock **without** a reset pulse first (CH9102 / M5GO).
-2. If no `fw_name=` line, optional pulse + boot wait + knock again.
-3. Capture window defaults longer than a single boot greeting (~3s).
+2. **Re-knock** on a short interval for the full listen window so a boot greeting cannot bury a one-shot line (#79).
+3. If no `fw_name=` line, optional pulse + boot wait + knock again.
+4. Capture window defaults longer than a single boot greeting (~3s).
+
+**Product requirement:** the C image must **answer** `identity` on the link, not only print at boot. Boot-print-only becomes invisible the moment the banner scrolls past. Plate `gcu-c` main shows both: boot line + knock responder.
 
 Manual check when inspect is empty but the app is alive: open the COM with dtr/rts false, write `identity` and a newline, read the response.
 

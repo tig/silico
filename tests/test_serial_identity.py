@@ -1,4 +1,4 @@
-"""Serial identity probe (#78 CH9102: no DTR/RTS pulse before knock)."""
+"""Serial identity probe (#78 CH9102 + #79 knock retry window)."""
 
 from __future__ import annotations
 
@@ -61,7 +61,9 @@ def test_probe_reset_false_never_pulses(monkeypatch):
     _install_fake_serial(monkeypatch, fake)
     monkeypatch.setattr(mod, "_pulse_reset", lambda _s: pulses.append(1))
     monkeypatch.setattr(
-        mod, "_listen", lambda _s, _t: b"fw_name=XUSSC fw_version=0.0.1\n"
+        mod,
+        "_listen_with_knock_retries",
+        lambda _s, _t, **_k: (b"fw_name=XUSSC fw_version=0.0.1\n", 1),
     )
     monkeypatch.setattr(mod.time, "sleep", lambda *_: None)
 
@@ -71,7 +73,6 @@ def test_probe_reset_false_never_pulses(monkeypatch):
     assert r.identity.fw_name == "XUSSC"
     assert r.identity.fw_version == "0.0.1"
     assert pulses == []
-    assert b"identity\r\n" in fake.writes
     assert fake.dtr is False
     assert fake.rts is False
 
@@ -82,7 +83,9 @@ def test_probe_auto_no_pulse_succeeds_without_fallback(monkeypatch):
     _install_fake_serial(monkeypatch, fake)
     monkeypatch.setattr(mod, "_pulse_reset", lambda _s: pulses.append(1))
     monkeypatch.setattr(
-        mod, "_listen", lambda _s, _t: b"fw_name=XUSSC fw_version=0.0.1\n"
+        mod,
+        "_listen_with_knock_retries",
+        lambda _s, _t, **_k: (b"fw_name=XUSSC fw_version=0.0.1\n", 2),
     )
     monkeypatch.setattr(mod.time, "sleep", lambda *_: None)
 
@@ -90,6 +93,7 @@ def test_probe_auto_no_pulse_succeeds_without_fallback(monkeypatch):
     assert r.ok
     assert pulses == []  # first attempt worked
     assert any("deasserted" in ln for ln in r.lines)
+    assert any("knocks this attempt" in ln for ln in r.lines)
 
 
 def test_probe_auto_falls_back_to_pulse(monkeypatch):
@@ -97,30 +101,70 @@ def test_probe_auto_falls_back_to_pulse(monkeypatch):
     pulses: list[int] = []
     listens = {"n": 0}
 
-    def _listen(_s, _t):
+    def _listen(_s, _t, **_k):
         listens["n"] += 1
         if listens["n"] == 1:
-            return b""
-        return b"fw_name=XUSSC fw_version=0.0.1\n"
+            return b"", 2
+        return b"fw_name=XUSSC fw_version=0.0.1\n", 1
 
     _install_fake_serial(monkeypatch, fake)
     monkeypatch.setattr(mod, "_pulse_reset", lambda _s: pulses.append(1))
-    monkeypatch.setattr(mod, "_listen", _listen)
+    monkeypatch.setattr(mod, "_listen_with_knock_retries", _listen)
     monkeypatch.setattr(mod.time, "sleep", lambda *_: None)
 
     r = probe_serial_identity("COM7", reset=None, listen_s=0.01, boot_wait_s=0.0)
     assert r.ok
     assert pulses == [1]
     assert any("Pulse DTR/RTS" in ln for ln in r.lines)
-    assert fake.writes.count(b"identity\r\n") >= 2
 
 
 def test_probe_empty_reports_ch9102_hint(monkeypatch):
     fake = _FakeSer()
     _install_fake_serial(monkeypatch, fake)
-    monkeypatch.setattr(mod, "_listen", lambda _s, _t: b"")
+    monkeypatch.setattr(
+        mod, "_listen_with_knock_retries", lambda _s, _t, **_k: (b"", 3)
+    )
     monkeypatch.setattr(mod.time, "sleep", lambda *_: None)
 
     r = probe_serial_identity("COM7", reset=False, listen_s=0.01)
     assert not r.ok
     assert any("CH9102" in ln for ln in r.lines)
+    assert any("answer identity on the link" in ln for ln in r.lines)
+
+
+def test_listen_with_knock_retries_reknocks_until_identity(monkeypatch):
+    """Shipped retry path: first reads empty, later knock sees identity (#79)."""
+    fake = _FakeSer()
+    reads = {"n": 0}
+    knocks = {"n": 0}
+
+    def _knock(_s):
+        knocks["n"] += 1
+
+    def _read(_size=1):
+        reads["n"] += 1
+        # After several knocks, surface identity (boot greeting window).
+        if knocks["n"] >= 3:
+            return b"fw_name=XUSSC fw_version=0.0.1\n"
+        return b""
+
+    fake.read = _read
+    monkeypatch.setattr(mod, "_knock_once", _knock)
+    # Freeze time progression via controlled sleep + fake clock
+    t = {"now": 0.0}
+
+    def _time():
+        return t["now"]
+
+    def _sleep(dt):
+        t["now"] += float(dt)
+
+    monkeypatch.setattr(mod.time, "time", _time)
+    monkeypatch.setattr(mod.time, "sleep", _sleep)
+
+    raw, n = mod._listen_with_knock_retries(
+        fake, listen_s=2.0, knock=True, knock_interval_s=0.4
+    )
+    assert b"fw_name=XUSSC" in raw
+    assert n >= 3
+    assert knocks["n"] >= 3

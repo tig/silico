@@ -839,8 +839,10 @@ Opt-in plate: `silico scaffold . --plate gcu-c`. Runtime from `silico.toml` (`la
 |------|------------|
 | `gate` | Device-header allowlist (`#include`) + `[host].gate` (cmake/ctest) when `build/host` exists |
 | `product-path` | Host C tests must use shipped defaults table (compiled use) |
-| `inspect` | Serial identity line; no mpremote; no `--apply-mpy-pin` |
+| `inspect` | Serial identity knock (not mpremote); no `--apply-mpy-pin`. Default: DTR/RTS **deasserted** first, re-knock over a short window, pulse only as fallback (#78 / #79) |
 | `deploy` | `idf.py build` + flash; plan says full image overwrite; `--prune` / `--verify-import` refuse |
+
+**C identity-on-link (hard):** the image must **answer** `identity` on the UART with `fw_name=… fw_version=…`. Boot-print only is not metal inspect-ready once the banner scrolls past. Plate `gcu-c` documents and implements the knock responder.
 
 Default plate stays MicroPython. Arduino is not this path (see issue #59). First consumer for C first ship is **tig/xuss-c** (spec-first product; not closed by hello-metal alone).
 

@@ -33,7 +33,7 @@ Context is finite. **Do not** open every manners file into the active window.
 
 ### Context budget rule
 
-Prefer **tools that encode manners** (`silico doctor|wait-device|inspect|deploy`, `bedside doctor|eval|ask|step`) over re-loading essays. If two files say the same rule, follow the **canonical owner** and treat the other as a pointer.
+Prefer **tools that encode manners** (`silico welcome|doctor|wait-device|inspect|deploy`, `bedside doctor|eval|ask|step`) over re-loading essays. If two files say the same rule, follow the **canonical owner** and treat the other as a pointer.
 
 ## What silico is
 
@@ -794,6 +794,7 @@ bedside eval
 # bedside ask --id confirm-deploy --prompt "Overwrite firmware on COMx now?" --choices yes,no --default no
 # bedside step --id plug-usb --prompt "Plug a data USB cable." --expect "Board shows power / new COM."
 
+silico welcome          # Phase 0a orientation skeleton (before start gate)
 silico doctor
 silico wait-device
 silico scaffold .

@@ -132,11 +132,31 @@ def test_plates_ship_bedside_pin_and_stage0_front_matter():
         assert "third_party/bedside/contract" in toml.replace("\\", "/")
         assert (root / "BEDSIDE.md").is_file(), plate
         agents = (root / "AGENTS.md").read_text(encoding="utf-8")
-        head = agents[:1200]
+        head = agents[:1500]
         assert "silico welcome" in head, plate
-        assert "bedside doctor" in head, plate
         assert "start-first-ship" in head or "start gate" in head.lower(), plate
         assert "FIRST ACTION" in head or "first action" in head.lower(), plate
+        # ban pre-go init (may appear in "do not" before the welcome command line)
+        assert "bedside init" in head.lower(), plate
+        assert "Do not" in head or "do not" in head, plate
+
+
+def test_root_agents_stage0_is_first_screen():
+    """Thin GCUs only fetch silico AGENTS — Stage 0 must be above context tables.
+
+    Observed fail: agent skims load-path tables, runs bedside init/vendor, opens
+    start gate with essay, never pastes silico welcome.
+    """
+    root = Path(__file__).resolve().parents[1]
+    agents = (root / "AGENTS.md").read_text(encoding="utf-8")
+    head = agents[:2500]
+    assert head.lstrip().startswith("# AGENTS.md")
+    assert "FIRST ACTION" in head
+    assert "silico welcome" in head
+    # welcome before the long context-load section
+    assert head.find("silico welcome") < head.find("Agent context load path")
+    assert "bedside init" in head.lower()
+    assert "No mutate before go" in head or "no mutate before go" in head.lower()
 
 
 def test_scaffold_ships_bedside_pin(tmp_path: Path):

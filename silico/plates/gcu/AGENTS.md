@@ -6,18 +6,21 @@ Guidance for AI coding agents in **this product repo**.
 
 When the human says *follow silico getting started* (or first ship / Day 1):
 
-**Do not** open with tooling narration, COM folklore, PR strategy, or a start-gate chooser.
+**Do not** open with tooling narration, `bedside init`, vendoring `third_party/`, PR strategy, or a start-gate chooser.
 
 ```text
-bedside doctor          # if fail: fix bedside.toml paths / pip install -e ../silico/third_party/bedside — do not invent a parallel manners path
-silico welcome          # orientation source (read-only)
+silico welcome          # 0a orientation source FIRST (read-only; do not block on bedside doctor)
+# paste that output as the first operator-facing chat message, then:
+bedside ask --id start-first-ship --prompt "Start first ship on this machine?" --choices yes,adjust --default yes
+# or host picker (same contract; short prompt only — no Stage A–C essay in the chooser)
 ```
 
-1. **0a:** Paste/adapt `silico welcome` output as your **first** operator-facing chat message (minimal adapt only). That skeleton is the orientation — do not hand-build a multi-section status report instead.
-2. **0b:** Only after 0a is in chat, open the start gate: `bedside ask --id start-first-ship --prompt "Start first ship on this machine?" --choices yes,adjust --default yes` **or** the host structured picker under the **same contract** (short prompt, recommended first, decline = halt). Prefer the CLI when it can reach the operator; when stdin is unreachable in the agent harness, the host picker is the **sanctioned** shell — say once that you are using it.
-3. **Decline / exit 10:** halt writes; one short reply; re-gate or stop. Do not commit/push/scaffold past a no.
+1. **0a:** Paste/adapt `silico welcome` as your **first** operator-facing chat message. Missing `bedside.toml` is **not** a reason to skip 0a or to `bedside init` before go.
+2. **0b:** Only after 0a is in chat. Gate body = one short question. Prefer CLI when it reaches the operator; host picker is sanctioned when stdin cannot — say once.
+3. **Decline / exit 10:** halt writes; one short reply; re-gate or stop.
+4. **After go:** fix manners pin via plate / sibling silico paths if needed — not a pre-go full vendor into this tree.
 
-Full playbook (stages A–F, metal rules): https://github.com/tig/silico `AGENTS.md`. This file does not soft-fork it.
+Full playbook: https://github.com/tig/silico `AGENTS.md`.
 
 ## Spine
 

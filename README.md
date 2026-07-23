@@ -81,7 +81,7 @@ Give the agent this starting prompt:
 See https://github.com/tig/silico. Follow the getting started instructions for agents.
 ```
 
- The agent will ask questions, suggest options, and otherwise guide the process through [first ship](./specs/lexicon.md#first-ship); it will use Silico [bedside manners](https://github.com/tig/bedside), install or upgrade [host](./specs/lexicon.md#host) tooling (with consent), including the GitHub CLI (`gh`).
+The agent’s **first** job (Stage 0) is: run `silico welcome`, show that orientation in chat, **then** open a short start-gate chooser. It must **not** open with tooling status, `bedside init`, or a multi-paragraph gate. After you say go, it guides [first ship](./specs/lexicon.md#first-ship) with [bedside manners](https://github.com/tig/bedside) and host tooling (with consent), including the GitHub CLI (`gh`).
 
 When [first ship](./specs/lexicon.md#first-ship) is complete, the agent will land the following on the default branch (e.g. `main`), following the repo's contribution standards:
 

@@ -28,8 +28,8 @@ Method notes:
 
 Then:
 
-> "I met Tig, and he showed me Silico. With just Claude Code on my Mac and my hardware spec, I had the device working end-to-end in a few hours, and in a field test the day after that. Silico is now a foundational piece of our company's technology."
-> — Grady, CEO and Founder of Quilan
+> "I met Tig, and he showed me Silico. With just Claude Code on my Mac, my prototype board, and my product spec, I had the device working end-to-end in a few hours, and in a field test the day after that. Silico is now a foundational piece of our company's technology."
+> — Grady, CEO and Founder of www.velocityvane.com
 
 That is the product experience of **silico** (github.com/tig/silico). Not a new MCU religion. Not "hire an embedded team and wait a quarter." **Prompt to metal**: Claude Code on a Mac, host-honest done, board in a real hand on a two-day clock.
 

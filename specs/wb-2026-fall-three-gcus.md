@@ -2,7 +2,7 @@
 
 **Stage:** First draft for broad foundational input. Ambition date is Fall 2026.
 **Artifact form:** Press release plus FAQ
-**Scope of this doc:** Silico **v1** only. Longer-term vision is FAQ 37, not a separate v2 narrative (yet).
+**Scope of this doc:** Silico **v1** only. Longer-term vision is FAQ 38, not a separate v2 narrative (yet).
 
 How to read: we work backwards from **this** customer experience. Everything in the PR, FAQ, tenets, and v1 spec is invented only to make this true (and repeatable without Tig in the room):
 
@@ -107,7 +107,57 @@ The operator's getting-started interface is an AI coding agent. Human-facing Sil
 
 **Not first-class silico backends yet:** Arduino / `arduino-cli` ([issue #59](https://github.com/tig/silico/issues/59)), PlatformIO as the deploy path, Pico SDK C as a language peer, or a separate `language = cpp` runtime. PlatformIO, raw MicroPython, and ESP-IDF may still appear *inside* a GCU; silico owns the operator Day 1→Day 2 loop, not every possible build system.
 
-## 4. What does Day 1 really look like?
+## 4. Why is Silico not a "skill"?
+
+A **skill** (in agent products: Claude Code, Cursor, Grok, and kin) is a **prompt pack**: markdown and optional helpers the agent host loads into context so the model behaves differently for a while. Useful for manners, checklists, and domain playbooks. **Not** a durable host dependency.
+
+**Silico is a spine.** Agents use it; it is not only text about how to behave.
+
+| | **Skill** | **Silico** |
+|--|-----------|------------|
+| **Ship form** | `SKILL.md` (and maybe a few helpers) in the agent product's skill tree | Installable host package + CLI (`tig-silico` / `silico`), plate, pin, CI, knowledge |
+| **Lives** | In the agent session / agent host config | On the **host** and in the **GCU** repo as a pinned dep |
+| **Proof** | Model followed the prose | Named **host gate** green; version identity on metal |
+| **Update path** | Re-read or re-install the skill | Same verbs next week: pin, gate, deploy, verify |
+| **Who owns gobbledygook** | Chat recovery and tribal notes | Code: `doctor`, `wait-device`, `inspect`, `deploy`, first-flash |
+
+FAQ 3 still holds: **host gate green means done; metal confirms.** A skill cannot be that rule. It can only *tell* the model the rule.
+
+### What it would mean if Silico were packaged as a skill
+
+If "Silico" shipped only as an agent skill, "using Silico" would mean roughly:
+
+1. **Install the skill in a specific agent product** (not `pip install -e` a clone next to the GCU). First ship becomes "pick Claude vs Cursor vs Grok and hope the skill ports."
+2. **Load first-ship prose into context** — stages, COM folklore, deploy order, bedside manners — as **instructions**, not as verbs the agent runs and CI re-runs.
+3. **No plate pin.** Scaffold becomes "copy whatever layout the model remembers." No stable `silico.toml`, no shared HAL/sim stubs, no plate CI that checks out Silico as a sibling.
+4. **No host gate as product.** "Done" is a confident chat summary or a board that blinked once. Pytest / `silico gate` / product-path are optional homework, not the spine.
+5. **Metal path is shell walls.** Port pick, first-flash, deploy verify, lockout recovery live in the skill text. Next session re-derives them. **Make it better than you found it** has nowhere durable to land except another skill edit.
+6. **GCU independence dies.** The product repo does not pin Silico. Six months later the skill changed, the agent host changed, or the skill was never installed — and the company foundation was a markdown file in someone's IDE.
+7. **Bedside becomes essay, not contract.** No `bedside doctor` / `eval` / `ask` / `step` as shared surface; only "be nice to operators" paragraphs.
+
+That package can still *feel* like Prompt to metal in one lucky session. It does **not** make this sentence true as company tech:
+
+> With just Claude Code on my Mac and my hardware spec, I had the device working end-to-end in a few hours, and in a field test the day after that. **Silico is now a foundational piece of our company's technology.**
+
+"Foundational" means **pinned host path + gate + update path**, not "we had a good skill that day."
+
+### What is fair to ship as a skill
+
+A thin **skill that points at Silico** is fine — and is not Silico itself:
+
+- Trigger: first ship / edge product / GCU / silico.
+- Body: open `https://github.com/tig/silico`, follow agent getting started, prefer `silico` / `bedside` verbs over shell walls.
+- Explicit non-goal: do not replace the package, plate, or host gate with skill prose.
+
+That is an on-ramp. The spine stays the repo and the pin.
+
+### Bottom line
+
+- **Skill** = agent-host prompt surface (session manners and playbooks).
+- **Silico** = open host spine GCUs pin so agents can **Prompt to metal** repeatedly.
+- Packaging Silico *as* a skill would mean trading infrastructure for folklore in context — the opposite of **Agents operate the host path** and **Host first**.
+
+## 5. What does Day 1 really look like?
 
 Day 1 begins with one human action: open a coding agent and give it the Silico start prompt. The agent owns machine discovery, prerequisites, GitHub authentication, Silico installation, repository setup, testing, and the device host path. The human supplies domain judgment, performs necessary physical actions, and confirms irreversible writes.
 
@@ -153,15 +203,15 @@ The checklist for Grady, or anyone who finds `github.com/tig/silico` and wants D
 
 **Split to remember:** `firmware/` → metal only. Silico package → Mac and CI only. Product domain stays private in the GCU.
 
-## 5. Who is Grady?
+## 6. Who is Grady?
 
 CEO and Founder of Quilan. Not a software guy. Raised money, Asia-built prototype, software and field trials stalled. The person in the sentence we work backwards from.
 
-## 6. What problem does silico refuse to solve?
+## 7. What problem does silico refuse to solve?
 
 The unicorn's core product. Vertical domain truth is their moat. Silico refuses to own it. Silico owns gobbledygook: prove on host, install, identify, recover, prompt agents without folklore.
 
-## 7. What are the three GCUs?
+## 8. What are the three GCUs?
 
 1. **Zakalwe** — closed-loop control GCU. No internet requirement. First extraction source; agent-authored firmware is the existence proof.
 2. **Quilan** — slow field logger GCU. Only starter that needs internet and phone-home (app-owned in v1, not silico spine).
@@ -169,7 +219,7 @@ The unicorn's core product. Vertical domain truth is their moat. Silico refuses 
 
 Legend: [gcu-codenames.md](./gcu-codenames.md). Public docs use codenames plus short published product shape when the owner chooses; no private domain dump into the spine.
 
-## 8. Who is the customer of silico?
+## 9. Who is the customer of silico?
 
 Near term: me, shipping three GCUs with agents under contracts I write; partners who supply domain rough specs (Galahad-shaped).
 
@@ -177,15 +227,15 @@ Target: vertical teams (SpaceX / Stoke / Figure / Anduril shaped) that need edge
 
 End customers of Zakalwe, Quilan, or Sma never have to know silico exists.
 
-## 9. Is silico an app or a platform?
+## 10. Is silico an app or a platform?
 
 Today it is a builder tool (an app for people who ship GCUs) governed by tenets. It is not a multi-sided platform under the Gates line until economic value to everyone using it exceeds value I capture. See [Virtuous Cycles, Platforms, Flywheels, Snowballs, and Tidal Waves](https://blog.kindel.com/2021/03/30/virtuous-cycles-platforms-flywheels-snowballs-and-tidal-waves/) and [Be Either an App or a Platform, Not Both](https://blog.kindel.com/2011/08/24/be-either-an-app-or-a-platform-not-both/).
 
-## 10. Why not call this a platform in the press release?
+## 11. Why not call this a platform in the press release?
 
 Because I still stand by 2011. Calling a tool a platform before the sides show up loses focus. The PR names three apps, a spine, agent-authored firmware as proof, and honest language under **Extract, then open**.
 
-## 11. What are the Priorities (in order)?
+## 12. What are the Priorities (in order)?
 
 1. Three GCUs actually in field service (not bench heroes).
 2. Shared install/update/verify path end customers can run.
@@ -194,24 +244,24 @@ Because I still stand by 2011. Calling a tool a platform before the sides show u
 5. Public silico repo that is not a dump of private product trees.
 6. Honest language: extraction proven; external adoption not yet.
 
-## 12. What is deliberately out of scope for silico v1 / Fall 2026?
+## 13. What is deliberately out of scope for silico v1 / Fall 2026?
 
 1. Built-in internet and phone-home **as silico spine features** (Quilan may do WAN in the *app*).
 2. Claiming external adoption or "industry default."
-3. A full v2 narrative (see FAQ 37 for longer-term vision in one place).
+3. A full v2 narrative (see FAQ 38 for longer-term vision in one place).
 4. **Arduino-class** plates as a silico deliverable (tracked; not shipped — [issue #59](https://github.com/tig/silico/issues/59)). ESP32-class MicroPython and ESP-IDF C *are* on the spine (FAQ 3).
 5. PlatformIO or Pico SDK as **silico** dual-runtime peers (may still live inside a GCU’s own build).
 6. Paid silico support, multi-tenant cloud twin, "silico certified" marketing.
 
-## 13. How will we describe this in one breath?
+## 14. How will we describe this in one breath?
 
 Tomorrow the device works end-to-end with Claude Code on your Mac and your hardware spec. The day after, it is in a field test. Silico stays how you ship edge after that.
 
-## 14. What is the plan for geographic roll out?
+## 15. What is the plan for geographic roll out?
 
 **open.**
 
-## 15. How does this compare to Embedder, Simantic, ESPHome, PlatformIO, etc.?
+## 16. How does this compare to Embedder, Simantic, ESPHome, PlatformIO, etc.?
 
 Those are real tools. Most stop at an **expert developer's desk** or lock you into a **hub/cloud/module** story. Silico's wedge is the combination, not any single feature:
 
@@ -228,11 +278,11 @@ Those are real tools. Most stop at an **expert developer's desk** or lock you in
 
 No full SWOT in this FAQ. Landscape shifts; the wedge should not.
 
-## 16. What is the thing you think hardest about?
+## 17. What is the thing you think hardest about?
 
 Whether "in the field" is honest for all three GCUs by Fall 2026, and whether I will confuse "agents shipped my apps" with "vertical unicorns will adopt this." Those are different proofs. Also whether host gates stay honest when the agent is confident and wrong.
 
-## 17. Risk: What are the riskiest parts of this?
+## 18. Risk: What are the riskiest parts of this?
 
 1. Soft "field" definition (one friendly pilot counts).
 2. Claiming external proof when only extraction (or only Zakalwe agent-authorship) is proven.
@@ -243,7 +293,7 @@ Whether "in the field" is honest for all three GCUs by Fall 2026, and whether I 
 7. Humans "helping" by bypassing the host gate and reintroducing folklore.
 8. Building spine features vertical teams do not care about while the gate is still soft.
 
-## 18. Risk: Mitigations?
+## 19. Risk: Mitigations?
 
 1. One-sentence "field" definition per GCU before more spine code.
 2. Label extraction vs external proof every time we talk (**Extract, then open**).
@@ -254,27 +304,27 @@ Whether "in the field" is honest for all three GCUs by Fall 2026, and whether I 
 7. Anti-pattern files next to AGENTS.md; agent-written code is the default path, not a side quest.
 8. Keep the Zakalwe story honest: non-expert human, agent-authored firmware, rough brief from Galahad.
 
-## 19. What IP will we create?
+## 20. What IP will we create?
 
 Private: each GCU's firmware domain, PCB, mechanical, brand.
 Open (tig/silico): spine, plates, docs, agent contracts, non-secret examples.
 **open:** license choice and patent posture.
 
-## 20. What tech do we buy, license, use, or invent?
+## 21. What tech do we buy, license, use, or invent?
 
 Use: MicroPython, mpremote, pytest, GitHub Actions; ESP-IDF / esptool for ESP32-class paths; KiCad where products need boards.
 Invent: host-first contracts, install/verify protocol, agent prompt surface, dual-runtime deploy/inspect (mpy file copy vs IDF image), discipline that keeps apps from becoming platforms.
 Buy/license: **open.**
 
-## 21. What cloud services will be required?
+## 22. What cloud services will be required?
 
-None for silico v1. Quilan may phone home on its own app dime. Zakalwe does not need WAN. Sma local mesh is not cloud. Continuous deploy with automatic rollback for fleets is longer-term vision (FAQ 37), not this PR.
+None for silico v1. Quilan may phone home on its own app dime. Zakalwe does not need WAN. Sma local mesh is not cloud. Continuous deploy with automatic rollback for fleets is longer-term vision (FAQ 38), not this PR.
 
-## 22. What device software will be required?
+## 23. What device software will be required?
 
 Per GCU: application firmware on a supported device runtime (FAQ 3). Default remains **MicroPython** (RP2040-class or ESP32-class). **C / ESP-IDF** is available for ESP32-class GCUs that opt into the `gcu-c` plate. Agents write it. Shared contracts: version / identity on the link, harness or self-test signature where the product needs it, HAL-shaped I/O for host sim (pytest or CTest).
 
-## 23. How will we measure success?
+## 24. How will we measure success?
 
 Primary: can a Grady-shaped founder reproduce the path without Tig in the room?
 - Day 1: agent on Mac, real USB device (+ sim), end-to-end, host gate green.
@@ -286,40 +336,40 @@ Secondary: three GCUs on one spine; agent-authored firmware under contracts; pub
 Not yet: strangers adopt without meeting Tig.
 **open:** product-line revenue is not silico's scoreboard.
 
-## 24. What metrics will you track?
+## 25. What metrics will you track?
 
 Candidates: host CI green rate; time merge to verified device version; failed install rate; field returns tied to firmware; silico promotions driven by a second GCU; fraction of firmware commits that are agent-authored; agent changes that pass host gate without human code rewrite.
 **open:** pick the few that change behavior.
 
-## 25. Why not only ship Zakalwe?
+## 26. Why not only ship Zakalwe?
 
 Because **Vertical teams are the customer** and **Prompt to metal** are not one vertical. Quilan and Sma force extraction. If they die, silico should still have made Zakalwe more shippable and agent contracts more honest. If they live, gobbledygook was paid down once.
 
-## 26. What customer segments will these products NOT attract?
+## 27. What customer segments will these products NOT attract?
 
 **open** per GCU. Hostile version: who do we tell "no"?
 
-## 27. Does "in the field" mean paying strangers or my own sites and benches?
+## 28. Does "in the field" mean paying strangers or my own sites and benches?
 
 **open.** Write the bar so a skeptic cannot move it after the fact.
 
-## 28. Will end customers need Python installed?
+## 29. Will end customers need Python installed?
 
 They may need host runtime dependencies in v1, but they do not need Python knowledge or a Python tutorial. The agent owns installation and operation of host tooling. End customers use the GCU's product-specific update path and do not need to know Silico exists. Longer term, packaged update paths should reduce host prerequisites further.
 
-## 29. What happens when the wrong USB device is on the machine?
+## 30. What happens when the wrong USB device is on the machine?
 
 The agent will help.
 
-## 30. How do agents know they are done?
+## 31. How do agents know they are done?
 
 AGENTS.md names the host command that must be green. Device flash is confirmation, not proof. That is **Prompt to metal** and **Host first**. Without that, "agents write the code" is cosplay.
 
-## 31. How do humans who are not embedded experts know they are done?
+## 32. How do humans who are not embedded experts know they are done?
 
 Same gate. Same version verify. Same anti-patterns. The point of Zakalwe is that the human did not need Pi literacy to ship. If the process reintroduces "ask the firmware person," we failed.
 
-## 32. What is the naming plan?
+## 33. What is the naming plan?
 
 Spine brand and GitHub: silico (github.com/tig/silico).
 CLI entry point: `silico`.
@@ -328,23 +378,23 @@ Product class: GCU (GCV later if needed).
 Public product references: Zakalwe, Quilan, Sma only.
 Commercial brands: **open** per app; not silico sub-brands.
 
-## 33. HW: SKU plan?
+## 34. HW: SKU plan?
 
 **open** per product.
 
-## 34. HW: Regulatory?
+## 35. HW: Regulatory?
 
 **open.** Per product class. Keep product-specific lists out of public silico docs.
 
-## 35. HW: EOL for key components?
+## 36. HW: EOL for key components?
 
 **open.**
 
-## 36. What is the relationship between this doc and silicov1.md?
+## 37. What is the relationship between this doc and silicov1.md?
 
 [silicov1.md](./silicov1.md) is the buildable spine spec for three Pi-class GCUs. [tenets.md](./tenets.md) is the Principle set. This WB doc is the v1 customer-facing ambition and FAQ forcing function. If they disagree, fix one.
 
-## 37. What is the longer-term vision?
+## 38. What is the longer-term vision?
 
 Not a second full WB (yet). Direction under the same tenets:
 
@@ -357,10 +407,10 @@ Not a second full WB (yet). Direction under the same tenets:
 
 v1 success does not require any of that. v1 requires three field GCUs, agent-honest gates, and a spine extracted without cosplay. Revisit a v2 WB when external proof or a second forcing function demands it.
 
-## 38. Is silico a company product?
+## 39. Is silico a company product?
 
 No. Tig Kindel's open-source spine under the Silico tenets. Private GCU apps ship under whatever brand each requires.
 
-## 39. When is this doc done?
+## 40. When is this doc done?
 
 When a hostile reader can state the two-day Grady experience in one breath, see how every priority serves it, still tell extraction from external proof apart, and not invent a platform cosplay or leak product brands.

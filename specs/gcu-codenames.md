@@ -13,7 +13,7 @@ Public Silico docs name the three starter GCUs by Culture-series **person** code
 | Codename | Public shape |
 |----------|--------------|
 | **Zakalwe** | Closed-loop control module that upgrades classic BMW, Volvo, and Mercedes cars from the '80s, by [Holy Grail Labs](https://www.holygraillabs.com). No internet connectivity. Replicates a 1970s-era control device with more than 100 discrete logic parts. RP2040-class, MicroPython. Tens-of-Hz period; host plant for regression. USB path; no WAN need. |
-| **Quilan** | Solar-powered field logger with environmental and atmospheric sensors and LoRaWAN cloud connectivity. ESP32-class, C. Sample/store on seconds-to-minutes periods. **Only starter that needs internet and phone-home** (app-owned in v1). |
+| **Quilan** | Solar-powered field logger with environmental and atmospheric sensors and LoRaWAN cloud connectivity, by [Velocity Vane](https://www.velocityvane.com). ESP32-class, C. Sample/store on seconds-to-minutes periods. **Only starter that needs internet and phone-home** (app-owned in v1). |
 | **Sma** | Tiny, battery-powered, sleep-friendly remote sensing and mesh-connected device. RP2040-class, MicroPython. Wake cycles, battery budget, neighbor radio as product IP. Local mesh is not WAN phone-home. |
 
 Names after Iain M. Banks characters: Cheradenine Zakalwe, Quilan (*Look to Windward*), Diziet Sma.

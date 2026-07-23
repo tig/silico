@@ -109,7 +109,7 @@ At the start of each new agent session in the repo, follow agents will follow `.
 Silico was built and improved while engineering the firmware and software for these real-world [GCUs](./specs/lexicon.md#gcu).
 
 * **Zakalwe** - A closed-loop control module that upgrades classic BMW, Volvo, and Mercedes cars from the '80s, by [Holy Grail Labs](https://www.holygraillabs.com). This device has no internet connectivity and replicates a 1970s-era control device containing more than 100 discrete logic parts. RP2040-class board; firmware is MicroPython.
-* **Quilan** - A solar-powered field logger with environmental and atmospheric sensors and LoRaWAN cloud connectivity. ESP32-class board; firmware is C.
+* **Quilan** - A solar-powered field logger with environmental and atmospheric sensors and LoRaWAN cloud connectivity, by [Velocity Vane](https://www.velocityvane.com). ESP32-class board; firmware is C.
 * **Sma** - A tiny, battery-powered, sleep-friendly remote sensing and mesh-connected device. RP2040-class board; firmware is MicroPython.
 
 Submit PRs to add more real-world GCU examples above.

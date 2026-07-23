@@ -2,7 +2,7 @@
 # Do not `pip install silico` (unrelated package on PyPI).
 #
 # Pin: editable local clone as a sibling of this GCU (../silico).
-# Day 1: agent clones tig/silico beside the GCU if missing, then pip install -e.
+# first ship: agent clones tig/silico beside the GCU if missing, then pip install -e.
 # CI: plate .github/workflows/ci.yml checks out GCU + silico as siblings so
 #     `pip install -r requirements-dev.txt` works unchanged — do not invent a
 #     separate silico-src path or skip this file on the runner.

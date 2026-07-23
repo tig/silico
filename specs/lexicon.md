@@ -66,9 +66,23 @@ The **human-observable product indication** on the [GCU](#gcu) after the app is 
 
 **Not** the same as: deploy verify success, `FW_VERSION` over REPL, or a generic [plate](#plate) hello on a module GPIO that is not the product’s intended signal.
 
-Always say the full term **product face**. Never shorten to bare “face.” On first use in a session, define it (see silico `AGENTS.md` operator language). Day 1 [metal](#metal) acceptance requires the operator to confirm the product face, not only a version string.
+Always say the full term **product face**. Never shorten to bare “face.” On first use in a session, define it (see silico `AGENTS.md` operator language). First-ship [metal](#metal) acceptance requires the operator to confirm the product face, not only a version string.
 
-See also: [metal](#metal), [host gate](#host-gate), [Help the operator](#help-the-operator).
+See also: [metal](#metal), [host gate](#host-gate), [Help the operator](#help-the-operator), [first ship](#first-ship).
+
+### first ship
+
+Also **first-ship path.** The ordered getting-started path from cold start to an operator-observable [product face](#product-face) on [metal](#metal): tools → workspace → [plate](#plate) + [host gate](#host-gate) → board talk + confirmed deploy + see/hear. **Not** a calendar day and not “we’ll finish tomorrow.” Say **first ship**, never “Day 1.”
+
+Chunks of the path are [**stages**](#stage) (Stage 0 welcome, A tools, B workspace, C plate, D metal, …). After first ship: the **update path** (how you change and re-flash next time), not “Day 2.”
+
+See also: [stage](#stage), [Help the operator](#help-the-operator), [Prompt to metal](#prompt-to-metal).
+
+### stage
+
+One **short ordered chunk** of the [first ship](#first-ship) path (Stage 0, A, B, C, D, E, F). Prefer **stage** over **phase** (phase sounds long and waterfall). When saying “where we are,” use stage letter + plain name from the first-ship map in root `AGENTS.md`.
+
+See also: [first ship](#first-ship), [gate](#gate).
 
 ---
 
@@ -115,13 +129,13 @@ See also: [integrity](#integrity), [Prompt to metal](#prompt-to-metal), [gobbled
 
 ### integrity
 
-Also **update integrity.** Hardening so field updates are trustworthy beyond version string match (hash manifest, signing, provenance, CRA-related hooks, etc.). Definition open - see the integrity spike. **Not** a Day 2 alpha requirement; belongs on the month-later beta horizon.
+Also **update integrity.** Hardening so field updates are trustworthy beyond version string match (hash manifest, signing, provenance, CRA-related hooks, etc.). Definition open - see the integrity spike. **Not** a first-ship or early update-path requirement; belongs on the month-later beta horizon.
 
 See also: [version identity](#version-identity).
 
 ### sim
 
-Also **host plant** / **closed-loop plant.** [Host](#host)-only simulation of the product world used for regression without a board. Never deployed to the device. Complements [metal](#metal); does not replace [host gate](#host-gate) or real USB on Day 1.
+Also **host plant** / **closed-loop plant.** [Host](#host)-only simulation of the product world used for regression without a board. Never deployed to the device. Complements [metal](#metal); does not replace [host gate](#host-gate) or real USB on first ship.
 
 See also: [HAL](#hal), [host-first](#host-first).
 
@@ -139,7 +153,7 @@ See also: [host-first](#host-first), [metal](#metal).
 
 Also **bedside manners.** Assume low ops literacy; do the work when you can; one step at a time for physical/browser steps; never dump a wall of unexplained shell. Violating this violates Agents operate the host path.
 
-In **silico**, agent docs add domain operator language on top of Bedside (not a fork of the nine principles): (1) the **first prompt** reminds what Silico is and summarizes **this** [GCU](#gcu); (2) silico terms ([GCU](#gcu), [host](#host), [plate](#plate), [scaffold](#scaffold), [gate](#gate), [host gate](#host-gate), [metal](#metal), [product face](#product-face), [pin](#pin), …) are **defined on first use** and spoken as their **canonical lexicon names** (no invented short forms such as bare “face” for product face); (3) big human steps include **why** and **where** on the Day 1 map. Canonical rules: silico root `AGENTS.md` → Operator language.
+In **silico**, agent docs add domain operator language on top of Bedside (not a fork of the nine principles): (1) the **first prompt** reminds what Silico is and summarizes **this** [GCU](#gcu); (2) silico terms ([GCU](#gcu), [host](#host), [plate](#plate), [scaffold](#scaffold), [first ship](#first-ship), [stage](#stage), [gate](#gate), [host gate](#host-gate), [metal](#metal), [product face](#product-face), [pin](#pin), …) are **defined on first use** and spoken as their **canonical lexicon names** (no invented short forms such as bare “face” for product face); (3) big human steps include **why** and **where** on the first-ship map. Canonical rules: silico root `AGENTS.md` → Operator language.
 
 See also: [operator](#operator), [Grady](#grady).
 
@@ -151,7 +165,7 @@ See also: [Help the operator](#help-the-operator).
 
 ### Grady
 
-Also **Grady-shaped.** Persona for the non-software (or non-embedded) founder/builder who should complete Day 1-2 with an agent, without staffing a device-ops cult. Used as the customer shape for [**Prompt to metal**](#prompt-to-metal), not as a public product brand.
+Also **Grady-shaped.** Persona for the non-software (or non-embedded) founder/builder who should complete [first ship](#first-ship) and the update path with an agent, without staffing a device-ops cult. Used as the customer shape for [**Prompt to metal**](#prompt-to-metal), not as a public product brand.
 
 See also: [operator](#operator).
 
@@ -167,7 +181,7 @@ See also: [host path](#host-path), [spine](#spine).
 
 ### pin
 
-Also **package pin.** [GCU](#gcu) `requirements-dev.txt` (or equivalent) depends on [silico](#silico) by **tag or SHA** (or editable path while extracting). Pin is necessary for Day 1 foundation; not sufficient without CI [host gate](#host-gate) and real [metal](#metal) path.
+Also **package pin.** [GCU](#gcu) `requirements-dev.txt` (or equivalent) depends on [silico](#silico) by **tag or SHA** (or editable path while extracting). Pin is necessary for first-ship foundation; not sufficient without CI [host gate](#host-gate) and real [metal](#metal) path.
 
 See also: [plate](#plate).
 

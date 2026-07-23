@@ -12,7 +12,7 @@ Product domain (idle control, drone songs, vehicle acceptance) stays in the **GC
 | SPI IPS color / INVON / partial paint | [esp32-lcd-ips.md](esp32-lcd-ips.md) |
 | Large binary assets (PCM, images) deploy verify | [deploy-assets.md](deploy-assets.md) |
 | M5GO / Core v2.7 power button | [m5go-power.md](m5go-power.md) |
-| Day-1 product-face pin packs / board profiles | [board-profiles.md](board-profiles.md) |
+| first-ship product-face pin packs / board profiles | [board-profiles.md](board-profiles.md) |
 | ESP32 USB-serial duplex / console lockout / UART0 | [esp32-usb-serial.md](esp32-usb-serial.md) |
 | First-flash UF2 vs esptool | [first-flash.md](first-flash.md) |
 | Thin / contradictory product `spec.md` (interview mode) | [spec-interview.md](spec-interview.md) |
@@ -22,7 +22,7 @@ Do **not** load every knowledge file into context. Open only the topic you need.
 
 ## Make it better (required loop)
 
-When Day 1 or metal work forces you to **guess, reverse, or research** something that is **host/board-generic** (not one vertical product):
+When first ship or metal work forces you to **guess, reverse, or research** something that is **host/board-generic** (not one vertical product):
 
 1. Prefer a durable fix in code (`ports.py`, `inspect`, `deploy`, plate) when it is a tool bug.
 2. If it is durable **guidance**, add or extend a file under `silico/knowledge/` in the same PR or a follow-up.
@@ -36,4 +36,4 @@ Leaving recovery only in chat violates **Make it better than you found it**.
 
 - Vertical GCU specs, acceptance rows, brand names
 - Bedside operator-manners contract (lives in tig/bedside)
-- Long essays that duplicate AGENTS Day 1 phase order
+- Long essays that duplicate AGENTS first-ship stage order

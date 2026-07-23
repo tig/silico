@@ -36,7 +36,7 @@ def run_doctor(*, root: Path | None = None) -> DoctorReport:
         lines.append(f"  - {r}")
     if ws.mode == "silico-package":
         lines.append(
-            "INFO: this tree is the silico package. Product Day 1 work belongs in a GCU repo "
+            "INFO: this tree is the silico package. Product first-ship work belongs in a GCU repo "
             "(do not scaffold a GCU into the silico checkout)."
         )
     elif ws.mode == "gcu":
@@ -123,7 +123,7 @@ def run_doctor(*, root: Path | None = None) -> DoctorReport:
     # Point agents at growing host knowledge (board caps, audio, first-flash).
     lines.append(
         "Host knowledge: silico/knowledge/ (ESP32 audio, first-flash notes). "
-        "When Day 1 friction is board/host-generic, add a note there (Make it better)."
+        "When first ship friction is board/host-generic, add a note there (Make it better)."
     )
 
     return DoctorReport(ok=ok, lines=lines)

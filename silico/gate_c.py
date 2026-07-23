@@ -120,7 +120,7 @@ def run_host_gate_command(
     if not cmd:
         lines.append(
             "WARN: no [host].gate command — skip subprocess host build/test "
-            "(set gate = \"cmake --build build/host --target test\")."
+            "(set gate = \"cmake --build build/host --target host_test\")."
         )
         return True, lines
 

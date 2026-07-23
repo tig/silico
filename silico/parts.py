@@ -40,7 +40,7 @@ class Part:
     name: str
     role: str = ""
     notes: str = ""
-    # Optional silico board profile id (Day-1 product-face pin pack). See board_profile.
+    # Optional silico board profile id (first-ship product-face pin pack). See board_profile.
     profile: str = ""
     pointers: dict[str, str] = field(default_factory=dict)
 

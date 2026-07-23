@@ -1,6 +1,6 @@
 # Spec interview mode (product contract quality)
 
-**Not product domain.** Guidance for agents when a GCU’s `spec.md` is too thin or fights itself. Normative Day 1 placement: root `AGENTS.md` → **Spec interview mode**. Issue: [tig/silico#68](https://github.com/tig/silico/issues/68).
+**Not product domain.** Guidance for agents when a GCU’s `spec.md` is too thin or fights itself. Normative first ship placement: root `AGENTS.md` → **Spec interview mode**. Issue: [tig/silico#68](https://github.com/tig/silico/issues/68).
 
 ## When to fire
 
@@ -29,7 +29,7 @@ Prefer structured chooser (`bedside ask` / host picker):
 3. Free text only for open domain judgment.
 4. Propose durable `spec.md` edits only after **yes**; else issues / ambiguity log.
 5. Do not invent vertical moat without operator judgment.
-6. Do not write product identity (`firmware/version.py`, `silico.toml`) from unresolved or conflicting identity fields — assess / interview first (root AGENTS Phase C).
+6. Do not write product identity (`firmware/version.py`, `silico.toml`) from unresolved or conflicting identity fields — assess / interview first (root AGENTS Stage C).
 
 ## Interactive path
 

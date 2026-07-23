@@ -14,8 +14,9 @@ add_executable(test_defaults test_defaults.c)
 target_link_libraries(test_defaults gcu_core)
 add_test(NAME defaults COMMAND test_defaults)
 
-# Convenience: cmake --build build/host --target test runs ctest
-add_custom_target(test
+# Convenience: cmake --build build/host --target host_test runs ctest.
+# Do not name this target "test" — CMake reserves that name when enable_testing() is on.
+add_custom_target(host_test
   COMMAND ${CMAKE_CTEST_COMMAND} --output-on-failure
   DEPENDS test_defaults
   WORKING_DIRECTORY ${CMAKE_BINARY_DIR}

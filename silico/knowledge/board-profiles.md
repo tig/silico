@@ -1,4 +1,4 @@
-# Board profiles (Day-1 product-face pin packs)
+# Board profiles (first-ship product-face pin packs)
 
 **Not product domain.** Packaged GPIO / face candidates for common boards so agents do not invent pin maps from chat folklore.
 
@@ -6,7 +6,7 @@ Normative tools: `silico board-profile`, `parts.toml` `profile = "…"`, `silico
 
 ## Why
 
-Day-1 metal needs an operator-observable **product face** (see root AGENTS Phase D1). On M5GO-class units that often means **side strip + speaker**, not a random module LED. Pin numbers used to live only in knowledge notes (`esp32-audio.md`, bench lore). Prefer a **board profile** that agents can list and seed into `firmware/defaults.py` as **candidates**.
+first-ship metal needs an operator-observable **product face** (see root AGENTS Stage D1). On M5GO-class units that often means **side strip + speaker**, not a random module LED. Pin numbers used to live only in knowledge notes (`esp32-audio.md`, bench lore). Prefer a **board profile** that agents can list and seed into `firmware/defaults.py` as **candidates**.
 
 ## Workflow
 
@@ -52,5 +52,5 @@ Add a new `silico/boards/<id>.toml` when a common board is proven on bench. Keep
 
 - Hard-code GPIO15/25 in agent chat only; leave no profile for the next agent.
 - Seed with `--yes` without operator board confirmation.
-- Claim Day-1 metal done because defaults match a profile (still need observe).
+- Claim first-ship metal done because defaults match a profile (still need observe).
 - Soft-fork board pin tables into each GCU without promoting a silico profile when reusable.

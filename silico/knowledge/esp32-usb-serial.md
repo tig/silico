@@ -10,7 +10,7 @@ Do **not** skip steps. Host gate green ≠ duplex OK.
 2. Deploy app **without** `micropython.kbd_intr(-1)` (tool interrupt still works).
 3. Prove **round-trip**: host sends a line, device answers (not TX-only telem/identity).
 4. Only then: Ctrl-C-is-data + product `repl`/`reboot` door; prove `repl` restores mpremote.
-5. Claim metal only after operator-observable product face (AGENTS Phase D1).
+5. Claim metal only after operator-observable product face (AGENTS Stage D1).
 
 **Anti-pattern:** `kbd_intr(-1)` + unproven `serial_read` → TX works, tools locked, `repl` dead → full erase (#62).
 

@@ -13,7 +13,7 @@ chip = "esp32"
 baud = 115200
 
 [host]
-gate = "cmake --build build/host --target test"
+gate = "cmake --build build/host --target host_test"
 product_defaults = "include/gcu/defaults.h"
 
 [hal]

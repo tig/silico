@@ -45,7 +45,7 @@ def cmd_doctor(_args: argparse.Namespace) -> int:
 
 
 def cmd_welcome(_args: argparse.Namespace) -> int:
-    """Phase 0a orientation skeleton from workspace + doctor (before start gate)."""
+    """Stage 0a orientation skeleton from workspace + doctor (before start gate)."""
     report = run_welcome()
     _print_lines(report.lines)
     return 0 if report.ok else 1
@@ -66,14 +66,14 @@ def cmd_parts(args: argparse.Namespace) -> int:
 
 
 def cmd_board_profile(args: argparse.Namespace) -> int:
-    """List / show / seed Day-1 product-face pin packs for common boards."""
+    """List / show / seed first-ship product-face pin packs for common boards."""
     action = getattr(args, "bp_action", None) or "list"
     if action == "list":
         profiles = list_profiles()
         if not profiles:
             _out("FAIL: no board profiles packaged.")
             return 1
-        _out("Board profiles (Day-1 product-face pin packs):")
+        _out("Board profiles (first-ship product-face pin packs):")
         for p in profiles:
             face = p.product_face_summary or "(no face summary)"
             _out(f"  {p.id:16}  {p.name} — {face}")
@@ -265,7 +265,7 @@ def build_parser() -> argparse.ArgumentParser:
 
     wel = sub.add_parser(
         "welcome",
-        help="Phase 0a Day 1 orientation skeleton (before start gate); read-only",
+        help="Stage 0a first ship orientation skeleton (before start gate); read-only",
     )
     wel.set_defaults(func=cmd_welcome)
 
@@ -284,7 +284,7 @@ def build_parser() -> argparse.ArgumentParser:
 
     bp = sub.add_parser(
         "board-profile",
-        help="Day-1 product-face pin packs: list/show/seed defaults.py candidates",
+        help="first-ship product-face pin packs: list/show/seed defaults.py candidates",
     )
     bp_sub = bp.add_subparsers(dest="bp_action")
     bp_list = bp_sub.add_parser("list", help="list packaged board profiles")

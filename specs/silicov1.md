@@ -32,9 +32,9 @@ Make the two-day path real and repeatable for three GCUs ([gcu-codenames.md](./g
 
 v1 succeeds when:
 
-1. **Day 1:** non-software human + agent on a Mac → real USB device (+ sim) end-to-end, host gate green.
-2. **Day 2 (alpha):** same verified build can leave as a **prototype** with a **real customer for alpha** feedback — not beta polish; not full integrity suite.
-3. **~1 month later (beta horizon):** more customers can get beta-class units; **update integrity** (definition TBD — [spike](https://github.com/tig/silico/issues/4)) and optional self-hosted metal CI belong here, not on Day 2.
+1. **first ship:** non-software human + agent on a Mac → real USB device (+ sim) end-to-end, host gate green.
+2. **update path (alpha):** same verified build can leave as a **prototype** with a **real customer for alpha** feedback — not beta polish; not full integrity suite.
+3. **~1 month later (beta horizon):** more customers can get beta-class units; **update integrity** (definition TBD — [spike](https://github.com/tig/silico/issues/4)) and optional self-hosted metal CI belong here, not on update path.
 4. Ongoing: silico remains how that company updates edge (foundational, not a demo).
 5. All three GCUs share the spine without private folklore dumps into silico.
 
@@ -107,11 +107,11 @@ Public repo contains:
 4. **One thin public example GCU** (not Zakalwe domain) green in CI.
 5. **CI** for the spine itself.
 
-Private GCU repos pin silico as a **host** dependency and follow the plate. Device `firmware/` never imports silico. Full Day 1 checklist (Grady or anyone discovering this repo): [v1 WB FAQ 4](./wb-2026-fall-three-gcus.md).
+Private GCU repos pin silico as a **host** dependency and follow the plate. Device `firmware/` never imports silico. Full first ship checklist (Grady or anyone discovering this repo): [v1 WB FAQ 4](./wb-2026-fall-three-gcus.md).
 
 ```text
 # GCU depends on silico (host / CI only)
-# Day 1: local clone of tig/silico + editable pin (not git+https pip bootstrap)
+# first ship: local clone of tig/silico + editable pin (not git+https pip bootstrap)
 requirements-dev.txt:
   -e ../silico
   # CI may use a checked-out sibling or a real tag/SHA that ships tig-silico
@@ -216,8 +216,8 @@ This is the minimum **Prompt to metal** / **Host first** bar. Soften it and a no
 
 1. **Required:** scriptable path from a product checkout.
 2. **Target:** release zip per GCU (no git required).
-3. **Not required for Day 1–2:** MSI/GUI installer, OTA, full signing PKI, fleet CD with automatic rollback (FAQ 37).
-4. **Not required for Day 2 alpha:** update integrity protection beyond version identity — see month-later beta horizon and integrity spike.
+3. **Not required for first ship–2:** MSI/GUI installer, OTA, full signing PKI, fleet CD with automatic rollback (FAQ 37).
+4. **Not required for update path alpha:** update integrity protection beyond version identity — see month-later beta horizon and integrity spike.
 5. **Open (spike):** what "protecting integrity" means for beta units (hash manifest, signing, provenance, CRA hooks, …).
 
 ### 8.3 Port scoring (v1 defaults)
@@ -302,7 +302,7 @@ Until then, Quilan owns modem, credentials, and uplink protocol in private app c
 
 1. **License: Apache-2.0** (patent grant for serious vertical legal review).
 2. **Python floor: 3.11+** (do not guide operators onto EOL 3.9).
-3. **Host pin:** Day 1 agents **clone `tig/silico` locally** and pin editable (`-e ../silico` / `pip install -e …`). Do **not** bootstrap via `git+https://…@…` pip URLs. Remote tag/SHA pins only when CI or the operator needs an immutable remote ref that actually ships `tig-silico` — never invent a tag from the package version string.
+3. **Host pin:** first-ship agents **clone `tig/silico` locally** and pin editable (`-e ../silico` / `pip install -e …`). Do **not** bootstrap via `git+https://…@…` pip URLs. Remote tag/SHA pins only when CI or the operator needs an immutable remote ref that actually ships `tig-silico` — never invent a tag from the package version string.
 4. **mpy-cross** pinned to device MicroPython runtime (single source in `silico.toml` when tooling lands).
 
 **Still open**
@@ -315,7 +315,7 @@ Until then, Quilan owns modem, credentials, and uplink protocol in private app c
 6. When phone-home graduates from Quilan app code into silico.
 7. What "shout from the rooftops" means as external proof.
 8. Minimal package layout so `pip install` of a tag works (make-PR-true; pre-alpha until then).
-9. CLI verbs (spec now; see tui-cs/cli design discussion) and Day 1 rehearsal harness.
+9. CLI verbs (spec now; see tui-cs/cli design discussion) and first ship rehearsal harness.
 10. MicroPython host-sim stack ([issue #3](https://github.com/tig/silico/issues/3)); integrity for beta ([issue #4](https://github.com/tig/silico/issues/4)).
 
 ## 16. Acceptance for silico v1

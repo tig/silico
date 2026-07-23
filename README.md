@@ -63,7 +63,7 @@ Default for new GCUs is **MicroPython**. C on ESP-IDF is opt-in when a product n
 
 These may appear *inside* a GCU’s own tree; they are **not** first-class silico plates or `[runtime].language` values, yet:
 
-- **Arduino** core / `arduino-cli` as the Day 1 deploy backend ([issue #59](https://github.com/tig/silico/issues/59)).
+- **Arduino** core / `arduino-cli` as the first ship deploy backend ([issue #59](https://github.com/tig/silico/issues/59)).
 - **PlatformIO** as the silico deploy path.
 - **Pico SDK (C)** as a silico language peer (only if an RP2040 GCU forces it later).
 - **`language = cpp`** as a third peer next to MicroPython and C (C++ may live in ESP-IDF board TUs; host-gated domain stays portable C by default).
@@ -72,7 +72,7 @@ These may appear *inside* a GCU’s own tree; they are **not** first-class silic
 
 | Doc | Who |
 |-----|-----|
-| [AGENTS.md](AGENTS.md) | Agents (Day 1 getting started) |
+| [AGENTS.md](AGENTS.md) | Agents (first ship getting started) |
 | [BEDSIDE.md](BEDSIDE.md) | Operator domain notes (metal); pin [Bedside](https://github.com/tig/bedside) via vendored contract |
 | [specs/wb-2026-fall-three-gcus.md](specs/wb-2026-fall-three-gcus.md) | Humans: v1 PR + FAQ |
 | [specs/tenets.md](specs/tenets.md) | Tenets |

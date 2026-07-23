@@ -20,7 +20,7 @@ If product `spec.md` is way under-specified or contradictory, follow silico root
 
 ```text
 cmake -S host -B build/host
-cmake --build build/host --target test
+cmake --build build/host --target host_test
 silico gate
 silico product-path
 ```

@@ -4,7 +4,7 @@ Host gate:
 
 ```text
 cmake -S host -B build/host
-cmake --build build/host --target test
+cmake --build build/host --target host_test
 ```
 
 Deploy (after operator confirms board identity):

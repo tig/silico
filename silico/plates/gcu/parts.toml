@@ -19,7 +19,7 @@ notes = "SVD ships in pico-sdk (BSD-3); register-level truth, prefer it over the
 id = "xiao-rp2040"
 name = "Seeed XIAO RP2040"
 role = "board"
-# Day-1 product-face pin pack (silico board-profile). Candidates → defaults.py via seed.
+# first-ship product-face pin pack (silico board-profile). Candidates → defaults.py via seed.
 profile = "xiao-rp2040"
 docs = "https://wiki.seeedstudio.com/XIAO-RP2040/"
 notes = "Board pinout and D-label to GPIO mapping. Face candidates: silico board-profile show xiao-rp2040"

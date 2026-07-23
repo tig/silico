@@ -5,7 +5,7 @@ This file is **not** a fork of the Bedside principles.
 | Need | Open once |
 |------|-----------|
 | Portable manners (normative) | `third_party/bedside/contract` (pin: `bedside.toml`) |
-| Silico Day 1 / CLI / plate | root `AGENTS.md` |
+| Silico first ship / CLI / plate | root `AGENTS.md` |
 | First-flash detail (UF2 / esptool) | `silico/knowledge/first-flash.md` |
 | ESP32 USB duplex / console lockout | `silico/knowledge/esp32-usb-serial.md` |
 | ESP32 audio / DAC / PWM silence | `silico/knowledge/esp32-audio.md` |
@@ -18,13 +18,13 @@ This file is **not** a fork of the Bedside principles.
 
 Plain-language orientation, **first-use term definitions**, and **why + where-we-are** on big steps live in root **AGENTS.md** → *Operator language (silico domain)*. This file stays metal glossary only — do not soft-fork Bedside principles here.
 
-When prompting plug-USB, first-flash, confirm-board, or confirm-deploy: always state **why** the step is needed and **where** Day 1 is (host done vs metal still open).
+When prompting plug-USB, first-flash, confirm-board, or confirm-deploy: always state **why** the step is needed and **where** first ship is (host done vs metal still open).
 
 Before deploy / soft-reset / any act that may **surprise** (loud or long tone, music, bright LEDs, motion): **announce** what will happen and roughly how long — plain agent output is enough; not always a new confirm gate. See root **AGENTS.md** → *Announce surprising metal effects*.
 
 ## Metal first-run (domain pack)
 
-Host tools and Day-1 **phase order** live in **AGENTS.md**. Metal-specific once-only path:
+Host tools and first-ship **stage order** live in **AGENTS.md**. Metal-specific once-only path:
 
 1. Data USB cable (not charge-only).
 2. Long `silico wait-device` (agent polls; human does not announce plug-in).
@@ -36,10 +36,10 @@ Host tools and Day-1 **phase order** live in **AGENTS.md**. Metal-specific once-
 6. **Before write/reset:** clearly tell the operator what the board may do after boot (tones, LEDs, motion, duration) — especially audio products. Permission to overwrite is not a license to startle.
 7. After `--verify`, **soft-reset again** so the product boot entry runs (verify parks the app loop).
 8. **Operator-observable good:** confirm the human can **see or hear** the documented **product face** for **this** product board (not only `FW_VERSION` over REPL). Always say **product face**, never bare “face.” Plate generic LED on the wrong pin is not acceptance.
-9. **Pin / product face mismatch → ask first:** if GPIO, LED, or audio that makes up the product face is unclear vs product docs/board, **stop and clarify with the operator** (`bedside ask` / host picker) before assuming, filing-only, or advancing phases. Then fix → redeploy → re-confirm observe.
+9. **Pin / product face mismatch → ask first:** if GPIO, LED, or audio that makes up the product face is unclear vs product docs/board, **stop and clarify with the operator** (`bedside ask` / host picker) before assuming, filing-only, or advancing stages. Then fix → redeploy → re-confirm observe.
 10. App updates after first-flash: no re-teaching UF2/esptool.
 
-Do **not** stop Day 1 after host gate green unless the operator explicitly defers metal.  
+Do **not** stop first ship after host gate green unless the operator explicitly defers metal.  
 Do **not** claim “on the metal” while the product face is unproven or only tracked as an open issue.  
 Do **not** monologue HW confusion without asking the operator to clarify.  
 Do **not** invent short forms of lexicon terms (bare “face” for product face).  
@@ -64,7 +64,7 @@ Do **not** start surprising audio/motion without a clear forewarning in agent ou
 | Deploy verify | Uses REPL; **parks the product loop** — soft-reset so main runs; TX after reset ≠ duplex |
 | Running app CDC (read-only) | `silico monitor --port COMx` (does not Ctrl-C the loop) |
 
-## Day-2 leave-behind (metal)
+## update-path leave-behind (metal)
 
 MicroPython plate:
 
@@ -77,7 +77,7 @@ silico deploy --port COMx --yes --verify --reset
 C / ESP-IDF plate (`silico scaffold . --plate gcu-c`):
 
 ```text
-cmake -S host -B build/host && cmake --build build/host --target test
+cmake -S host -B build/host && cmake --build build/host --target host_test
 silico deploy --port COMx --yes --verify
 ```
 

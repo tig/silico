@@ -8,7 +8,7 @@
 | esp32-lcd-ips | SPI IPS color pack (R/B, INVON), partial blit | [esp32-lcd-ips.md](esp32-lcd-ips.md) |
 | deploy-assets | Large binary asset deploy + size verify | [deploy-assets.md](deploy-assets.md) |
 | m5go-power | M5GO / Core v2.7 red button on/off (double-click off) | [m5go-power.md](m5go-power.md) |
-| board-profiles | Day-1 product-face pin packs; board-profile seed → defaults.py | [board-profiles.md](board-profiles.md) |
+| board-profiles | first-ship product-face pin packs; board-profile seed → defaults.py | [board-profiles.md](board-profiles.md) |
 | spec-interview | Thin/contradictory product specs; interview vs interactive path | [spec-interview.md](spec-interview.md) |
 
 Add a row when you add a file.

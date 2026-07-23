@@ -8,11 +8,11 @@ Host path comes from **silico** (https://github.com/tig/silico). Pin as host-onl
 
 Start: *See https://github.com/tig/silico. Follow the getting started instructions for agents.*
 
-That playbook begins with **Phase 0** **before** any tooling. The first message must **orient** the operator: what Silico is, what a **GCU** is, and a short summary of **this** product from `README.md` / `spec.md` / this file. Then recap machine readiness, name the Day 1 map (tools → workspace → plate + host tests → board talk), name the next mutating step, and get a clear go.
+That playbook begins with **Stage 0** **before** any tooling. The first message must **orient** the operator: what Silico is, what a **GCU** is, and a short summary of **this** product from `README.md` / `spec.md` / this file. Then recap machine readiness, name the first-ship map (tools → workspace → plate + host tests → board talk), name the next mutating step, and get a clear go.
 
 Operator manners follow **Bedside** (pinned in silico; see silico `BEDSIDE.md` / vendored contract). Silico-specific operator language (define jargon on first use; big steps need why + where-we-are) lives in silico root `AGENTS.md` → **Operator language**.
 
-Day 1 is **host gate + device USB talk/prep**, not host-only. After scaffold and green pytest, continue into `wait-device` / `inspect` / REPL (or UF2) unless the operator explicitly defers metal.
+first ship is **host gate + device USB talk/prep**, not host-only. After scaffold and green pytest, continue into `wait-device` / `inspect` / REPL (or UF2) unless the operator explicitly defers metal.
 
 **Spec quality:** if product `spec.md` is way under-specified or contradictory, enter silico **spec interview mode** (root AGENTS + `silico/knowledge/spec-interview.md`) or take the operator’s **interactive path** (build while improving the spec; re-run later). Do not invent domain moat. Product truth is **this** checkout + the operator — not a sibling GCU repo with a similar name.
 
@@ -22,13 +22,13 @@ Assume low ops literacy. Prefer doing over dumping shell. **Poll USB** after ask
 
 **First-use terms:** the first time in a session you say GCU, host, plate, scaffold, gate / host gate, metal, **product face**, pin, or deploy — define it in plain language (parenthetical). Full book: silico `specs/lexicon.md`. Use **canonical lexicon names** only — never invent short forms (e.g. bare “face” for product face).
 
-**Big steps:** when asking the human to install, log in, plug hardware, first-flash, or confirm overwrite — one sentence **why**, one line **where we are** on Day 1 (phase + done vs next), then the single act.
+**Big steps:** when asking the human to install, log in, plug hardware, first-flash, or confirm overwrite — one sentence **why**, one line **where we are** on first ship (phase + done vs next), then the single act.
 
 **Next-step forks:** use a structured chooser (`bedside ask` or host picker). Never a free-text `1. / 2.` menu in chat.
 
-**Repo workflow:** inspect the GCU remote (branches / PRs / issues). **Simple** tree → recommend commits on `main` (PRs later). **Well-used** → ask whether to use PRs (note: CI/CD proof is then an explicit PR step). Never PR-spam: one branch/PR per Day 1 arc max unless the operator asked to split. Issues stage work; commits stage history. Full rule: silico root AGENTS **Repo workflow**.
+**Repo workflow:** inspect the GCU remote (branches / PRs / issues). **Simple** tree → recommend commits on `main` (PRs later). **Well-used** → ask whether to use PRs (note: CI/CD proof is then an explicit PR step). Never PR-spam: one branch/PR per first-ship path max unless the operator asked to split. Issues stage work; commits stage history. Full rule: silico root AGENTS **Repo workflow**.
 
-**Metal acceptance:** Day 1 is not “on the metal” until the operator can **see or hear** the documented **product face** after deploy. Wrong plate pin / product face LED confusion is work to finish with the operator — not an honesty footnote under a done banner. Trackers do not replace observe. **If the pin / product face mapping is unclear, ask the operator to clarify (structured chooser) in that turn** — do not only file an issue or assume GPIO16 is fine. Prefer **`silico board-profile`** pin packs (link `profile = "…"` in `parts.toml`; `seed` into `defaults.py` after confirm) over inventing M5 side/speaker pins from memory.
+**Metal acceptance:** first ship is not “on the metal” until the operator can **see or hear** the documented **product face** after deploy. Wrong plate pin / product face LED confusion is work to finish with the operator — not an honesty footnote under a done banner. Trackers do not replace observe. **If the pin / product face mapping is unclear, ask the operator to clarify (structured chooser) in that turn** — do not only file an issue or assume GPIO16 is fine. Prefer **`silico board-profile`** pin packs (link `profile = "…"` in `parts.toml`; `seed` into `defaults.py` after confirm) over inventing M5 side/speaker pins from memory.
 
 **Surprising metal effects:** before deploy, soft-reset, or any board act that may make noise, long tones, bright lights, or motion — **clearly state in chat** what will happen and roughly how long. Not always a new yes/no gate; always a forewarning. Never silent-deploy a screaming boot riff.
 
@@ -40,7 +40,7 @@ Portable manners gaps: file on **tig/bedside**; metal spine gaps: **tig/silico**
 |-------|--------|
 | `firmware/` change done | `pytest -q` green (host gate). CI green if remote exists. |
 | Deployed | `silico deploy … --port COMx --yes --verify` after operator confirmed identity + write. |
-| On the metal (Day 1) | Deployed **and** operator sees/hears documented **product face** for this GCU (not only version string). |
+| On the metal (first ship) | Deployed **and** operator sees/hears documented **product face** for this GCU (not only version string). |
 | Issue fixed | CI green **and** metal matches the issue. |
 
 Never treat "I flashed something" as done. Never claim on-the-metal while the product face is unproven.

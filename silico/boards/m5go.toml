@@ -1,4 +1,4 @@
-# Day-1 product-face pin pack: M5GO / M5Stack Core classic ESP32 family.
+# first-ship product-face pin pack: M5GO / M5Stack Core classic ESP32 family.
 # Candidates only — operator must confirm on metal before claiming product face.
 
 id = "m5go"
@@ -8,7 +8,7 @@ mcu = "esp32"
 notes = "Side RGB strip + on-board speaker. Board revs differ; confirm LEDs and amp path on the unit in hand."
 
 [product_face]
-summary = "M5GO-class Day-1 face: side status strip + speaker boot/status tone"
+summary = "M5GO-class first-ship face: side status strip + speaker boot/status tone"
 led_pin = 15
 led_role = "side strip / status (often NeoPixel bus; some revs differ — confirm)"
 speaker_pin = 25

@@ -47,7 +47,7 @@ def _should_skip_source(rel: Path) -> bool:
     """Skip decision on the path RELATIVE to the plate root.
 
     Never test the absolute source path: when silico is pip-installed into a
-    venv that lives inside the destination repo (the layout the Day 1 playbook
+    venv that lives inside the destination repo (the layout the first ship playbook
     itself produces), every plate file's absolute path contains ".venv" as a
     part and the whole plate is silently skipped (tig/silico#48).
     """
@@ -120,7 +120,7 @@ def scaffold(dest: Path, *, force: bool = False, plate: str = "gcu") -> list[str
     if plate == "gcu-c":
         lines.append(
             "Next: set product identity in silico.toml / include/gcu/version.h, "
-            "then: cmake -S host -B build/host && cmake --build build/host --target test"
+            "then: cmake -S host -B build/host && cmake --build build/host --target host_test"
         )
         lines.append("Metal: silico deploy --port COMx (idf-flash) after operator confirm.")
     else:

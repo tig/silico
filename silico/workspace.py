@@ -39,7 +39,7 @@ def _project_name(pyproject: Path) -> str | None:
 
 
 def detect_workspace(root: Path | None = None) -> WorkspaceKind:
-    """Classify the working tree for Day 1 agents (no product names)."""
+    """Classify the working tree for first ship agents (no product names)."""
     root = (root or Path.cwd()).resolve()
     reasons: list[str] = []
 

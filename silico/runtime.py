@@ -122,7 +122,7 @@ def resolve_runtime(root: Path | None = None) -> RuntimeConfig:
         if project is None:
             project = "firmware"
         if host_gate is None:
-            host_gate = "cmake --build build/host --target test"
+            host_gate = "cmake --build build/host --target host_test"
         if chip is None:
             warnings.append(
                 "WARN: [runtime].chip not set (esptool needs esp32 / esp32s3 / …). "

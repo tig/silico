@@ -1,9 +1,9 @@
-"""Phase 0 orientation skeleton filled from workspace + doctor facts.
+"""Stage 0 orientation skeleton filled from workspace + doctor facts.
 
 Tools encode manners: agents run ``silico welcome`` (read-only), paste/adapt the
-text into chat as Phase **0a**, and only then open the start gate (0b).
+text into chat as Stage **0a**, and only then open the start gate (0b).
 
-See root AGENTS.md Phase 0 and tig/silico#70.
+See root AGENTS.md Stage 0 and tig/silico#70.
 """
 
 from __future__ import annotations
@@ -45,9 +45,13 @@ ORIENTATION_MARKERS: tuple[tuple[str, str, re.Pattern[str]], ...] = (
         ),
     ),
     (
-        "day1_map",
-        "Day 1 map",
-        re.compile(r"\bDay\s*1\b.*\b(map|Phase|tools|workspace|plate|host gate|metal|USB)\b", re.I | re.S),
+        "first_ship_map",
+        "first-ship map",
+        re.compile(
+            r"\b(first[- ]?ship map|Day\s*1 map)\b"
+            r"|\b(first[- ]?ship|Day\s*1)\b.*\b(map|Stage|Phase|tools|workspace|plate|host gate|metal|USB)\b",
+            re.I | re.S,
+        ),
     ),
     (
         "next_step",
@@ -59,7 +63,7 @@ ORIENTATION_MARKERS: tuple[tuple[str, str, re.Pattern[str]], ...] = (
         "start gate only after orientation",
         re.compile(
             r"\bstart[- ]?gate\b.*\b(next|after|until)\b"
-            r"|\bdo not\b.*\b(start[- ]?day1|start[- ]?gate|bedside ask|chooser)\b.*\buntil\b",
+            r"|\bdo not\b.*\b(start[- ]?first[- ]?ship|start[- ]?day1|start[- ]?gate|bedside ask|chooser)\b.*\buntil\b",
             re.I | re.S,
         ),
     ),
@@ -76,7 +80,7 @@ class WelcomeReport:
 def validate_orientation_text(text: str) -> list[str]:
     """Return marker ids missing from an operator-facing orientation message.
 
-    Empty list means the skeleton is present enough for Phase 0a. Used by tests
+    Empty list means the skeleton is present enough for Stage 0a. Used by tests
     and as a lightweight eval so thin tooling-only first turns fail the same
     way a red host gate does (tig/silico#70).
     """
@@ -179,7 +183,7 @@ def _readiness_bits(doctor_lines: list[str], ws_mode: str) -> str:
 
 
 def build_welcome(*, root: Path | None = None) -> list[str]:
-    """Return filled Phase 0a orientation lines (read-only; no start gate)."""
+    """Return filled Stage 0a orientation lines (read-only; no start gate)."""
     root = (root or Path.cwd()).resolve()
     ws = detect_workspace(root)
     doctor = run_doctor(root=root)
@@ -196,7 +200,7 @@ def build_welcome(*, root: Path | None = None) -> list[str]:
         next_step = (
             "open or create the **product GCU** checkout (do not scaffold a customer GCU into silico)"
         )
-        workspace_line = "this tree is the silico package — product Day 1 belongs in a GCU repo"
+        workspace_line = "this tree is the silico package — product first ship belongs in a GCU repo"
     else:
         next_step = (
             "lock the **product workspace** (GCU root with spec/README), then local-clone Silico and scaffold"
@@ -217,7 +221,7 @@ def build_welcome(*, root: Path | None = None) -> list[str]:
         "",
         f"What I know now: {readiness} ({workspace_line}).",
         "",
-        "**Day 1 map:** (A) machine tools → (B) product workspace locked → (C) **plate** via "
+        "**First-ship map:** (A) machine tools → (B) product workspace locked → (C) **plate** via "
         "**scaffold**, then **host gate** (automated tests on this computer) green → (D) board "
         "talks over USB and a confirmed first deploy with operator-observable **product face**. "
         "We do not stop at host-only.",
@@ -226,8 +230,8 @@ def build_welcome(*, root: Path | None = None) -> list[str]:
         "host test path before we touch the board.",
         "",
         "---",
-        "Phase **0a complete** (orientation). **Start gate is next** — do **not** call "
-        "`bedside ask` / host chooser for `start-day1` until this orientation has been shown "
+        "Stage **0a complete** (orientation). **Start gate is next** — do **not** call "
+        "`bedside ask` / host chooser for `start-first-ship` until this orientation has been shown "
         "to the operator as a normal chat message. Then open the start gate (0b).",
         "",
         "Doctor snapshot (read-only grounding):",

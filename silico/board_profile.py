@@ -1,4 +1,4 @@
-"""Board product-face pin packs (Day-1 face candidates).
+"""Board product-face pin packs (first-ship face candidates).
 
 Agents should not invent GPIO maps from tribal knowledge alone. Silico ships
 **board profiles** under ``silico/boards/`` with candidate pins for the
@@ -9,9 +9,9 @@ Workflow:
 2. ``silico board-profile`` / ``show`` — list candidates + knowledge pointers.
 3. ``silico board-profile seed [--yes]`` — dry-run or write ``firmware/defaults.py``
    keys from ``[defaults_candidates]``.
-4. Operator still confirms the **product face** on metal (AGENTS Phase D1).
+4. Operator still confirms the **product face** on metal (AGENTS Stage D1).
 
-These are **candidates**, not metal truth. Never claim Day-1 metal done from a
+These are **candidates**, not metal truth. Never claim first-ship metal done from a
 profile alone.
 """
 
@@ -157,7 +157,7 @@ def show_profile_lines(profile: BoardProfile) -> list[str]:
             lines.append(f"    {k}: {v}")
     lines.append(
         "  These are **candidates**. Confirm the product face on metal "
-        "(operator see/hear) before Day-1 metal done."
+        "(operator see/hear) before first-ship metal done."
     )
     return lines
 
@@ -261,7 +261,7 @@ def seed_defaults_candidates(
     if not yes:
         lines.append(
             "dry-run: no write. Re-run with --yes after operator confirms "
-            "this board profile is the right Day-1 face map."
+            "this board profile is the right first-ship face map."
         )
         lines.append(
             "Would update firmware/defaults.py; host gate + redeploy still required."
@@ -272,7 +272,7 @@ def seed_defaults_candidates(
     lines.append(f"wrote: {path.name} from board profile {pid}")
     lines.append(
         "Next: host gate (pytest -q), then operator-confirmed deploy; "
-        "confirm they can see/hear the product face before Day-1 metal done."
+        "confirm they can see/hear the product face before first-ship metal done."
     )
     return lines, True
 
@@ -284,7 +284,7 @@ def report_for_parts(root: Path | None = None) -> list[str]:
     if not pid:
         return [
             "INFO: no board profile on parts.toml — set profile = \"m5go\" "
-            "(or other id) on the role=board part for Day-1 face pin packs. "
+            "(or other id) on the role=board part for first-ship face pin packs. "
             "List: silico board-profile"
         ]
     try:

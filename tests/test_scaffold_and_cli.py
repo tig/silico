@@ -41,7 +41,7 @@ def test_scaffold_into_empty(tmp_path: Path):
 
 
 def test_plate_host_pin_is_sibling_local_clone():
-    """Day 1 + CI both use sibling ../silico — not a git+https pip URL."""
+    """first ship + CI both use sibling ../silico — not a git+https pip URL."""
     root = plate_root()
     req_lines = [
         ln.strip()
@@ -55,7 +55,7 @@ def test_plate_host_pin_is_sibling_local_clone():
 def test_plate_ci_sibling_silico_layout():
     """CI must place silico as a sibling so `pip install -r` can use -e ../silico.
 
-    Anti-pattern (broke Day 1 GCUs): checkout only the GCU, then
+    Anti-pattern (broke first ship GCUs): checkout only the GCU, then
     ``pip install -r requirements-dev.txt`` → missing ../silico on the runner.
     """
     root = plate_root()
@@ -67,7 +67,7 @@ def test_plate_ci_sibling_silico_layout():
     assert "repository: tig/silico" in text
     assert "working-directory: gcu" in text
     assert "pip install -r requirements-dev.txt" in text
-    # Do not invent a silico-src path that diverges from the Day 1 pin.
+    # Do not invent a silico-src path that diverges from the first ship pin.
     assert "silico-src" not in text
 
 
@@ -238,7 +238,7 @@ def test_apply_mpy_pin_requires_explicit_port(tmp_path):
 def test_scaffold_writes_when_plate_lives_under_a_venv_path(tmp_path, monkeypatch):
     """Regression for #48: skip names must be tested against the path relative
     to the plate root, not the absolute source path. A venv inside the
-    destination repo (the Day 1 layout) puts ".venv" in every absolute plate
+    destination repo (the first ship layout) puts ".venv" in every absolute plate
     path and silently skipped the entire plate."""
     from silico import scaffold as sc
 

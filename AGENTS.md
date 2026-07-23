@@ -300,20 +300,40 @@ Run this playbook under **Help the operator**. Confirm each phase with them befo
 
 ### Phase 0 - Welcome the operator (proactive, safe)
 
-Be **proactive in a safe way.** Before the start gate, **do** read-only discovery so your welcome is grounded - do **not** wait for the human to ask whether Git exists. Follow **Operator language** above: orient first, define jargon on first use, never open with an unexplained term soup.
+Phase 0 is **two steps**. Do not collapse them into “doctor + start gate.”
 
-**Allowed before start gate** (read-only / non-destructive):
+| Step | Name | Deliverable |
+|------|------|-------------|
+| **0a** | Orientation message | Full skeleton as a **normal chat message** to the operator |
+| **0b** | Start gate | `bedside ask` / host chooser for go/adjust — **only after 0a is in the transcript** |
+
+**Hard rule:** Do **not** call `bedside ask` / host chooser for `start-day1` (or equivalent) until the orientation skeleton has been sent as a normal chat message.
+
+Prefer the tool that encodes manners:
+
+```text
+silico welcome
+```
+
+Read-only: fills the skeleton from workspace + doctor facts. **Show 0a in chat** (copy/adapt; do not only leave it in a tool log), **then** open 0b.
+
+#### 0a — Orientation (required first operator-facing message)
+
+Be **proactive in a safe way.** Before the start gate, **do** read-only discovery so your welcome is grounded — do **not** wait for the human to ask whether Git exists. Follow **Operator language** above: orient first, define jargon on first use, never open with an unexplained term soup.
+
+**Allowed in 0a** (read-only / non-destructive):
 
 - Detect OS; run `git --version`, Python version (`py -3` / `python3`), `gh --version`, `pip` check
 - `gh auth status` (do not start `gh auth login` until after go, unless they already asked)
-- Read product `README` / `spec.md` / workspace layout; run `silico doctor` if installed (**workspace mode** line)
-- List serial ports only as information - **do not** inspect/deploy metal or assume a board identity
+- Read product `README` / `spec.md` / workspace layout; run `silico doctor` / **`silico welcome`**
+- List serial ports only as information — **do not** inspect/deploy metal or assume a board identity
 
-**Not allowed before start gate:**
+**Not allowed before start gate (0b go):**
 
 - Installing packages, changing PATH, scaffold, deploy, device writes
 - Destructive git (reset --hard, force-push) unless the operator already ordered that work
 - Walls of shell for the human to paste when you could run the check yourself
+- **Opening the start-gate chooser** before 0a is visible in chat
 
 Then speak in plain language. Structure (tone may vary; **skeleton may not** — see **First prompt orients the operator**):
 
@@ -323,9 +343,11 @@ Then speak in plain language. Structure (tone may vary; **skeleton may not** —
 4. **What you know now** — machine readiness **and** workspace mode (GCU root vs silico package vs unknown) **and** whether a preferred USB board is already talking.
 5. **Where Day 1 is headed** — short map: machine tools → product workspace → plate + host tests → board talk over USB (then domain work). Frame Day 1 as **host plate + device talk**, not host-only.
 6. **Next mutating step** in one short sentence (first step after go), with **why** if it is a big step.
-7. **Start gate:** ask whether to start or adjust something. Prefer the agent product's **structured question UI** when available (not a multi-option free-text paragraph).
+7. **Do not** put the start-gate picker in the same breath as a tooling-only status dump. End 0a by stating that the start gate is **next**.
 
-Example shape:
+`silico welcome` prints this skeleton (plus a doctor snapshot). Lightweight eval: thin first turns that only list tooling fail the same markers the welcome tests enforce (tig/silico#70).
+
+Example shape (0a only — no start-gate tool yet):
 
 > Welcome. **Silico** is the open host-first spine for building shippable edge products: I (the agent) own setup, tests, and deploy on this computer; you own product judgment and confirm physical or irreversible steps.
 >
@@ -339,13 +361,19 @@ Example shape:
 >
 > **Next after go:** ensure a **local clone** of Silico on this machine, editable-install it, then scaffold/merge the plate here — that gives us the maintainable repo layout and an honest host test path before we touch the board.
 >
-> Do you want me to start? Or should I adjust something?
+> Orientation is done. **Start gate is next.**
+
+#### 0b — Start gate (only after 0a)
+
+Ask whether to start or adjust something. Prefer the agent product's **structured question UI** / `bedside ask` when available (not a multi-option free-text paragraph).
 
 Only after a clear **go** (or after applying their adjustments and re-confirming) may you begin **mutating** Phase A work (installs, scaffold, repo create, device paths).
 
 **Anti-pattern:** promising to stop after host gate and "check back before we go near the board." Host gate is a checkpoint, not Day 1 done. After go, you drive through Phase D prep (USB talk + REPL) unless the operator explicitly defers metal.
 
 **Anti-pattern:** first message that only lists tooling status with no Silico explanation and no GCU summary.
+
+**Anti-pattern:** `bedside ask --id start-day1` (or host chooser) as the **first** operator-facing act, before orientation is in chat.
 
 ### Phase A - Machine prerequisites
 

@@ -21,6 +21,7 @@ from silico.board_profile import (
     show_profile_lines,
 )
 from silico.parts import fetch_parts, load_parts
+from silico.welcome import run_welcome
 from silico.product_path import run_product_path_check
 from silico.pull_device import pull_device
 from silico.scaffold import scaffold
@@ -39,6 +40,13 @@ def _print_lines(lines: list[str]) -> None:
 
 def cmd_doctor(_args: argparse.Namespace) -> int:
     report = run_doctor()
+    _print_lines(report.lines)
+    return 0 if report.ok else 1
+
+
+def cmd_welcome(_args: argparse.Namespace) -> int:
+    """Phase 0a orientation skeleton from workspace + doctor (before start gate)."""
+    report = run_welcome()
     _print_lines(report.lines)
     return 0 if report.ok else 1
 
@@ -254,6 +262,12 @@ def build_parser() -> argparse.ArgumentParser:
 
     d = sub.add_parser("doctor", help="host environment + scored serial ports (read-only)")
     d.set_defaults(func=cmd_doctor)
+
+    wel = sub.add_parser(
+        "welcome",
+        help="Phase 0a Day 1 orientation skeleton (before start gate); read-only",
+    )
+    wel.set_defaults(func=cmd_welcome)
 
     g = sub.add_parser(
         "gate",

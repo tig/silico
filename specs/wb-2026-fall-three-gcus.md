@@ -113,17 +113,17 @@ Day 1 begins with one human action: open a coding agent and give it the Silico s
 
 The checklist for Grady, or anyone who finds `github.com/tig/silico` and wants Day 2 to be possible. Order matters. Agent-facing detail lives in [AGENTS.md](../AGENTS.md).
 
-**You need before you start**
+**Before start**
 
 1. A Mac or PC with internet.
 2. Hardware that can run the GCU (RP2040-class or ESP32-class board + USB **data** cable; see FAQ 3 for runtimes).
-3. A rough idea of what the product must do (domain judgment). Silico will not invent your moat.
+3. A rough idea of what the product must do (domain judgment). Do not expect Silico to invent the product moat.
 4. A GitHub account. CI and a durable GCU repo need a real remote.
-5. Access to a coding agent (CLI or IDE). Examples: Claude Code, Grok Build, GitHub Copilot, OpenAI Codex.
+5. A coding agent (CLI or IDE). Examples: Claude Code, Grok Build, GitHub Copilot, OpenAI Codex.
 
 **Account and tools**
 
-6. Create a GitHub account if needed. Enable 2FA. You will create a **private** product repo here.
+6. Create a GitHub account if needed. Enable 2FA. Create a **private** product repo here.
 7. Start the agent and prompt: `See https://github.com/tig/silico. Follow the getting started instructions for agents.` The agent **helps the operator** (see [AGENTS.md](../AGENTS.md)): installs prerequisites, walks auth step by step, does not assume shell or first-flash literacy, and creates or selects a private GCU repo.
 8. Agent and human confirm setup is complete before hardware work. Do not skip to flashing. Do not dump unexplained command lists on the human.
 

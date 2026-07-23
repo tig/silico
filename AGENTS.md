@@ -92,11 +92,11 @@ These rules sit **on top of** Bedside for this product. They do not soften or re
 
 #### First prompt orients the operator
 
-The **first operator-facing message** of a **first-ship** (getting-started) session must help them understand **what they started**, not only what you will do next. Required shape (tone may vary; skeleton may not):
+The **first operator-facing message** of a **first-ship** (getting-started) session must help them understand **what they started**, not only the next action. Required shape (tone may vary; skeleton may not):
 
 1. **What Silico is** — one or two plain sentences (open host-first spine / “prompt to metal”: agents build and maintain shippable edge products on real boards; Silico is the host tooling and plate, not the product brand).
 2. **What a GCU is** — define on first use, then **summarize this GCU** from product truth (`README.md`, `spec.md`, product `AGENTS.md`, workspace markers). Name intent, not codename theater. If product docs are thin **or contradictory**, say so and plan **spec interview mode** after go (see that section) — do not invent domain moat to fill the holes.
-3. **Your role** — you will step them through host setup, plate, proof on the computer, then the board talking over USB.
+3. **Role** — step them through host setup, plate, proof on the computer, then the board talking over USB.
 4. **What you know now** — machine readiness + workspace mode + whether a board is already talking (read-only discovery only).
 5. **Where first ship is headed** — one short map (host tools → product workspace → plate/host tests → board talk → optional domain loop). Say **first ship**, not “Day 1.”
 6. **Next mutating step** + **start gate** (structured yes/adjust when available).
@@ -138,8 +138,8 @@ This is bedside manners for silico jargon: inventing “face” for **product fa
 
 **Anti-pattern:** “The GCU will get the plate scaffolded and the host gate will go green” with no definitions.  
 **Anti-pattern:** “Confirm the face is alive” (undefined clip of **product face**).  
-**Better:** “Your GCU (GCU stands for General Contact Unit — Silico’s term for this shippable edge product) will get a **plate** (the standard project template) via **scaffold**, then we run the **host gate** (automated tests on this computer) until green.”  
-**Better:** “Confirm the **product face** (what you should see or hear when the app runs — here, the M5 status LEDs) is alive.”
+**Better:** “This GCU (GCU stands for General Contact Unit — Silico’s term for this shippable edge product) gets a **plate** (the standard project template) via **scaffold**, then we run the **host gate** (automated tests on this computer) until green.”  
+**Better:** “Confirm the **product face** (what to see or hear when the app runs — here, the M5 status LEDs) is alive.”
 
 #### Big steps: why + where in the process
 
@@ -167,7 +167,7 @@ Example big-step shape:
 > **Where we are:** first ship, Stage D (hello metal). Host tools, workspace, and the host gate (automated tests on this computer) are done. We still need the board talking over USB before any firmware write.  
 > **Why this step:** Without a data USB cable I cannot discover or talk to the board.  
 > **Your step:** Plug a data USB cable into the product board.  
-> **What I will do next:** Poll for a new serial port, then inspect it with you confirming identity.
+> **Next:** Poll for a new serial port, then inspect it with the operator confirming identity.
 
 ### Operator gates: `bedside ask` / `bedside step` (not multi-choice free text)
 
@@ -248,7 +248,7 @@ This is **not** always an extra confirm gate (deploy overwrite already has `conf
 Do **not** bury this only in code comments, issue text, or a post-hoc “by the way.” Do **not** wait until after the scream.
 
 **Anti-pattern:** `silico deploy … --yes --verify --reset` with no operator-facing line, then a 15-second boot tone with no warning.  
-**Better (before deploy/reset):** “I’m about to write firmware to COM7 and soft-reset so the app runs. On this build the product face includes a boot tone for about 15 seconds — you should hear that, then silence when the idle state is reached. Ready; deploying now.”
+**Better (before deploy/reset):** “About to write firmware to COM7 and soft-reset so the app runs. On this build the product face includes a boot tone for about 15 seconds — expect that, then silence when idle is reached. Ready; deploying now.”
 
 Irreversible writes still need **operator gate** confirmation. Surprising **effects** need **announcement** even when write permission was already granted earlier in the session (permission ≠ “no heads-up on loud audio”).
 
@@ -277,7 +277,7 @@ Do **not** invent GPIO maps for common boards only from chat or knowledge essays
 
 Anytime the path is rough and you had to **guess, correct, reverse, or research** something that a better doc, plate, script, error message, or small infra fix would have prevented for the **next** agent: do not leave that knowledge only in chat.
 
-1. **Notice friction.** Wrong default port, missing UF2 step, bedside eval miss, Windows-only failure, tool flag that changed: if you stumbled, the next agent will too.
+1. **Notice friction.** Wrong default port, missing UF2 step, bedside eval miss, Windows-only failure, tool flag that changed: if this agent stumbled, the next one will too.
 2. **Prefer a durable fix in the right repo.**
    - **Portable operator manners** (contract, surface patterns, CLI init/doctor/eval/ask/step, fixtures, rubric): file and/or fix on **tig/bedside**. Silico is customer 0.
    - **Metal host spine** (ports, deploy, GCU plate, first-ship playbook specifics): fix in **tig/silico**.
@@ -351,11 +351,11 @@ Then speak in plain language. Structure (tone may vary; **skeleton may not** —
 
 Example shape (0a only — no start-gate tool yet):
 
-> Welcome. **Silico** is the open host-first spine for building shippable edge products: I (the agent) own setup, tests, and deploy on this computer; you own product judgment and confirm physical or irreversible steps.
+> Welcome. **Silico** is the open host-first spine for building shippable edge products: agents build and maintain products on real boards; Silico is the host tooling and plate, not the product brand.
 >
-> You are building a **GCU** (GCU stands for General Contact Unit — Silico’s term for one shippable edge product: app + board). From your product docs, this GCU is: …
+> This session builds a **GCU** (GCU stands for General Contact Unit — Silico’s term for one shippable edge product: app + board). From the product docs, this GCU is: …
 >
-> I'm here to get it shipped and will step you through it.
+> I'm here to get it shipped. I step through host setup, plate, tests, and the board. **I own the host path**; the operator owns product judgment and confirms physical or irreversible steps.
 >
 > On this machine I already checked: Git OK, Python 3.12 OK, gh logged in; workspace mode=gcu (we stay in this product checkout); preferred board not on USB yet (only a demoted adapter).
 >
@@ -500,7 +500,7 @@ After go, when you read product `spec.md` (or the product says the contract live
 1. **Detect (lightweight):** thin (missing layers / hardware fix / product face / rails / acceptance); contradictory (same key two ways; acceptance rows that cannot all be true); silent on scary surfaces (long audio, force channels, escape hatch, dead-man).
 2. **Gate with the operator** (structured chooser first): recommended path **interview gaps now**, or **proceed interactively and improve the spec as we build**, or adjust.
 3. **Interview:** one gap (or tight cluster) at a time; recommended option first when plate/parts/knowledge give a defensible default; free text only for open domain judgment.
-4. **Capture:** propose `spec.md` edits only after operator **yes**; or durable issues / ambiguity log if they prefer. Chat alone is not enough when the next agent will re-guess.
+4. **Capture:** propose `spec.md` edits only after operator **yes**; or durable issues / ambiguity log if they prefer. Chat alone is not enough when the next agent must re-guess.
 5. **Do not persist product identity** into `firmware/version.py` / `silico.toml` from conflicting or unresolved identity fields — assess and settle (or take an explicit interactive assumption) first (Stage C steps 3–4).
 6. **Exit interview when:** blocking fights resolved, **or** operator chose interactive path, **or** remaining gaps are named follow-ups.
 
@@ -622,7 +622,7 @@ Closed loop: **issue → agent → host gate → CI → metal**.
 
 #### Spec gaps
 
-While coding, you will find product `spec.md` items that are lacking, confusing, or wrong. **start-of-first-ship** thin/contradictory contracts use **Spec interview mode** (above). Mid-build gaps use this table.
+While coding, treat product `spec.md` items that are lacking, confusing, or wrong. **start-of-first-ship** thin/contradictory contracts use **Spec interview mode** (above). Mid-build gaps use this table.
 
 **Split by whether the gap blocks operator-observable metal:**
 
@@ -817,9 +817,10 @@ Always pass explicit `COMx` / `/dev/tty...` to deploy. Confirm device identity e
 
 ## When working in silico itself
 
-1. Re-read `specs/` files you will edit before changing them.
+1. Re-read `specs/` files before editing them.
 2. Prefer surgical edits over rewriting whole docs.
 3. Preserve human-owned wording (PR title, Grady quote, Tig quote).
 4. Commit in small, reviewable steps when the human wants revision history.
 5. Host gate for silico package code when it exists; docs-only changes need no metal.
 6. Apply **Make it better than you found it** here first: doc and infra PRs in this repo beat issues when you already have write access.
+7. Follow Tig's writing style.

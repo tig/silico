@@ -144,7 +144,7 @@ def _product_summary(root: Path) -> str:
     if len(joined) < 40 and not (spec.is_file() and readme.is_file()):
         return (
             f"From product files: {joined} "
-            "(docs still look thin — we will clarify after go if needed)."
+            "(docs still look thin — clarify after go if needed)."
         )
     return joined
 
@@ -212,12 +212,12 @@ def build_welcome(*, root: Path | None = None) -> list[str]:
         "agents build and maintain products on real boards; Silico is the host tooling and plate, "
         "not the product brand. Prompt to metal.",
         "",
-        "You are building a **GCU** (GCU stands for General Contact Unit — Silico’s term for one "
-        f"shippable edge product: app + board). From your product docs, this GCU is: {summary}",
+        "This session builds a **GCU** (GCU stands for General Contact Unit — Silico’s term for one "
+        f"shippable edge product: app + board). From the product docs, this GCU is: {summary}",
         "",
-        "I'm here to get it shipped and will step you through it. **I own the host path** "
-        "(setup, tests, deploy tooling); **you own product judgment** and confirm physical or "
-        "irreversible steps.",
+        "I'm here to get it shipped. I step through host setup, plate, tests, and the board. "
+        "**I own the host path** (setup, tests, deploy tooling); the operator owns product "
+        "judgment and confirms physical or irreversible steps.",
         "",
         f"What I know now: {readiness} ({workspace_line}).",
         "",

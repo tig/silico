@@ -18,7 +18,7 @@ Product domain (idle control, drone songs, vehicle acceptance) stays in the **GC
 | Thin / contradictory product `spec.md` (interview mode) | [spec-interview.md](spec-interview.md) |
 | Index of topics | [INDEX.md](INDEX.md) |
 
-Do **not** load every knowledge file into context. Open only the topic you need.
+Do **not** load every knowledge file into context. Open only the topic needed for the current task.
 
 ## Make it better (required loop)
 

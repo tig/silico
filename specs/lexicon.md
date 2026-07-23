@@ -56,7 +56,7 @@ See also: [GCU](#gcu), [scaffold](#scaffold), [product face](#product-face).
 
 ### repo
 
-Also **GCU repo**. The GitHub repository the human created for the [GCU](#gcu). Silico will [scaffold](#scaffold) this repo with everything needed to test, build, deploy, and maintain the GCU over time.
+Also **GCU repo**. The GitHub repository for the [GCU](#gcu). [Scaffold](#scaffold) it with Silico so the tree can test, build, deploy, and maintain the GCU over time.
 
 See also: [GCU](#gcu), [scaffold](#scaffold), [plate](#plate).
 

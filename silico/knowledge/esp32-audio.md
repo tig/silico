@@ -69,7 +69,7 @@ Related ecosystem reports exist around ESP-IDF DAC re-init / MicroPython DAC reb
 ## Silence is hard (bench-proven)
 
 - **PWM duty 0 is not silence** on many ESP32 + amp boards — the LEDC channel still drives the amp. **Deinit PWM** and rebind the pin as **GPIO OUT low** (or board-documented idle) when you are in PWM mode.
-- Dropping a Python `DAC` reference may **not** unmux the pin. Prefer an explicit quiet write while **keeping** the object if you will play samples again.
+- Dropping a Python `DAC` reference may **not** unmux the pin. Prefer an explicit quiet write while **keeping** the object when more samples follow.
 - After sample playback, avoid a cliff:
   1. Ease samples toward **u8 mid (128)** (digital silence for unsigned PCM),
   2. Hold mid briefly,

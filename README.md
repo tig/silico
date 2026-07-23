@@ -24,7 +24,7 @@ Silico uses a highly opinionated lexicon to keep AIs and humans on the same page
 
 ### Host
 
-**The developer or CI machine** (Mac, Windows, Linux runner). The Silico simulator, OSS embedded tooling, test infrastructure, and deploy tools all run on the host—not on the board.
+**The developer or CI machine** (Mac, Windows, Linux runner). The Silico simulator, OSS embedded tooling, test infrastructure, and deploy tools all run on the host; not on the board.
 
 ### Spine
 
@@ -40,19 +40,15 @@ The act of **laying down the [plate](./specs/lexicon.md#plate)** into a product 
 
 ## Getting Started
 
-### Step 0: Prerequisites (device first)
+### Step 0: Prerequisites
 
-Silico ships maintainable firmware and host tooling for a real product board. It does not invent your PCB or your domain moat.
-
-Before you start:
-
-1. **Get the device engineered** (or use a known board kit). You need physical metal you can plug in over USB—custom hardware, a prototype, or a starter kit such as the M5GO used in the examples below. Silico proves software on that board; it is not the schematic/layout CAD loop.
-2. **Know what the product must do.** Rough is fine. Agents will interview you to refine the [spec](./specs/lexicon.md#spec); they will not invent vertical product judgment.
-3. **A Mac or PC**, a **GitHub** account, and access to a **coding agent** (TUI or GUI). The agent installs host tools (Git, Python, `gh`, and so on) with your consent—you do not need a clean embedded workstation up front.
+1. **Engineer the device** (or use a known board kit). Custom hardware, a prototype, or a starter kit like the M5GO in the examples below. Use a USB data cable so the host can talk to the board. Silico covers firmware and the host path on that board, not PCB design.
+2. **Know roughly what the product must do.** Let the agent help refine the [spec](./specs/lexicon.md#spec). Do not expect the agent to invent the product.
+3. **A Mac or PC, a GitHub account, and a coding agent** (TUI or GUI).
 
 ### Step 1: The Spec
 
-Put the specification for the device—hardware and end-user functionality—in a GitHub repo. These example repos each contain a [spec](./specs/lexicon.md#spec) that has been proven to work with Silico:
+Put the specification for the device (hardware and end-user functionality) in a GitHub repo. These example repos each contain a [spec](./specs/lexicon.md#spec) that has been proven to work with Silico:
 
 - [Xuss](https://github.com/tig/xuss) - A demo device based on the [M5Stack M5GO IoT Starter Kit v2.7](https://shop.m5stack.com/products/m5go-iot-starter-kit-v2-7), using [MicroPython](https://github.com/micropython). Intentionally specifies a simple implementation using Python to illustrate that path.
 - [Xuss-C](https://github.com/tig/xuss-c) - A demo device based on the [M5Stack M5GO IoT Starter Kit v2.7](https://shop.m5stack.com/products/m5go-iot-starter-kit-v2-7), using C and native ESP32 development. Intentionally specifies a more sophisticated implementation with higher performance and usability to illustrate that path.
@@ -85,17 +81,15 @@ Give the agent this starting prompt:
 See https://github.com/tig/silico. Follow the getting started instructions for agents.
 ```
 
-With Silico, the agent will guide/interview the human along the way until the [first ship](./specs/lexicon.md#first-ship) is complete.
+ The agent will ask questions, suggest options, and otherwise guide the process through [first ship](./specs/lexicon.md#first-ship); it will use Silico [bedside manners](https://github.com/tig/bedside), install or upgrade [host](./specs/lexicon.md#host) tooling (with consent), including the GitHub CLI (`gh`).
 
-Silico ensures the agent has great [bedside manners](https://github.com/tig/bedside), and any tooling required on the [host](./specs/lexicon.md#host) will be upgraded or installed (with the operator's consent). This includes the GitHub CLI (`gh`).
+When [first ship](./specs/lexicon.md#first-ship) is complete, the agent will land the following on the default branch (e.g. `main`), following the repo's contribution standards:
 
-When [first ship](./specs/lexicon.md#first-ship) is complete, the following will be on the default branch (e.g. `main`) of the repo (following whatever contribution standards it already uses):
-
-* `./AGENTS.md` - The self-improving Silico agent guidance.
-* `./firmware` - The device firmware that implements the spec and has been proven on real metal.
-* `./sim` - The bespoke [HAL](./specs/lexicon.md#hal) and [simulator](./specs/lexicon.md#sim) used to verify the firmware on the host and in CI.
-* `./install` - The install and upgrade tool end users can use to install and upgrade the firmware on the GCU.
-* `.github/workflows/ci.yml` - A GitHub workflow that runs on `push` and `pull_request` and tests and validates the firmware.
+* `./AGENTS.md` - Self-improving Silico agent guidance.
+* `./firmware` - Device firmware that implements the spec and is proven on real metal.
+* `./sim` - Bespoke [HAL](./specs/lexicon.md#hal) and [simulator](./specs/lexicon.md#sim) for host and CI verification.
+* `./install` - Install and upgrade tool for end users to put firmware on the GCU.
+* `.github/workflows/ci.yml` - GitHub workflow on `push` and `pull_request` that tests and validates the firmware.
 * Other files and folders required for the GCU to implement the GCU spec.
 
 ### Steps 4-n: Iterate and Improve
@@ -106,9 +100,9 @@ Use AI agents to refine the GCU. E.g.:
 Create a new PR to lower the volume of the bootup sound by 10%.
 ```
 
-Each push to `main` or PR merge will cause CI workflows to run with validation and regression testing using the bespoke simulator Silico helps create.
+On each push to `main` or PR merge, CI will run with validation and regression testing on the bespoke simulator Silico helps create.
 
-Anytime a new agent session is started in the repo, the guidance in `./AGENTS.md` will ensure the agent continues to leverage Silico in improving the GCU.
+At the start of each new agent session in the repo, follow agents will follow `./AGENTS.md` so work continues to use Silico on the GCU.
 
 ## Real World Examples
 
@@ -118,7 +112,7 @@ Silico was built and improved while engineering the firmware and software for th
 * **Quilan** - A solar-powered field logger with environmental and atmospheric sensors and LoRaWAN cloud connectivity. ESP32-class board; firmware is C.
 * **Sma** - A tiny, battery-powered, sleep-friendly remote sensing and mesh-connected device. RP2040-class board; firmware is MicroPython.
 
-Humans who use Silico to build products are encouraged to submit PRs to have their examples added above.
+Submit PRs to add more real-world GCU examples above.
 
 ## Supported platforms (host spine)
 

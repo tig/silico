@@ -148,6 +148,41 @@ For product audio that must sound better than bit-bang DAC:
 
 Do not copy keypad/Web-UI surfaces into silico; extract only host techniques that every GCU might need.
 
+## ESP-IDF `dac_continuous` (C / native path) — queue depth is product behavior
+
+Native ESP-IDF continuous DAC (DMA) is the right path for multi-minute PCM on `language=c` GCUs. **Queue depth is audible product behavior**, not a free tuning knob (#79 field report).
+
+### Queue depth vs pause / teardown
+
+| Shape | Approx latency (example) | Pause / stop feel |
+|-------|--------------------------|-------------------|
+| Deep (e.g. **4 × 2048** samples @ ~22 kHz) | ~**370 ms** buffered | Pause/teardown **hard-cuts** late; operator hears a long tail or abrupt dump |
+| Shallow (e.g. **2 × 1024**) | ~tens of ms | Responsive pause; still enough DMA margin if the feeder keeps up |
+
+**Preferred product shape:** shallow queue (**2 × 1024** is a good starting point) + **full drain before disable**. Do not disable the continuous channel while DMA still holds audible samples if the product promises a clean pause.
+
+### Clean stop sequence
+
+1. Stop submitting new buffers (pause source / feeder task).
+2. **Drain** the continuous queue (wait until DMA finishes pending buffers, or ring silence to empty).
+3. Only then `dac_continuous_disable` / delete channel.
+4. Soft-park the pin quiet if more audio may follow this boot.
+
+Hard-disable mid-queue = click or multi-hundred-ms “catch-up” dump.
+
+### Sample rate from the asset
+
+- Clock the DAC continuous config from the **asset header rate** (or sidecar), not a hard-coded constant that drifts from the file.
+- **Validate at probe/open:** if the file claims 22050 Hz and the feeder assumes 11025, pitch and duration are wrong and buffers underrun.
+- Prefer rejecting the asset at load over playing at the wrong rate silently.
+
+### Agent checklist (C audio)
+
+- [ ] Queue depth chosen for **pause UX**, not max underrun margin alone.
+- [ ] Stop path **drains** before disable.
+- [ ] Rate from header + probe validation.
+- [ ] Operator forewarning before long boot riffs (AGENTS: announce surprising metal effects).
+
 ## Deploy / CDC interaction
 
 - Product apps that set **Ctrl-C as data** own the CDC; `mpremote` cannot enter raw REPL until `repl` door or boot window.

@@ -77,6 +77,16 @@ def cmd_env(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_agents(args: argparse.Namespace) -> int:
+    """Print an AGENTS.md stage pack (on-demand; same source as full essay)."""
+    from silico.agents_stage import stage_pack
+
+    stage = getattr(args, "stage", None) or "list"
+    ok, lines = stage_pack(stage)
+    _print_lines(lines)
+    return 0 if ok else 1
+
+
 def cmd_welcome(_args: argparse.Namespace) -> int:
     """Stage 0a orientation skeleton from workspace + doctor (before start gate)."""
     report = run_welcome()
@@ -314,6 +324,17 @@ def build_parser() -> argparse.ArgumentParser:
         help="shell dialect (default: powershell on Windows, bash elsewhere)",
     )
     env_p.set_defaults(func=cmd_env)
+
+    ag = sub.add_parser(
+        "agents",
+        help="print AGENTS.md stage pack on demand (same source; avoid full-essay token load)",
+    )
+    ag.add_argument(
+        "--stage",
+        default="list",
+        help="stage id: list|core|gates|0|a|b|c|d|e|f|lang-c|interview|dod",
+    )
+    ag.set_defaults(func=cmd_agents)
 
     wel = sub.add_parser(
         "welcome",

@@ -91,6 +91,17 @@ Context is finite. **Do not** open every manners file into the active window.
 
 Prefer **tools that encode manners** (`silico welcome|doctor|wait-device|inspect|deploy`, `bedside doctor|eval|ask|step`) over re-loading essays. If two files say the same rule, follow the **canonical owner** and treat the other as a pointer.
 
+**Stage packs (token lever, #79):** do not paste the entire `AGENTS.md` into every turn. Keep Stage 0 + hard rules (manners tools required, decline = halt) as the session core; load one stage on demand:
+
+```text
+silico agents --stage list
+silico agents --stage core    # manners tools hard rules
+silico agents --stage d       # hello metal only
+silico agents --stage lang-c  # C / ESP-IDF backend
+```
+
+Same file is the only source of truth — packs are extracts, not a soft-fork.
+
 ### Manners tools are the operator path (required, not optional)
 
 **Hard rule:** On first ship (and any operator-facing metal/host path), the manners tools **are** the path. They are not optional flavor on top of a self-driven install script.
@@ -789,6 +800,10 @@ For non-blocking gaps (and after **interactive path** from interview mode):
 3. **Late step** — prompt the operator: what was wrong/missing, a proposed edit, and ask (structured chooser) whether to update the spec **now**.
 4. Edit the product spec only after a clear **yes**.
 5. Expect re-run / rebuild later when the operator chose interactive path and the contract later gets stronger.
+
+### Review pass per product slice (recommended)
+
+After each meaningful product slice (plate green, audio path, UI face, link door, …), run an **independent review** of that slice’s diff before claiming host-done or stacking the next domain change (#79 field report). Compile + ctest + CI miss boot-paint and HAL-init drops that a focused review catches. Costly in tokens; cheaper than a silent metal miss.
 
 ### first-ship exit criteria (before the update path)
 

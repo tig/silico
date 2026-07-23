@@ -10,7 +10,7 @@ The human interface is a coding agent, not an installation guide, IDE, or shell 
 
 ## Silico works backwards from this
 
-> *With just Claude Code on my Mac and my hardware spec, I had the device working end-to-end in a few hours, and in a field test the day after that. Silico is now a foundational piece of our company's technology.*
+> *With just Claude Code on my Mac, my prototype hardware, and my product spec, I had the device working end-to-end in a few hours, and in a field test the day after that. Silico is now a foundational piece of our company's technology.*
 
 Agents write the firmware. The human owns the judgment.
 

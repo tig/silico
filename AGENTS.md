@@ -35,6 +35,25 @@ Context is finite. **Do not** open every manners file into the active window.
 
 Prefer **tools that encode manners** (`silico welcome|doctor|wait-device|inspect|deploy`, `bedside doctor|eval|ask|step`) over re-loading essays. If two files say the same rule, follow the **canonical owner** and treat the other as a pointer.
 
+### Manners tools are the operator path (required, not optional)
+
+**Hard rule:** On first ship (and any operator-facing metal/host path), the manners tools **are** the path. They are not optional flavor on top of a self-driven install script.
+
+| Required tool / gate | When | Failure if skipped |
+|----------------------|------|--------------------|
+| `silico welcome` | Stage **0a** source of orientation | Hand-built long status dump / discovery theater instead of the skeleton |
+| `bedside ask` or host picker (**same contract**) | Stage **0b** start gate; board identity; deploy overwrite; stage forks | Free-text walls; monologue past the human |
+| `bedside step` or host step (**same contract**) | Plug USB, BOOT/RESET, OS dialogs | Multi-step essays; leaving them at a cliff |
+| `bedside doctor` | Before relying on ask/step; when doctor fails | Noting “not initialized” and inventing a parallel manners path |
+| `silico doctor` / `wait-device` / `inspect` / `deploy` | Stages A–D as named | Blind serial; deploy without identity |
+
+**Not a substitute for the path:**
+
+- Long chat status reports, PR strategy monologues, or COM folklore tables **before** or **instead of** the welcome skeleton and start gate.
+- “I ran discovery myself, so I can skip `silico welcome`.”
+- “Host `AskUserQuestion` means I never need `bedside`.” Host pickers are **same contract, alternate shell** — still one short gate, recommended first, exit on decline. Prefer `bedside ask|step` when the CLI is on PATH; if `bedside doctor` fails, **init/fix Bedside** (vendor pin / `pip install -e third_party/bedside`), do **not** abandon the gate surface.
+- “Prefer doing over instructing” does **not** mean drive past operator gates, commit/push while a gate is open or declined, or treat first ship as an unattended install script. Doing the host work is correct; **doing past the operator’s yes/no is not.**
+
 ## What silico is
 
 **Prompt to metal.** Open host-first spine for vertical edge products (GCUs). Not a company product line. Not the vertical domain app.
@@ -74,7 +93,7 @@ Summary (full contract is normative; do not soft-fork):
 
 1. Assume low ops literacy, high judgment.
 2. No wall of unexplained shell.
-3. Prefer doing over instructing.
+3. Prefer doing over instructing — **run checks and installs yourself; do not paste command walls.** This is **not** a license to mutate, commit, push, scaffold, or flash past an open or declined operator gate.
 4. Human acts: explicit, one step, dumb-simple.
 5. Own first-time setup from zero.
 6. Own scary surfaces in plain language.
@@ -82,9 +101,9 @@ Summary (full contract is normative; do not soft-fork):
 8. Never leave them at a cliff.
 9. Teach only what the update path requires.
 
-Silico domain (metal / host path) details: **BEDSIDE.md** and first-ship stages below. Host tools that encode manners: `silico doctor`, `wait-device`, `inspect`, `deploy --yes`, plus Bedside operator gates below.
+Silico domain (metal / host path) details: **BEDSIDE.md** and first-ship stages below. Host tools that encode manners: `silico welcome`, `silico doctor`, `wait-device`, `inspect`, `deploy --yes`, plus Bedside operator gates below.
 
-Prove manners: `bedside doctor` and `bedside eval` (vendored fixtures include `operator-gate-ask` / `operator-gate-step`).
+Prove manners: `bedside doctor` and `bedside eval` (vendored fixtures include `operator-gate-ask` / `operator-gate-step`). If `bedside doctor` fails (“not initialized” / missing pin), **fix that first** (`bedside init` / editable install of vendored bedside / check `bedside.toml`) — do not skip gates and invent a prose path.
 
 ### Operator language (silico domain — not a second contract)
 
@@ -171,7 +190,7 @@ Example big-step shape:
 
 ### Operator gates: `bedside ask` / `bedside step` (not multi-choice free text)
 
-Do **not** restate long "how to ask the human" essays. Prefer tools:
+Do **not** restate long "how to ask the human" essays. **Use the gate tools** (required path — see **Manners tools are the operator path**):
 
 | Gate | Tool | Example |
 |------|------|---------|
@@ -187,7 +206,36 @@ bedside step --id plug-usb --prompt "Plug a data USB cable into the board." --ex
 
 Exit codes (agents): **0** recommended path / step confirmed; **10** declined, other choice, or human still needed; **30** setup error.
 
-**Also OK:** the agent product's **structured question UI** (pickers, `AskUserQuestion`, etc.) when it implements the same contract: one gate, recommended first, no multi-option free-text walls. Free text remains for open domain judgment only.
+#### Gate prompt shape (short — no essay inside the chooser)
+
+The **why + where** map belongs in the **chat turn before** the gate (Big steps), not stuffed into `--prompt` / the picker body.
+
+| OK in the gate | Not OK in the gate |
+|----------------|--------------------|
+| One clear question | “Where we are… Why… Inspect found… Next we will…” walls |
+| Recommended choice first | Multi-paragraph status + the chooser at the bottom |
+| Default that matches bedside (e.g. confirm-board default **no**) | Hiding the scary act inside a long monologue |
+
+#### Decline / exit 10 = halt writes (hard rule)
+
+When the operator **declines**, picks **adjust** / non-recommended, or the gate returns **exit 10** (or the host picker equivalent):
+
+1. **Stop mutating** for that gated act: no further scaffold overwrite, commit, push, deploy, first-flash, or “full first-ship status” monologue as if you were still green.
+2. **One short reply:** acknowledge the decline in plain language; offer **one** next gate (adjust path) **or** stop cleanly. Do not invent “continue with best judgment” past a no.
+3. **Do not** commit + push + open PR + summarize the whole first-ship map while a board/start/deploy gate is declined or still open.
+4. Host product nudges (“continue with best judgment”) **never** override an explicit operator **no** on a bedside-shaped gate.
+
+Nothing in this file licenses: *system said declined → I still committed, pushed, and monologued.*
+
+#### Host structured UI (same contract, not a second path)
+
+**Also OK:** the agent product's **structured question UI** (pickers, `AskUserQuestion`, etc.) **only when** it implements the **same contract**: one gate, recommended first, short prompt, no multi-option free-text walls, and **decline = halt** as above. Free text remains for open domain judgment only.
+
+| Correct read | Wrong read |
+|--------------|------------|
+| Host picker ≈ `bedside ask` shell | “Host UI means I skip Bedside forever” |
+| Prefer `bedside ask|step` when CLI works | Note `bedside doctor` fail and never init |
+| Same ids/intent (`start-first-ship`, `confirm-board`, …) | Long chat chooser that re-asks the playbook |
 
 Non-interactive / CI: `--answer` on `ask`, `--confirm` / `--decline` / `--no-wait` on `step` (see `bedside ask --help`).
 
@@ -302,32 +350,45 @@ Run this playbook under **Help the operator**. Confirm each stage with them befo
 
 ### Stage 0 - Welcome the operator (proactive, safe)
 
-Stage 0 is **two steps**. Do not collapse them into “doctor + start gate.”
+Stage 0 is **two steps**. Do not collapse them into “doctor + start gate.” Do not replace them with a self-driven first-ship monologue.
 
 | Step | Name | Deliverable |
 |------|------|-------------|
-| **0a** | Orientation message | Full skeleton as a **normal chat message** to the operator |
+| **0a** | Orientation message | **`silico welcome` output** shown as a **normal chat message** (minimal adapt only) |
 | **0b** | Start gate | `bedside ask` / host chooser for go/adjust — **only after 0a is in the transcript** |
 
-**Hard rule:** Do **not** call `bedside ask` / host chooser for `start-first-ship` (or equivalent) until the orientation skeleton has been sent as a normal chat message.
+**Hard rules:**
 
-Prefer the tool that encodes manners:
+1. Do **not** call `bedside ask` / host chooser for `start-first-ship` (or equivalent) until the orientation skeleton has been sent as a normal chat message.
+2. Do **not** hand-build 0a from a wall of shell. **Run `silico welcome` first**; that tool is the orientation source.
+3. Do **not** open with a tooling-only status dump, then “also orient.” Order is: welcome skeleton in chat → then start gate.
+
+#### Required sequence (do not invent a parallel path)
 
 ```text
+# 1) Manners surface ready (if bedside doctor fails → init/fix; do not skip)
+bedside doctor
+# 2) Orientation source (read-only)
 silico welcome
+# 3) Paste/adapt that skeleton into chat as 0a (see minimal-adapt below)
+# 4) Only then:
+bedside ask --id start-first-ship --prompt "Start first ship on this machine?" --choices yes,adjust --default yes
+# or host picker with the same contract
 ```
 
-Read-only: fills the skeleton from workspace + doctor facts. **Show 0a in chat** (copy/adapt; do not only leave it in a tool log), **then** open 0b.
+`silico welcome` is read-only: fills the skeleton from workspace + doctor facts. **Show 0a in chat** (do not only leave it in a tool log), **then** open 0b.
 
 #### 0a — Orientation (required first operator-facing message)
 
-Be **proactive in a safe way.** Before the start gate, **do** read-only discovery so your welcome is grounded — do **not** wait for the human to ask whether Git exists. Follow **Operator language** above: orient first, define jargon on first use, never open with an unexplained term soup.
+Be **proactive in a safe way**, but **welcome-shaped**, not systems-report-shaped.
 
-**Allowed in 0a** (read-only / non-destructive):
+**Primary source:** run **`silico welcome`**. That is the skeleton. Discovery exists so welcome (or a thin fill-in when welcome cannot run) is grounded — discovery does **not** replace the skeleton with agent theater.
 
-- Detect OS; run `git --version`, Python version (`py -3` / `python3`), `gh --version`, `pip` check
+**Allowed behind the scenes in 0a** (read-only / non-destructive; prefer letting `silico welcome` / `silico doctor` own it):
+
+- Detect OS; `git` / Python / `gh` / `pip` version checks if welcome did not already cover them
 - `gh auth status` (do not start `gh auth login` until after go, unless they already asked)
-- Read product `README` / `spec.md` / workspace layout; run `silico doctor` / **`silico welcome`**
+- Read product `README` / `spec.md` / workspace layout
 - List serial ports only as information — **do not** inspect/deploy metal or assume a board identity
 
 **Not allowed before start gate (0b go):**
@@ -336,14 +397,26 @@ Be **proactive in a safe way.** Before the start gate, **do** read-only discover
 - Destructive git (reset --hard, force-push) unless the operator already ordered that work
 - Walls of shell for the human to paste when you could run the check yourself
 - **Opening the start-gate chooser** before 0a is visible in chat
+- Commit, push, PR open, or “full first-ship status” monologue
+- Mid-welcome **repo workflow** / PR strategy essays (that is Stage B, after go)
+- Long COM folklore tables, multi-section discovery reports, or phase tables that dwarf the skeleton
 
-Then speak in plain language. Structure (tone may vary; **skeleton may not** — see **First prompt orients the operator**):
+**Minimal adapt only** (“copy/adapt” means this — not a license to rewrite):
+
+| May change | Must not add before 0b |
+|------------|------------------------|
+| Fill “this GCU is …” from product docs | Extra tables (ports, PR policy, full doctor dump) |
+| Fix a wrong board line if welcome missed it | Mid-welcome commit/push/PR plan |
+| Tone to match the session | Parallel “Day 1 drive” install narrative |
+| Keep the seven skeleton beats | Tooling-status-first message with orientation buried |
+
+Structure (tone may vary; **skeleton may not** — see **First prompt orients the operator**):
 
 1. **What Silico is** (remind them what they started).
 2. **GCU defined + this product summarized** from product docs (or honest “thin docs” note).
 3. **Role:** you step them through shipping it on this host and then on the board.
-4. **What you know now** — machine readiness **and** workspace mode (GCU root vs silico package vs unknown) **and** whether a preferred USB board is already talking.
-5. **Where first ship is headed** — short map: machine tools → product workspace → plate + host tests → board talk over USB (then domain work). Frame first ship as **host plate + device talk**, not host-only.
+4. **What you know now** — machine readiness **and** workspace mode (GCU root vs silico package vs unknown) **and** whether a preferred USB board is already talking (**short** — one compact paragraph, not a full doctor paste).
+5. **Where first ship is headed** — short map: machine tools → product workspace → plate + host tests → board talk over USB (then domain work). Frame first ship as **host plate + device talk**, not host-only. Say **first ship**, not “Day 1.”
 6. **Next mutating step** in one short sentence (first step after go), with **why** if it is a big step.
 7. **Do not** put the start-gate picker in the same breath as a tooling-only status dump. End 0a by stating that the start gate is **next**.
 
@@ -367,15 +440,21 @@ Example shape (0a only — no start-gate tool yet):
 
 #### 0b — Start gate (only after 0a)
 
-Ask whether to start or adjust something. Prefer the agent product's **structured question UI** / `bedside ask` when available (not a multi-option free-text paragraph).
+Ask whether to start or adjust something with **`bedside ask`** (preferred when CLI works) or the host **structured question UI** under the **same contract** (short prompt, recommended first, **decline = halt** — see **Operator gates**). Not a multi-option free-text paragraph. Not a status essay with a chooser stapled on.
 
-Only after a clear **go** (or after applying their adjustments and re-confirming) may you begin **mutating** Stage A work (installs, scaffold, repo create, device paths).
+Only after a clear **go** (or after applying their adjustments and **re-confirming** with another gate) may you begin **mutating** Stage A work (installs, scaffold, repo create, device paths).
+
+If the answer is **adjust** or **no** / exit **10**: **halt writes** — short re-gate or stop. Do **not** keep mutating and monologue a full first-ship status.
 
 **Anti-pattern:** promising to stop after host gate and "check back before we go near the board." Host gate is a checkpoint, not first ship done. After go, you drive through Stage D prep (USB talk + REPL) unless the operator explicitly defers metal.
 
 **Anti-pattern:** first message that only lists tooling status with no Silico explanation and no GCU summary.
 
 **Anti-pattern:** `bedside ask --id start-first-ship` (or host chooser) as the **first** operator-facing act, before orientation is in chat.
+
+**Anti-pattern:** wall of shell discovery → hand-built multi-section orientation → host picker with a prose wall → operator declines → agent still commits/pushes and pastes a full first-ship report. That is the failure mode this section exists to prevent.
+
+**Anti-pattern:** `bedside doctor` fails → note it → never call `bedside ask|step` again for the rest of the session.
 
 ### Stage A - Machine prerequisites
 
@@ -707,6 +786,11 @@ Default plate stays MicroPython. Arduino is not this path (see issue #59). First
 - Do **not** deploy, soft-reset, or otherwise drive metal that may play loud/long audio, flash bright patterns, or move actuators without a clear operator-facing forewarning of what will happen and for how long.
 - Do **not** claim metal serial OK from identity/telem TX alone, or enable `kbd_intr(-1)` before round-trip + working `repl` re-entry (see serial readiness ladder; #62).
 - Do **not** thrash full-erase/redeploy when the console is locked; recover once, park stock MP, stop.
+- Do **not** skip `silico welcome` / `bedside ask|step` (or same-contract host gates) in favor of a self-driven first-ship monologue or hand-built status dump.
+- Do **not** treat “Prefer doing over instructing” as permission to mutate past an open or declined operator gate.
+- Do **not** continue commit/push/deploy/scaffold after gate exit **10** / operator **no** / **adjust** without a new clear go.
+- Do **not** stuff why/where essays into the gate prompt body; keep the chooser one step.
+- Do **not** note `bedside doctor` failure and invent a parallel manners path — init/fix Bedside first.
 - Prefer issue titles like `host-done / metal-TODO` when splitting layers is honest — and **never** put “on the metal” in the same message as metal-TODO.
 
 Never treat "I flashed something" or "pytest green" as metal/vehicle done.
@@ -773,6 +857,9 @@ Public Silico docs name starter GCUs **Zakalwe**, **Quilan**, **Sma**. Short pro
 11. Do not rewrite PR titles, Grady quotes, or Tig quotes unless the human asks.
 12. Do not start Arduino / multi-runtime work unless a GCU forces it (v2).
 13. Do not burn an hour recovering from silico friction and leave no issue or doc fix for the next agent.
+14. Do not treat manners tools as optional: skip `silico welcome`, skip/abandon `bedside ask|step`, or replace Stage 0 with a host-tool install script narrative.
+15. Do not keep mutating (commit/push/scaffold/deploy) after an operator gate decline / exit 10; halt, short re-gate, or stop.
+16. Do not read “Prefer doing over instructing” as “drive past the operator’s gates.”
 
 ## Commands (host)
 
@@ -788,14 +875,16 @@ python -m pip install -e "/path/to/tig/silico/third_party/bedside"
 python -m pip install -e ".[dev]"
 python -m pip install -e ./third_party/bedside
 
-bedside doctor
+bedside doctor          # if fail → init/fix; do not invent a parallel manners path
 bedside eval
-# operator gates (use host structured UI when it matches this contract):
+# operator gates (required path; host structured UI OK only under same contract):
+# bedside ask --id start-first-ship --prompt "Start first ship on this machine?" --choices yes,adjust --default yes
 # bedside ask --id confirm-board --prompt "Is COMx the product board?" --choices yes,no --default no
 # bedside ask --id confirm-deploy --prompt "Overwrite firmware on COMx now?" --choices yes,no --default no
 # bedside step --id plug-usb --prompt "Plug a data USB cable." --expect "Board shows power / new COM."
+# exit 10 / decline → halt writes; do not monologue past no
 
-silico welcome          # Stage 0a orientation skeleton (before start gate)
+silico welcome          # REQUIRED Stage 0a orientation source (paste to chat, then start gate)
 silico doctor
 silico wait-device
 silico scaffold .

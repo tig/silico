@@ -211,9 +211,10 @@ def build_welcome(*, root: Path | None = None) -> list[str]:
     lines = [
         # Agent directive first so tool logs still encode Stage 0 order even if the model
         # only skims the top of the command output.
-        "AGENT: This block is Stage **0a**. Paste/adapt it as your **first** operator-facing "
-        "chat message, then **END THE TURN** (no host picker / bedside ask / AskUserQuestion in "
-        "this same turn — those UIs steal focus and hide this text). Start gate is **turn 2** only.",
+        "AGENT: Stage **0a** — paste/adapt the operator block below as your first chat message, "
+        "then END THE TURN (no host picker / bedside ask in this turn). On the operator's next "
+        "short reply, turn 2 FIRST act = structured start gate only (yes/adjust) — never free-text "
+        "cliff or \"shall I open the gate?\". Full AGENTS.md text required (not a fetch summarizer).",
         "",
         "Welcome. **Silico** is the open host-first spine for building shippable edge products: "
         "agents build and maintain products on real boards; Silico is the host tooling and plate, "
@@ -237,20 +238,17 @@ def build_welcome(*, root: Path | None = None) -> list[str]:
         "host test path before we touch the board.",
         "",
         "---",
-        "Stage **0a complete** (orientation). END THIS TURN after showing this text. "
-        "Tool log only fails 0a; same-turn host pickers also fail 0a (modal hides orientation).",
+        "Orientation done (Stage **0a**).",
         "",
-        "**Turn 2 only** — start gate, CANONICAL shape:",
+        "**Your next step:** When you have read this, reply with anything short (`ok`, `go`, or "
+        "Enter). I will open a **start-gate chooser** (yes / adjust) on the next turn — not a "
+        "free-text menu. Do not type a long plan here.",
         "",
-        "  bedside ask --id start-first-ship \\",
-        '    --prompt "Start first ship on this machine?" \\',
-        "    --choices yes,adjust --default yes",
-        "",
-        "Host picker (when stdin cannot reach bedside ask): same id, same prompt, choices "
-        "**yes** and **adjust** only. Say once that you are using the host gate shell.",
-        "Do **not** invent Go / Host-only / Look around. Do **not** put Stage A-D detail "
-        "into option descriptions (why/where already lives in this orientation).",
-        "Optional prompt clause: Orientation is in the message above.",
+        "AGENT turn 2 (after their short reply) — open chooser FIRST, CANONICAL shape only:",
+        "  bedside ask --id start-first-ship --prompt \"Start first ship on this machine?\" "
+        "--choices yes,adjust --default yes",
+        "  Host picker: same id/prompt/choices; say once if using host shell.",
+        "  Do not invent Go / Host-only / Look around. Optional: Orientation is in the message above.",
         "",
         "Doctor snapshot (read-only grounding):",
     ]
@@ -269,7 +267,7 @@ def run_welcome(*, root: Path | None = None) -> WelcomeReport:
         )
     else:
         lines.append(
-            "OK: orientation skeleton complete — show 0a in chat and end turn; "
-            "start gate (0b) only on the next turn."
+            "OK: orientation skeleton complete — show 0a + operator next-step, end turn; "
+            "on their short reply open start-gate chooser first (not free-text)."
         )
     return WelcomeReport(ok=not missing, lines=lines, missing=missing)

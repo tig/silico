@@ -159,9 +159,12 @@ def test_root_agents_stage0_is_first_screen():
     assert "yes,adjust" in head or "yes, adjust" in head
     assert "Host-only" in head or "host-only" in head.lower()
     assert "raw.githubusercontent.com/tig/silico/main/AGENTS.md" in head
-    assert "README" in head and ("not only" in head.lower() or "not the" in head.lower())
+    assert "README" in head or "homepage" in head.lower()
     assert "Two turns" in head or "TURN 1" in head
-    assert "same turn" in head.lower() or "same-turn" in head.lower()
+    assert "fetch summarizer" in head.lower() or "summarizer" in head.lower()
+    assert "free-text" in head.lower() or "free text" in head.lower()
+    assert "chooser" in head.lower()
+    assert "human act" in head.lower() or "reply" in head.lower()
 
 
 def test_readme_points_agents_at_agents_md_not_homepage_only():

@@ -10,14 +10,13 @@ When the human says *follow silico getting started* (or first ship / Day 1):
 1. **Do not** open with tooling narration, `bedside init`, vendoring `third_party/`, PR strategy, or a start-gate chooser.
 
 ```text
-# TURN 1 — 0a only (then END TURN; no host picker in this turn)
-silico welcome          # paste as first operator chat message (tool log only fails 0a)
-# TURN 2 — 0b only (after 0a is a completed message; modal must not hide it)
+# TURN 1 — 0a only: silico welcome, paste skeleton + "reply ok/go", END TURN (no picker)
+# TURN 2 — after any short reply: open chooser FIRST (not free-text "shall I open the gate?")
 bedside ask --id start-first-ship --prompt "Start first ship on this machine?" --choices yes,adjust --default yes
 # host picker: same id/prompt/choices only — never invent Go / Host-only / Look around
 ```
 
-2. **0b** only on the **next turn** after 0a. Same-turn welcome+picker fails on Claude Code (chooser steals focus). One short question; **yes** / **adjust** only. Host picker: say once.
+2. **0b** = structured chooser on the turn after 0a. Do not leave a free-text cliff after orientation. Full silico AGENTS (not a fetch digest). One short question; **yes** / **adjust** only.
 3. **Decline / exit 10:** halt writes; short re-gate or stop.
 4. **After go:** plate / sibling silico paths for manners pin — not pre-go vendor.
 

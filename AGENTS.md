@@ -8,30 +8,33 @@ Human overview: [README.md](README.md). Tenets: [specs/tenets.md](specs/tenets.m
 
 When the human points at silico / first ship / “getting started for agents”, do **this exact order**.
 
-### 0 — Load this file (not only the README)
+### 0 — Load this file (full text, not a fetch digest)
 
-**You are not following silico until you have opened this `AGENTS.md`** (local silico clone, GCU plate after scaffold, or `https://raw.githubusercontent.com/tig/silico/main/AGENTS.md`).
+**You are not following silico until you have the full text of this `AGENTS.md`** (local silico clone, GCU plate after scaffold, or download `https://raw.githubusercontent.com/tig/silico/main/AGENTS.md` and **read the file**).
 
 | Fail | Correct |
 |------|---------|
-| WebFetch `github.com/tig/silico` (README/homepage) and start executing from the digest | Open **this file** (or the raw URL above), then Stage 0 tools |
+| WebFetch `github.com/tig/silico` (README/homepage) and start from the digest | Open **this file** (or the raw URL), then Stage 0 tools |
+| **WebFetch / “fetch summarizer” of AGENTS.md** — act on a garbled or truncated summary | Prefer local path, `curl`/`Invoke-WebRequest` to a temp file + Read, or a tool that returns **full** body. If a summarizer garbled it: **re-download and read full text before any Stage 0 claim** |
 | Treat a README one-liner about Stage 0 as the full contract | README is human entry; **this file is Priority 1** for agents |
 
-A second-hand README summary is luck, not diligence — even if it happens to mention `silico welcome`.
+A second-hand README or **lossy fetch summary** is luck, not diligence — even if it mentions `silico welcome`.
 
-### 1 — Stage 0 tools (after this file is open)
+### 1 — Stage 0 tools (after this file is open in full)
 
 **Do not** open with tooling narration, COM folklore, PR strategy, `bedside init`, vendoring `third_party/`, scaffold, or a start-gate chooser.
 
 ```text
-# --- TURN 1 (0a only): run tool, then END THE TURN with orientation text ---
+# --- TURN 1 (0a only): run tool, paste orientation, name the human act, END TURN ---
 silico welcome
 # Paste/adapt that output as the ONLY operator-facing content of this turn.
-# Do NOT call bedside ask, host AskUserQuestion / structured pickers, or any
-# blocking UI tool in this same turn. Mid-turn text before a host UI tool is
-# often scrolled past or never reliably shown (Claude Code and kin).
+# End with the operator next-step line from welcome (reply ok/go when ready).
+# Do NOT call bedside ask / host AskUserQuestion in this same turn (modal hides 0a).
+# Do NOT leave a free-text cliff ("Start gate is next") with no human act named.
 
-# --- TURN 2 (0b only): after 0a is a completed assistant message in the transcript ---
+# --- TURN 2 (0b only): FIRST act after any short operator reply (ok / go / yes / …) ---
+# Open the structured chooser immediately — do not re-welcome, do not ask free-text
+# "shall I open the gate?", do not wait for a second free-text "yes".
 bedside ask --id start-first-ship --prompt "Start first ship on this machine?" --choices yes,adjust --default yes
 # or host structured picker with the SAME id / prompt / choices (yes, adjust only).
 # Say once if using the host gate shell.
@@ -39,17 +42,19 @@ bedside ask --id start-first-ship --prompt "Start first ship on this machine?" -
 
 | Rule | Detail |
 |------|--------|
-| **Load AGENTS first** | README/repo homepage alone is **not** “followed the getting started instructions.” |
-| **Two turns: 0a then 0b** | **Hard rule.** Orientation is the **entire** operator-facing content of turn 1. Start gate is the **first** act of turn 2. Same-turn “welcome then picker” fails when the host UI steals focus. |
+| **Load full AGENTS first** | README/homepage alone fails. **Fetch digests of this file fail.** Full text or re-download. |
+| **Two turns: 0a then 0b** | **Hard rule.** Orientation is turn 1. Start gate is the **first** act of turn 2. Same-turn “welcome then picker” fails when the host UI steals focus. |
+| **0a ends with a human act** | Operator-facing close must say what to do next (e.g. reply `ok` / `go`). Never leave only “Start gate is next” at a free-text prompt with no chooser and no next step. |
+| **Turn 2 = chooser first** | After any short reply, open the **structured** start gate immediately. Free-text-only turn 2 fails Stage 0b (Bedside: never leave them at a cliff; no free-text choice wall). |
 | **0a is a completed chat message** | Tool log only fails 0a. 0a must be a finished assistant message the operator can scroll to **without** a modal open. |
 | **Welcome is the skeleton** | Do not hand-build a multi-section status report instead of `silico welcome`. |
-| **Gate prompt is short** | Title/prompt = one question (e.g. “Start first ship on this machine?”). **No** Stage A–D monologue in the chooser; **no** multi-line option descriptions that restate the playbook. Optional one clause: “Orientation is in the message above.” |
-| **Choices only `yes` / `adjust`** | Do **not** invent `Go`, `Host-only`, `Look around`, or other forks at start. Host-only is a named anti-pattern (first ship continues to metal unless the operator **adjusts** after a short re-gate). |
-| **No mutate before go** | Before **yes** on start-first-ship: no `bedside init`, no copy/vendor of `third_party/bedside` into the GCU, no scaffold, no commit/push, no install that rewrites the product tree. |
-| **Doctor fail ≠ skip 0a** | Missing GCU `bedside.toml` is normal on a thin product tree. **Still run `silico welcome` and show 0a.** Fix the pin **after go** via plate scaffold. |
-| **Host picker OK** | When agent stdin cannot reach the operator, host picker is the sanctioned shell — **same** id/prompt/choices; **say once** you are using the host gate shell. Decline / exit 10 = halt writes. Still **turn 2 only** — never same turn as 0a. |
+| **Gate prompt is short** | Title/prompt = one question. **No** Stage A–D monologue in the chooser. Optional: “Orientation is in the message above.” |
+| **Choices only `yes` / `adjust`** | Do **not** invent `Go`, `Host-only`, `Look around`. Host-only is a named anti-pattern unless the operator **adjusts** after a short re-gate. |
+| **No mutate before go** | Before **yes** on start-first-ship: no `bedside init`, vendor, scaffold, commit/push, product-tree installs. |
+| **Doctor fail ≠ skip 0a** | Missing GCU `bedside.toml` is normal. Still show 0a; fix pin after go via plate. |
+| **Host picker OK** | Same id/prompt/choices; say once. Still **turn 2 only**. Decline / exit 10 = halt writes. |
 
-**Harness note (Claude Code / similar):** Host structured questions take focus immediately. System prompts that say “text before tool calls may not be shown” **collide** with same-turn 0a+0b. Silico’s contract wins: **split the turns.** If the operator never saw 0a, re-show the welcome as a full turn (no gate), then open the gate on the next turn. Do not claim “I presented it mid-turn above the modal.”
+**Harness note (Claude Code / similar):** Host structured questions take focus immediately → **split turns**. After 0a, the session **must** resume into a **chooser**, not a bare free-text prompt. If the operator only saw free text after orientation, you failed 0b — open the start-gate picker on the next opportunity without redoing a long 0a.
 
 After **go**: Stage A tools → B workspace → C plate + host gate → D metal. Full stages and metal rules are below.
 
@@ -438,6 +443,10 @@ bedside ask --id start-first-ship --prompt "Start first ship on this machine?" -
 **Anti-pattern (observed in harness tests):** agent sees missing `bedside.toml` → runs `bedside init` + copies `third_party/bedside` into the GCU → opens start gate with a multi-sentence Stage A–C monologue in the picker → **never** pastes `silico welcome`. That is a failed Stage 0 even if the operator eventually clicks yes.
 
 **Anti-pattern (Claude Code / host UI):** same turn runs `silico welcome`, emits orientation text, then immediately calls `AskUserQuestion` / host picker — operator only sees the modal; agent claims “0a was above the gate.” That fails 0a. Split turns.
+
+**Anti-pattern (free-text cliff):** 0a ends with “Start gate is next” / “Orientation is done” and the session sits on a bare free-text prompt with **no** structured chooser and **no** named human act. That fails 0b and Bedside “never leave them at a cliff.” End 0a with “reply ok/go”; turn 2 **opens the chooser first**.
+
+**Anti-pattern (fetch summarizer):** WebFetch of AGENTS.md returns a garbled digest; agent narrates “summarizer garbled that” and proceeds from partial memory. Re-download full text (or use local clone) before Stage 0.
 
 #### 0a — Orientation (required first operator-facing message)
 

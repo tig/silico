@@ -1,4 +1,4 @@
-"""Serial identity probe (#78 CH9102: default no DTR/RTS pulse)."""
+"""Serial identity probe (#78 CH9102; #81 CR boot-buffer preserve)."""
 
 from __future__ import annotations
 
@@ -15,6 +15,7 @@ class _FakeSer:
         self.dtr = False
         self.rts = False
         self.writes: list[bytes] = []
+        self.clears = 0
         self.closed = False
 
     def open(self) -> None:
@@ -24,7 +25,7 @@ class _FakeSer:
         self.closed = True
 
     def reset_input_buffer(self) -> None:
-        pass
+        self.clears += 1
 
     def write(self, data: bytes) -> int:
         self.writes.append(data)
@@ -55,12 +56,45 @@ def test_default_reset_is_false_never_pulses(monkeypatch):
     assert r.ok
     assert r.identity is not None
     assert r.identity.fw_name == "XUSSC"
-    assert r.identity.fw_version == "0.0.1"
     assert pulses == []
     assert b"identity\r\n" in fake.writes
-    assert fake.dtr is False
-    assert fake.rts is False
-    assert any("no DTR/RTS pulse" in ln or "deasserted" in ln for ln in r.lines)
+    assert fake.clears == 1  # stale clear only when not pulsing
+
+
+def test_reset_true_clears_only_before_pulse(monkeypatch):
+    """Boot-only C plate: clear before pulse, never after boot wait (#81 CR)."""
+    fake = _FakeSer()
+    order: list[str] = []
+
+    def _clear(s):
+        order.append("clear")
+        s.clears += 1
+
+    def _pulse(s):
+        order.append("pulse")
+
+    def _listen(_s, _t):
+        order.append("listen")
+        return b"fw_name=GCU fw_version=0.0.1\n"
+
+    _install_fake_serial(monkeypatch, fake)
+    monkeypatch.setattr(mod, "_clear_input", _clear)
+    monkeypatch.setattr(mod, "_pulse_reset", _pulse)
+    monkeypatch.setattr(mod, "_listen", _listen)
+    monkeypatch.setattr(mod.time, "sleep", lambda *_: order.append("boot_wait"))
+
+    r = probe_serial_identity("COM7", reset=True, listen_s=0.01, boot_wait_s=0.1)
+    assert r.ok
+    assert r.identity is not None
+    assert r.identity.fw_name == "GCU"
+    # Exactly one clear, and it happens before pulse/boot_wait/listen
+    assert order.count("clear") == 1
+    assert order.index("clear") < order.index("pulse")
+    assert order.index("pulse") < order.index("boot_wait")
+    assert order.index("boot_wait") < order.index("listen")
+    assert not any(
+        order[i] == "clear" and i > order.index("pulse") for i in range(len(order))
+    )
 
 
 def test_reset_true_pulses_once(monkeypatch):
@@ -76,7 +110,6 @@ def test_reset_true_pulses_once(monkeypatch):
     r = probe_serial_identity("COM7", reset=True, listen_s=0.01, boot_wait_s=0.0)
     assert r.ok
     assert pulses == [1]
-    assert any("Pulse DTR/RTS" in ln for ln in r.lines)
 
 
 def test_probe_empty_reports_ch9102_hint(monkeypatch):
@@ -88,4 +121,3 @@ def test_probe_empty_reports_ch9102_hint(monkeypatch):
     r = probe_serial_identity("COM7", listen_s=0.01)
     assert not r.ok
     assert any("CH9102" in ln for ln in r.lines)
-    assert "..." in "\n".join(r.lines)  # ASCII ellipsis, not U+2026

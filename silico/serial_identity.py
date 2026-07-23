@@ -17,6 +17,7 @@ class SerialIdentityResult:
 
 
 def _pulse_reset(ser) -> None:
+    """Toggle DTR/RTS like a USB-UART reset (can land CH9102 in download/ROM)."""
     try:
         ser.dtr = False
         ser.rts = True
@@ -30,17 +31,49 @@ def _pulse_reset(ser) -> None:
         pass
 
 
+def _hold_deasserted(ser) -> None:
+    """Keep control lines idle so the app keeps running (CH9102 / M5GO-safe)."""
+    try:
+        ser.dtr = False
+        ser.rts = False
+    except Exception:  # noqa: BLE001
+        pass
+
+
+def _knock(ser) -> None:
+    ser.write(b"\r\n")
+    time.sleep(0.15)
+    ser.write(b"identity\r\n")
+    time.sleep(0.1)
+
+
+def _listen(ser, listen_s: float) -> bytes:
+    buf = bytearray()
+    t0 = time.time()
+    while time.time() - t0 < listen_s:
+        chunk = ser.read(512)
+        if chunk:
+            buf.extend(chunk)
+    return bytes(buf)
+
+
 def probe_serial_identity(
     port: str,
     *,
     baud: int = 115200,
-    listen_s: float = 2.0,
-    reset: bool = True,
+    listen_s: float = 3.0,
+    boot_wait_s: float = 1.5,
+    reset: bool = False,
     knock: bool = True,
     expect_name: str | None = None,
     expect_version: str | None = None,
 ) -> SerialIdentityResult:
-    """Open *port*, optional DTR/RTS pulse, knock ``identity``, parse response.
+    """Open *port*, knock ``identity``, parse response.
+
+    Default: DTR/RTS **deasserted**, **no** reset pulse, then knock (tig/silico#78).
+    CH9102/M5GO: a best-effort DTR/RTS pulse often lands ROM/download so the app
+    never answers; bare pyserial with dtr=rts=False works. Pass ``reset=True`` only
+    when you intentionally want a pulse + boot wait (e.g. boot-greeting capture).
 
     Does not use mpremote. Never writes firmware.
     """
@@ -58,44 +91,58 @@ def probe_serial_identity(
         ser.baudrate = baud
         ser.timeout = 0.05
         ser.write_timeout = 1.0
+        # Set before open so Windows does not leave lines asserted after open.
         ser.dtr = False
         ser.rts = False
         ser.open()
+        _hold_deasserted(ser)
     except Exception as e:  # noqa: BLE001
         return SerialIdentityResult(False, [f"FAIL: open {port}: {e}"])
 
+    raw = b""
     try:
+        _hold_deasserted(ser)
         if reset:
             lines.append("Pulse DTR/RTS (best-effort reset)...")
             _pulse_reset(ser)
-        ser.reset_input_buffer()
+            _hold_deasserted(ser)
+            if boot_wait_s > 0:
+                lines.append(f"Wait {boot_wait_s:g}s for app boot after pulse...")
+                time.sleep(boot_wait_s)
+        else:
+            lines.append("Lines held deasserted (no DTR/RTS pulse; CH9102-safe)")
+        try:
+            ser.reset_input_buffer()
+        except Exception:  # noqa: BLE001
+            pass
         if knock:
             lines.append("Knock: CR/LF + identity")
-            ser.write(b"\r\n")
-            time.sleep(0.15)
-            ser.write(b"identity\r\n")
-            time.sleep(0.1)
-        buf = bytearray()
-        t0 = time.time()
-        while time.time() - t0 < listen_s:
-            chunk = ser.read(512)
-            if chunk:
-                buf.extend(chunk)
-        raw = bytes(buf)
+            try:
+                _knock(ser)
+            except Exception as e:  # noqa: BLE001
+                lines.append(f"WARN: knock write failed: {e}")
+        raw = _listen(ser, listen_s)
     finally:
-        ser.close()
+        try:
+            ser.close()
+        except Exception:  # noqa: BLE001
+            pass
 
     lines.append(f"Captured {len(raw)} bytes @ {baud}")
     if raw:
         preview = raw[:160]
-        lines.append(f"  raw: {preview!r}{'…' if len(raw) > 160 else ''}")
+        lines.append(f"  raw: {preview!r}{'...' if len(raw) > 160 else ''}")
 
     text = raw.decode("utf-8", errors="replace")
     got = parse_identity_blob(text)
     if got is None or not (got.fw_name or got.fw_version):
         lines.append("RESULT: no identity line found on serial")
         lines.append(
-            "C images must print fw_name=… fw_version=… on boot or answer identity."
+            "C images must print fw_name=... fw_version=... on boot or answer identity."
+        )
+        lines.append(
+            "Hint: CH9102/M5GO — keep default (no DTR/RTS pulse). "
+            "Manual: open COM with dtr=rts=False, write identity + newline."
         )
         return SerialIdentityResult(False, lines, identity=None, raw=raw)
 

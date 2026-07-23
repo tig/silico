@@ -29,6 +29,17 @@ If inspect/deploy says app owns console / door stayed shut:
 | `machine.UART(0)` while REPL owns console | Often `uart_driver_install API first`; does not fix RX |
 | Identity/telem TX only | Proves outbound CDC, not host→device RX |
 | Deploy `--verify` then soft-reset into deaf app | Verify used REPL; app may never hear host (#49 race) |
+| DTR/RTS pulse before C identity knock on CH9102 | Resets into ROM / download; `silico inspect` captures 0 bytes while bare pyserial (dtr=rts=False + `identity`) works (#78) |
+
+## C / ESP-IDF identity (language=c)
+
+`silico inspect` uses serial knock (`identity` + CR/LF), not mpremote.
+
+1. Open with **DTR/RTS deasserted** and knock **without** a reset pulse (default; CH9102 / M5GO).
+2. Capture window ~3s (longer than a single boot greeting).
+3. Opt in only if needed: `probe_serial_identity(..., reset=True)` for pulse + boot wait.
+
+Manual check when inspect is empty but the app is alive: open the COM with dtr/rts false, write `identity` and a newline, read the response.
 
 ## Lockout recovery (once)
 

@@ -40,6 +40,16 @@ The act of **laying down the [plate](./specs/lexicon.md#plate)** into a product 
 
 ## Getting Started
 
+### Step 0: Prerequisites (device first)
+
+Silico ships maintainable firmware and host tooling for a real product board. It does not invent your PCB or your domain moat.
+
+Before you start:
+
+1. **Get the device engineered** (or use a known board kit). You need physical metal you can plug in over USB—custom hardware, a prototype, or a starter kit such as the M5GO used in the examples below. Silico proves software on that board; it is not the schematic/layout CAD loop.
+2. **Know what the product must do.** Rough is fine. Agents will interview you to refine the [spec](./specs/lexicon.md#spec); they will not invent vertical product judgment.
+3. **A Mac or PC**, a **GitHub** account, and access to a **coding agent** (TUI or GUI). The agent installs host tools (Git, Python, `gh`, and so on) with your consent—you do not need a clean embedded workstation up front.
+
 ### Step 1: The Spec
 
 Put the specification for the device—hardware and end-user functionality—in a GitHub repo. These example repos each contain a [spec](./specs/lexicon.md#spec) that has been proven to work with Silico:

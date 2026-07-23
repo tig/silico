@@ -33,7 +33,7 @@ Then:
 
 That is the product experience of **silico** (github.com/tig/silico). Not a new MCU religion. Not "hire an embedded team and wait a quarter." **Prompt to metal**: Claude Code on a Mac, host-honest done, board in a real hand on a two-day clock.
 
-> **What we work backwards from:** a non-software founder (or vertical lead) with a hardware spec unblocks end-to-end device software with an agent in a few hours, and has that device in a field test the day after, with Silico remaining foundational to how the company ships edge thereafter.
+> **What we work backwards from:** a non-software founder (or vertical lead) with a prototype board (or hardware kit) and a produc spec unblocks end-to-end device software with an agent in a few hours, and has that device in a field test the day after, with Silico remaining foundational to how the company ships edge thereafter.
 
 Tig Kindel today also announced that three GCUs share that spine: **Zakalwe**, **Quilan**, and **Sma** ([codenames for now](./gcu-codenames.md)). None is "the silico product." Each is a **GCU**: one shippable edge app with private domain logic and a life after the bench. Silico is not a GCU and not a company brand.
 

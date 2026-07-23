@@ -64,6 +64,19 @@ def cmd_doctor(_args: argparse.Namespace) -> int:
     return 0 if report.ok else 1
 
 
+def cmd_env(args: argparse.Namespace) -> int:
+    """Print C/IDF env block agents can apply (EIM catalog / IDF_PATH)."""
+    from silico.c_toolchain import env_print_block
+
+    shell = getattr(args, "shell", None)
+    lines = env_print_block(shell=shell)
+    _print_lines(lines)
+    # Non-zero only when literally nothing useful printed beyond the missing note
+    if lines and lines[0].startswith("# No IDF"):
+        return 1
+    return 0
+
+
 def cmd_welcome(_args: argparse.Namespace) -> int:
     """Stage 0a orientation skeleton from workspace + doctor (before start gate)."""
     report = run_welcome()
@@ -282,6 +295,25 @@ def build_parser() -> argparse.ArgumentParser:
 
     d = sub.add_parser("doctor", help="host environment + scored serial ports (read-only)")
     d.set_defaults(func=cmd_doctor)
+
+    env_p = sub.add_parser(
+        "env",
+        help="print C/ESP-IDF env block from EIM catalog (activation + IDF_PATH); read-only",
+    )
+    env_p.add_argument(
+        "--print",
+        dest="env_print",
+        action="store_true",
+        default=True,
+        help="emit shell assignments (default; kept for discoverability)",
+    )
+    env_p.add_argument(
+        "--shell",
+        choices=("powershell", "bash", "pwsh"),
+        default=None,
+        help="shell dialect (default: powershell on Windows, bash elsewhere)",
+    )
+    env_p.set_defaults(func=cmd_env)
 
     wel = sub.add_parser(
         "welcome",

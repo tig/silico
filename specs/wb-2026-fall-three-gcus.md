@@ -1,8 +1,4 @@
-# Working Backwards: Silico v1 — Three GCUs in the Field (Fall 2026)
-
-**Stage:** First draft for broad foundational input. Ambition date is Fall 2026.
-**Artifact form:** Press release plus FAQ
-**Scope of this doc:** Silico **v1** only. Longer-term vision is FAQ 38, not a separate v2 narrative (yet).
+# PRFAQ: Silico v1 — Three GCUs in the Field (Summer 2026)
 
 How to read: we work backwards from **this** customer experience. Everything in the PR, FAQ, tenets, and v1 spec is invented only to make this true (and repeatable without Tig in the room):
 
@@ -23,7 +19,7 @@ Method notes:
 # Press Release
 
 **FOR IMMEDIATE RELEASE**
-**Fall 2026**
+**August 2026**
 **Durango, CO**
 
 ## Silico proves `Prompt to metal` Actually Works

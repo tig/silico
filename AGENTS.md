@@ -6,7 +6,20 @@ Human overview: [README.md](README.md). Tenets: [specs/tenets.md](specs/tenets.m
 
 ## FIRST ACTION — Stage 0 (first ship / “getting started for agents”)
 
-When the human says *See https://github.com/tig/silico. Follow the getting started instructions for agents* (or first ship / Day 1), do **this exact order**. Context tables below are for later; they are not an excuse to skip 0a.
+When the human points at silico / first ship / “getting started for agents”, do **this exact order**.
+
+### 0 — Load this file (not only the README)
+
+**You are not following silico until you have opened this `AGENTS.md`** (local silico clone, GCU plate after scaffold, or `https://raw.githubusercontent.com/tig/silico/main/AGENTS.md`).
+
+| Fail | Correct |
+|------|---------|
+| WebFetch `github.com/tig/silico` (README/homepage) and start executing from the digest | Open **this file** (or the raw URL above), then Stage 0 tools |
+| Treat a README one-liner about Stage 0 as the full contract | README is human entry; **this file is Priority 1** for agents |
+
+A second-hand README summary is luck, not diligence — even if it happens to mention `silico welcome`.
+
+### 1 — Stage 0 tools (after this file is open)
 
 **Do not** open with tooling narration, COM folklore, PR strategy, `bedside init`, vendoring `third_party/`, scaffold, or a start-gate chooser.
 
@@ -14,19 +27,22 @@ When the human says *See https://github.com/tig/silico. Follow the getting start
 # 0a — orientation source (read-only; does NOT need bedside.toml)
 silico welcome
 # → paste/adapt that output as your FIRST operator-facing chat message
-# 0b — only after 0a is visible in chat:
+#    (tool log only does NOT count — the operator must see 0a in chat)
+# 0b — only after 0a is visible in chat — CANONICAL SHAPE ONLY:
 bedside ask --id start-first-ship --prompt "Start first ship on this machine?" --choices yes,adjust --default yes
-# or host structured picker (same contract). Gate body = one short question only.
+# or host structured picker with the SAME id / prompt / choices (yes, adjust only).
 ```
 
 | Rule | Detail |
 |------|--------|
-| **0a before 0b** | No start-gate tool/picker until the welcome skeleton is in the chat transcript. |
+| **Load AGENTS first** | README/repo homepage alone is **not** “followed the getting started instructions.” |
+| **0a before 0b** | No start-gate tool/picker until the welcome skeleton is in the **chat transcript** (not only a shell tool result). |
 | **Welcome is the skeleton** | Do not hand-build a multi-section status report instead of `silico welcome`. |
-| **Gate prompt is short** | `--prompt` / picker title = one question. **Why/where** stays in chat *before* the gate, not inside the chooser. |
+| **Gate prompt is short** | Title/prompt = one question (e.g. “Start first ship on this machine?”). **No** Stage A–D monologue in the chooser; **no** multi-line option descriptions that restate the playbook. |
+| **Choices only `yes` / `adjust`** | Do **not** invent `Go`, `Host-only`, `Look around`, or other forks at start. Host-only is a named anti-pattern (first ship continues to metal unless the operator **adjusts** after a short re-gate). |
 | **No mutate before go** | Before **yes** on start-first-ship: no `bedside init`, no copy/vendor of `third_party/bedside` into the GCU, no scaffold, no commit/push, no install that rewrites the product tree. |
-| **Doctor fail ≠ skip 0a** | Missing GCU `bedside.toml` is normal on a thin product tree. **Still run `silico welcome` and show 0a.** Fix the pin **after go** via plate scaffold (ships `bedside.toml` → sibling silico vendor). Do **not** invent a pre-go vendor path so doctor goes green first. |
-| **Host picker OK** | When agent stdin cannot reach the operator, host picker is the sanctioned shell — same ids/contract; say once. Decline / exit 10 = halt writes. |
+| **Doctor fail ≠ skip 0a** | Missing GCU `bedside.toml` is normal on a thin product tree. **Still run `silico welcome` and show 0a.** Fix the pin **after go** via plate scaffold. |
+| **Host picker OK** | When agent stdin cannot reach the operator, host picker is the sanctioned shell — **same** id/prompt/choices; **say once** you are using the host gate shell. Decline / exit 10 = halt writes. |
 
 After **go**: Stage A tools → B workspace → C plate + host gate → D metal. Full stages and metal rules are below.
 

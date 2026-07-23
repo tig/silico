@@ -40,6 +40,8 @@ The act of **laying down the [plate](./specs/lexicon.md#plate)** into a product 
 
 ## Getting Started
 
+**Agents: this README is not the playbook.** See Silico's [AGENTS.md](https://raw.githubusercontent.com/tig/silico/main/AGENTS.md) instead.
+
 ### Step 0: Prerequisites
 
 1. **Engineer the device** (or use a known board kit). Custom hardware, a prototype, or a starter kit like the M5GO in the examples below. Use a USB data cable so the host can talk to the board. Silico covers firmware and the host path on that board, not PCB design.
@@ -78,10 +80,8 @@ In the above example, `tig/xuss` is the repo for one of the Silico example GCUs;
 Give the agent this starting prompt:
 
 ```md
-See https://github.com/tig/silico. Follow the getting started instructions for agents.
+See https://github.com/tig/silico and read AGENTS.md. Follow the guidance there exactly. Stay in this product checkout.
 ```
-
-The agent’s **first** job (Stage 0) is: run `silico welcome`, show that orientation in chat, **then** open a short start-gate chooser. It must **not** open with tooling status, `bedside init`, or a multi-paragraph gate. After you say go, it guides [first ship](./specs/lexicon.md#first-ship) with [bedside manners](https://github.com/tig/bedside) and host tooling (with consent), including the GitHub CLI (`gh`).
 
 When [first ship](./specs/lexicon.md#first-ship) is complete, the agent will land the following on the default branch (e.g. `main`), following the repo's contribution standards:
 

@@ -6,21 +6,20 @@ Guidance for AI coding agents in **this product repo** (language=c plate).
 
 When the human says *follow silico getting started* (or first ship / Day 1):
 
-**Do not** open with tooling narration, `bedside init`, vendoring `third_party/`, PR strategy, or a start-gate chooser.
+0. **Open the silico spine AGENTS** (local `../silico/AGENTS.md` or raw `https://raw.githubusercontent.com/tig/silico/main/AGENTS.md`). The GitHub README/homepage alone is **not** the agent playbook.
+1. **Do not** open with tooling narration, `bedside init`, vendoring `third_party/`, PR strategy, or a start-gate chooser.
 
 ```text
-silico welcome          # 0a orientation source FIRST (read-only; do not block on bedside doctor)
-# paste that output as the first operator-facing chat message, then:
+silico welcome          # 0a FIRST — paste as first operator chat message (tool log only fails 0a)
 bedside ask --id start-first-ship --prompt "Start first ship on this machine?" --choices yes,adjust --default yes
-# or host picker (same contract; short prompt only — no Stage A–C essay in the chooser)
+# host picker: same id/prompt/choices only — never invent Go / Host-only / Look around
 ```
 
-1. **0a:** Paste/adapt `silico welcome` as your **first** operator-facing chat message. Missing `bedside.toml` is **not** a reason to skip 0a or to `bedside init` before go.
-2. **0b:** Only after 0a is in chat. Gate body = one short question. Prefer CLI when it reaches the operator; host picker is sanctioned when stdin cannot — say once.
-3. **Decline / exit 10:** halt writes; one short reply; re-gate or stop.
-4. **After go:** fix manners pin via plate / sibling silico paths if needed — not a pre-go full vendor into this tree.
+2. **0b** only after 0a is in chat. One short question; choices **yes** / **adjust** only. Host picker: say once.
+3. **Decline / exit 10:** halt writes; short re-gate or stop.
+4. **After go:** plate / sibling silico paths for manners pin — not pre-go vendor.
 
-Full playbook: https://github.com/tig/silico `AGENTS.md`.
+Full playbook: silico root `AGENTS.md` FIRST ACTION.
 
 ## Spine
 

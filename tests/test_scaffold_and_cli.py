@@ -149,14 +149,25 @@ def test_root_agents_stage0_is_first_screen():
     """
     root = Path(__file__).resolve().parents[1]
     agents = (root / "AGENTS.md").read_text(encoding="utf-8")
-    head = agents[:2500]
+    head = agents[:4500]
     assert head.lstrip().startswith("# AGENTS.md")
     assert "FIRST ACTION" in head
     assert "silico welcome" in head
     # welcome before the long context-load section
-    assert head.find("silico welcome") < head.find("Agent context load path")
+    assert agents.find("silico welcome") < agents.find("Agent context load path")
     assert "bedside init" in head.lower()
-    assert "No mutate before go" in head or "no mutate before go" in head.lower()
+    assert "yes,adjust" in head or "yes, adjust" in head
+    assert "Host-only" in head or "host-only" in head.lower()
+    assert "raw.githubusercontent.com/tig/silico/main/AGENTS.md" in head
+    assert "README" in head and ("not only" in head.lower() or "not the" in head.lower())
+
+
+def test_readme_points_agents_at_agents_md_not_homepage_only():
+    """README must send agents to silico AGENTS (raw), not invent Stage 0 from digest."""
+    root = Path(__file__).resolve().parents[1]
+    readme = (root / "README.md").read_text(encoding="utf-8")
+    assert "raw.githubusercontent.com/tig/silico/main/AGENTS.md" in readme
+    assert "not the playbook" in readme.lower()
 
 
 def test_scaffold_ships_bedside_pin(tmp_path: Path):

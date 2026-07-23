@@ -236,9 +236,17 @@ def build_welcome(*, root: Path | None = None) -> list[str]:
         "host test path before we touch the board.",
         "",
         "---",
-        "Stage **0a complete** (orientation). **Start gate is next** - do **not** call "
-        "`bedside ask` / host chooser for `start-first-ship` until this orientation has been shown "
-        "to the operator as a normal chat message. Then open the start gate (0b).",
+        "Stage **0a complete** (orientation). This text must already be in the operator chat "
+        "(tool log only fails 0a). **Start gate is next** — use the CANONICAL shape only:",
+        "",
+        "  bedside ask --id start-first-ship \\",
+        '    --prompt "Start first ship on this machine?" \\',
+        "    --choices yes,adjust --default yes",
+        "",
+        "Host picker (when stdin cannot reach bedside ask): same id, same prompt, choices "
+        "**yes** and **adjust** only. Say once that you are using the host gate shell.",
+        "Do **not** invent Go / Host-only / Look around. Do **not** put Stage A-D detail "
+        "into option descriptions (why/where already lives in this orientation).",
         "",
         "Doctor snapshot (read-only grounding):",
     ]

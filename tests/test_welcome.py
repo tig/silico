@@ -92,6 +92,16 @@ def test_welcome_is_cp1252_safe(tmp_path: Path):
     assert "0a" in text
 
 
+def test_welcome_encodes_canonical_start_gate(tmp_path: Path):
+    """Agents invent Go/Host-only pickers when the tool does not print the shape."""
+    (tmp_path / "silico.toml").write_text("[product]\nname = \"X\"\n", encoding="utf-8")
+    text = "\n".join(build_welcome(root=tmp_path))
+    assert "start-first-ship" in text
+    assert "yes,adjust" in text or ("yes" in text and "adjust" in text)
+    assert "Host-only" in text  # named ban
+    assert "tool log only" in text.lower() or "tool log only fails" in text.lower()
+
+
 def test_cli_out_survives_cp1252_stream(capsys):
     from silico.cli import _out
 

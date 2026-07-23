@@ -2,8 +2,8 @@
 
 How to read: we work backwards from **this** customer experience. Everything in the PR, FAQ, tenets, and v1 spec is invented only to make this true (and repeatable without Tig in the room):
 
-> "I met Tig, and he showed me Silico. With just Claude Code on my Mac and my hardware spec, I had the device working end-to-end in a few hours, and in a field test the day after that. Silico is now a foundational piece of our company's technology."
-> — Grady, CEO and Founder of Quilan
+> "I met Tig, and he showed me Silico. With just Claude Code on my Mac, my prototype board, and my product spec, I had the device working end-to-end in a few hours, and in a field test the day after that. Silico is now a foundational piece of our company's technology."
+> — Grady, CEO and Founder of www.velocityvane.com
 
 The press release is that experience made public. The FAQ is everything the PR cannot carry without becoming a strategy deck. See [tenets.md](./tenets.md). Phrase book: [lexicon.md](./lexicon.md).
 

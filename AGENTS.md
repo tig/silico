@@ -37,7 +37,7 @@ Prefer **tools that encode manners** (`silico welcome|doctor|wait-device|inspect
 
 ## What silico is
 
-**Prompt for metal.** Open host-first spine for vertical edge products (GCUs). Not a company product line. Not the vertical domain app.
+**Prompt to metal.** Open host-first spine for vertical edge products (GCUs). Not a company product line. Not the vertical domain app.
 
 We work backwards from:
 
@@ -55,7 +55,7 @@ Full text: [specs/tenets.md](specs/tenets.md) (unless you know better ones).
 4. **Make it better than you found it.**
 5. **Edge that just works is hard.**
 6. **Vertical teams are the customer.**
-7. **Prompt for metal.**
+7. **Prompt to metal.**
 8. **Default is a product choice, not a quality ranking.**
 9. **Host first.**
 10. **Apps stay apps.**
@@ -94,7 +94,7 @@ These rules sit **on top of** Bedside for this product. They do not soften or re
 
 The **first operator-facing message** of a Day 1 (or “getting started”) session must help them understand **what they started**, not only what you will do next. Required shape (tone may vary; skeleton may not):
 
-1. **What Silico is** — one or two plain sentences (open host-first spine / “prompt for metal”: agents build and maintain shippable edge products on real boards; Silico is the host tooling and plate, not the product brand).
+1. **What Silico is** — one or two plain sentences (open host-first spine / “prompt to metal”: agents build and maintain shippable edge products on real boards; Silico is the host tooling and plate, not the product brand).
 2. **What a GCU is** — define on first use, then **summarize this GCU** from product truth (`README.md`, `spec.md`, product `AGENTS.md`, workspace markers). Name intent, not codename theater. If product docs are thin **or contradictory**, say so and plan **spec interview mode** after go (see that section) — do not invent domain moat to fill the holes.
 3. **Your role** — you will step them through host setup, plate, proof on the computer, then the board talking over USB.
 4. **What you know now** — machine readiness + workspace mode + whether a board is already talking (read-only discovery only).

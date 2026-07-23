@@ -48,7 +48,7 @@ v1 succeeds when:
 2. Promote to silico only when a second GCU needs the same thing (**Extract, then open**).
 3. No hardware at import time. Init constructs the world.
 4. I/O and time cross a HAL as boring values (ints, floats, bools), not driver objects.
-5. Install and update verify version identity. Mismatch is failure (**Prompt for metal**, **Host first**).
+5. Install and update verify version identity. Mismatch is failure (**Prompt to metal**, **Host first**).
 6. Agents author firmware and detailed specs by default. Chat folklore is not a release artifact (**Agents write the code**).
 7. Agents run host setup, CI, deploy, and first-flash guidance; help the operator; do not assume ops literacy (**Agents operate the host path**).
 8. Agent friction becomes silico doc/infra fixes or issues on `tig/silico`, not chat-only recovery (**Make it better than you found it**).
@@ -95,7 +95,7 @@ If a design is "built-in internet and phone-home for every GCU via silico," it i
 2. **Agents editing GCU repos:** AGENTS.md, anti-patterns, commands that mean done. Default authors of firmware and detailed specs.
 3. **End customers of GCUs:** install/update without knowing silico exists.
 
-Target after v1: vertical teams (Grady-shaped) who **Prompt for metal** and will not staff a device-ops priesthood.
+Target after v1: vertical teams (Grady-shaped) who **Prompt to metal** and will not staff a device-ops priesthood.
 
 ## 5. Repository shape (spine)
 
@@ -199,7 +199,7 @@ Layers (see [AGENTS.md](../AGENTS.md) Definition of done):
 
 **Forbidden:** close P0 sensing/actuation as fully done with only host/sim when device hooks are stubs — leave a metal follow-up open or finish the pin path. Host-first is not host-only.
 
-This is the minimum **Prompt for metal** / **Host first** bar. Soften it and a non-expert cannot trust agent-authored firmware. Soften it and Grady is right to walk away.
+This is the minimum **Prompt to metal** / **Host first** bar. Soften it and a non-expert cannot trust agent-authored firmware. Soften it and Grady is right to walk away.
 
 ## 8. Install and update (customer path)
 

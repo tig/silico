@@ -206,7 +206,7 @@ def build_welcome(*, root: Path | None = None) -> list[str]:
     lines = [
         "Welcome. **Silico** is the open host-first spine for building shippable edge products: "
         "agents build and maintain products on real boards; Silico is the host tooling and plate, "
-        "not the product brand. Prompt for metal.",
+        "not the product brand. Prompt to metal.",
         "",
         "You are building a **GCU** (GCU stands for General Contact Unit — Silico’s term for one "
         f"shippable edge product: app + board). From your product docs, this GCU is: {summary}",

@@ -8,7 +8,7 @@ build-backend = "setuptools.build_meta"
 name = "tig-silico"
 # Bump when packaging rename ships; plate pins must point at a ref with this metadata.
 version = "0.1.4"
-description = "Prompt for metal: host spine for agent-authored edge products (GCUs)"
+description = "Prompt to metal: host spine for agent-authored edge products (GCUs)"
 readme = "README.md"
 license = { text = "Apache-2.0" }
 requires-python = ">=3.11"

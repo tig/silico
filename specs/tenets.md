@@ -20,7 +20,7 @@ Tenets are the written rules that distinguish good behavior from unwelcome behav
 
 6. **Vertical teams are the customer.** Builders in the SpaceX, Stoke Space, Figure, and Anduril pattern need edge devices inside a vertical solution. They do not want a device-ops priesthood. Pure cloud SaaS with no metal is not our customer.
 
-7. **Prompt for metal.** Silico exists so teams can prompt agents such that what they *care about* lands on edge devices reliably, safely, and repeatedly. The experience we work backwards from: agent on a Mac, device working end-to-end the next day, potential customer's hand the day after, silico still foundational after that. Host gates, version verify, and agent docs are the product surface for that prompt. Folklore is not. The human's job is domain judgment and confirmation, not typing C or MicroPython into a blank file or memorizing serial folklore.
+7. **Prompt to metal.** Silico exists so teams can prompt agents such that what they *care about* lands on edge devices reliably, safely, and repeatedly. The experience we work backwards from: agent on a Mac, device working end-to-end the next day, potential customer's hand the day after, silico still foundational after that. Host gates, version verify, and agent docs are the product surface for that prompt. Folklore is not. The human's job is domain judgment and confirmation, not typing C or MicroPython into a blank file or memorizing serial folklore.
 
 8. **Default is a product choice, not a quality ranking.** Default runtime means "open this door first for most GCUs," not "this language is better." Supported backends share the same excellence bar. A weak path is unfinished silico, not a ranking.
 

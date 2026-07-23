@@ -1,4 +1,4 @@
-![Silico - Prompt for metal](docs/hero.jpg)
+![Silico - Prompt to metal](docs/hero.jpg)
 
 **[Prompt to metal](https://blog.kindel.com/2026/07/22/prompt-to-metal/)**
 

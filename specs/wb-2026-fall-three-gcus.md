@@ -26,7 +26,7 @@ Method notes:
 **Fall 2026**
 **Durango, CO**
 
-## Silico proves `Prompt for metal` Actually Works
+## Silico proves `Prompt to metal` Actually Works
 
 **Durango, CO** — Grady had raised money to build Quilan and spent it on contract manufacture in Asia. The prototype existed. Field trials did not. He is not a software guy. Software was the stall.
 
@@ -35,7 +35,7 @@ Then:
 > "I met Tig, and he showed me Silico. With just Claude Code on my Mac, I had the device working end-to-end the next day, and in a potential customer's hand the day after that. Silico is now a foundational piece of our company's technology."
 > — Grady, CEO and Founder of Quilan
 
-That is the product experience of **silico** (github.com/tig/silico). Not a new MCU religion. Not "hire an embedded team and wait a quarter." **Prompt for metal**: Claude Code on a Mac, host-honest done, board in a real hand on a two-day clock.
+That is the product experience of **silico** (github.com/tig/silico). Not a new MCU religion. Not "hire an embedded team and wait a quarter." **Prompt to metal**: Claude Code on a Mac, host-honest done, board in a real hand on a two-day clock.
 
 > **What we work backwards from:** a non-software founder (or vertical lead) with hardware in hand unblocks end-to-end device software with an agent in about a day, and puts that device with a potential customer the day after, with silico remaining foundational to how the company ships edge thereafter.
 
@@ -87,13 +87,13 @@ Because that two-day path is the only customer experience that matters for silic
 
 Skin in the game: Media Center, Home Server, Phone, Echo, Control4 (device ops at scale; Echo toward continuous deploy with rollback). Live experiment: agents wrote Zakalwe firmware line for line and the detailed spec from a rough brief; I am not the Pi or electrical expert. Judgment and host-first done are mine. Typing firmware is not.
 
-If Grady still needs a software guy and a quarter to move, **Prompt for metal** is a slogan. If only I can run the two days, we are not done.
+If Grady still needs a software guy and a quarter to move, **Prompt to metal** is a slogan. If only I can run the two days, we are not done.
 
-Load-bearing tenets: [tenets.md](./tenets.md). Especially **Prompt for metal**, **Agents write the code**, **Agents operate the host path**, **Make it better than you found it**, **Vertical teams are the customer**.
+Load-bearing tenets: [tenets.md](./tenets.md). Especially **Prompt to metal**, **Agents write the code**, **Agents operate the host path**, **Make it better than you found it**, **Vertical teams are the customer**.
 
 ## 3. What is silico?
 
-**Prompt for metal.** Silico is an open host-side spine so AI agents can ship real edge products: prove firmware on the host before anyone trusts a flash, install and update a device a normal human can run twice, and verify version identity so the board cannot lie about what it is running. Your domain and brand stay in your app; silico is not the product, not a company SKU, and not a device-ops cult. One rule: **host gate green means done; metal confirms.**
+**Prompt to metal.** Silico is an open host-side spine so AI agents can ship real edge products: prove firmware on the host before anyone trusts a flash, install and update a device a normal human can run twice, and verify version identity so the board cannot lie about what it is running. Your domain and brand stay in your app; silico is not the product, not a company SKU, and not a device-ops cult. One rule: **host gate green means done; metal confirms.**
 
 The operator's getting-started interface is an AI coding agent. Human-facing Silico documentation intentionally does not begin with package installation or shell commands. The agent owns those mechanics.
 
@@ -293,7 +293,7 @@ Candidates: host CI green rate; time merge to verified device version; failed in
 
 ## 25. Why not only ship Zakalwe?
 
-Because **Vertical teams are the customer** and **Prompt for metal** are not one vertical. Quilan and Sma force extraction. If they die, silico should still have made Zakalwe more shippable and agent contracts more honest. If they live, gobbledygook was paid down once.
+Because **Vertical teams are the customer** and **Prompt to metal** are not one vertical. Quilan and Sma force extraction. If they die, silico should still have made Zakalwe more shippable and agent contracts more honest. If they live, gobbledygook was paid down once.
 
 ## 26. What customer segments will these products NOT attract?
 
@@ -313,7 +313,7 @@ The agent will help.
 
 ## 30. How do agents know they are done?
 
-AGENTS.md names the host command that must be green. Device flash is confirmation, not proof. That is **Prompt for metal** and **Host first**. Without that, "agents write the code" is cosplay.
+AGENTS.md names the host command that must be green. Device flash is confirmation, not proof. That is **Prompt to metal** and **Host first**. Without that, "agents write the code" is cosplay.
 
 ## 31. How do humans who are not embedded experts know they are done?
 
@@ -348,7 +348,7 @@ Commercial brands: **open** per app; not silico sub-brands.
 
 Not a second full WB (yet). Direction under the same tenets:
 
-1. Silico becomes the boring default for vertical teams who **Prompt for metal** instead of staffing device-ops cults.
+1. Silico becomes the boring default for vertical teams who **Prompt to metal** instead of staffing device-ops cults.
 2. Further multi-target spine when real GCUs force it (Arduino-class plates, Pico SDK C, …) — ESP32 MicroPython and ESP-IDF C already shipped under that rule.
 3. Phone-home and network patterns **in silico** when a second GCU needs what Quilan already does in app code; USB host path remains always available.
 4. Echo-shaped continuous deploy with automatic rollback for fleets, only after host-first and version identity are boring.

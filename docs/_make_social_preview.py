@@ -99,7 +99,7 @@ def main() -> None:
     )
 
     title = "silico"
-    tag = "Prompt for metal."
+    tag = "Prompt to metal."
     title_color = (64, 196, 255)
     tag_color = (210, 220, 235)
 

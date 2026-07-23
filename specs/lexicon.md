@@ -46,7 +46,7 @@ See also: [plate](#plate), [pin](#pin).
 
 The physical board (and the behavior that only appears on real hardware). **Metal confirms**; it does not define **done**. Opposite of host-only proof.
 
-See also: [host-first](#host-first), [host gate](#host-gate), [Prompt for metal](#prompt-for-metal), [sim](#sim).
+See also: [host-first](#host-first), [host gate](#host-gate), [Prompt to metal](#prompt-to-metal), [sim](#sim).
 
 ### host
 
@@ -89,7 +89,7 @@ See also: [host gate](#host-gate), [Help the operator](#help-the-operator).
 
 Doctrine: **done lives on the [host](#host)** (named tests, compile gates, [sim](#sim)/scenario gates) before anyone treats a device flash as proof. [Metal](#metal) confirms after the [host gate](#host-gate) is green. Enables a non-expert to trust agent work without lying.
 
-See also: [host-honest](#host-honest), [test-first](#test-first), [Prompt for metal](#prompt-for-metal).
+See also: [host-honest](#host-honest), [test-first](#test-first), [Prompt to metal](#prompt-to-metal).
 
 ### test-first
 
@@ -111,7 +111,7 @@ See also: [host-first](#host-first).
 
 Also **version verify.** Install and update fail closed unless device-reported `FW_VERSION` (and related identity) matches what the [host](#host) deployed. Mismatch is failure, not a warning.
 
-See also: [integrity](#integrity), [Prompt for metal](#prompt-for-metal), [gobbledygook](#gobbledygook).
+See also: [integrity](#integrity), [Prompt to metal](#prompt-to-metal), [gobbledygook](#gobbledygook).
 
 ### integrity
 
@@ -129,7 +129,7 @@ See also: [HAL](#hal), [host-first](#host-first).
 
 ## Prompt, agents, operators
 
-### Prompt for metal
+### Prompt to metal
 
 Tagline and tenet: use agent prompts so what the team **cares about** lands on edge devices reliably, safely, and repeatedly. The experience we work backwards from: agent on a Mac, device end-to-end the next day, potential customer's hand the day after, [silico](#silico) still foundational. [Host gates](#host-gate), [version verify](#version-identity), and agent docs are the product surface for that prompt - not folklore.
 
@@ -151,7 +151,7 @@ See also: [Help the operator](#help-the-operator).
 
 ### Grady
 
-Also **Grady-shaped.** Persona for the non-software (or non-embedded) founder/builder who should complete Day 1-2 with an agent, without staffing a device-ops cult. Used as the customer shape for [**Prompt for metal**](#prompt-for-metal), not as a public product brand.
+Also **Grady-shaped.** Persona for the non-software (or non-embedded) founder/builder who should complete Day 1-2 with an agent, without staffing a device-ops cult. Used as the customer shape for [**Prompt to metal**](#prompt-to-metal), not as a public product brand.
 
 See also: [operator](#operator).
 

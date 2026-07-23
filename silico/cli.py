@@ -255,7 +255,7 @@ def cmd_version(_args: argparse.Namespace) -> int:
 def build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(
         prog="silico",
-        description="Prompt for metal - host spine for GCUs (agent-first CLI).",
+        description="Prompt to metal - host spine for GCUs (agent-first CLI).",
     )
     p.add_argument("--version", action="store_true", help="print version and exit")
     sub = p.add_subparsers(dest="cmd", required=False)

@@ -12,13 +12,13 @@ Tenets: [tenets.md](./tenets.md). Method: [Working Backwards](https://blog.kinde
 
 ## Silico is the boring default for vertical teams that put edge in the solution
 
-Silico (github.com/tig/silico) is the open host-first spine vertical teams use when they **Prompt for metal** instead of staffing a device-ops cult. Agents write the code. Host gate means done. Apps stay apps. Domain moat stays private.
+Silico (github.com/tig/silico) is the open host-first spine vertical teams use when they **Prompt to metal** instead of staffing a device-ops cult. Agents write the code. Host gate means done. Apps stay apps. Domain moat stays private.
 
 > **Default** means a competent team would rather adopt silico than reinvent install, verify, and agent contracts. Behavior, not marketing. If only Tig's GCUs use it, this PR is fiction.
 
 Tig still ships Zakalwe, Quilan, and Sma on silico. Strangers ship theirs. End customers never need the word silico.
 
-"Vertical teams do not want gobbledygook. They want to prompt for metal," said Tig Kindel. "Enough of them now treat silico as boring infrastructure that I can stop whispering."
+"Vertical teams do not want gobbledygook. They want to prompt to metal," said Tig Kindel. "Enough of them now treat silico as boring infrastructure that I can stop whispering."
 
 # FAQ
 

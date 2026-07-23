@@ -100,6 +100,8 @@ def test_welcome_encodes_canonical_start_gate(tmp_path: Path):
     assert "yes,adjust" in text or ("yes" in text and "adjust" in text)
     assert "Host-only" in text  # named ban
     assert "tool log only" in text.lower() or "tool log only fails" in text.lower()
+    assert "END THE TURN" in text or "end the turn" in text.lower() or "END THIS TURN" in text
+    assert "Turn 2" in text or "turn 2" in text.lower()
 
 
 def test_cli_out_survives_cp1252_stream(capsys):

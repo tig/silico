@@ -24,25 +24,32 @@ A second-hand README summary is luck, not diligence — even if it happens to me
 **Do not** open with tooling narration, COM folklore, PR strategy, `bedside init`, vendoring `third_party/`, scaffold, or a start-gate chooser.
 
 ```text
-# 0a — orientation source (read-only; does NOT need bedside.toml)
+# --- TURN 1 (0a only): run tool, then END THE TURN with orientation text ---
 silico welcome
-# → paste/adapt that output as your FIRST operator-facing chat message
-#    (tool log only does NOT count — the operator must see 0a in chat)
-# 0b — only after 0a is visible in chat — CANONICAL SHAPE ONLY:
+# Paste/adapt that output as the ONLY operator-facing content of this turn.
+# Do NOT call bedside ask, host AskUserQuestion / structured pickers, or any
+# blocking UI tool in this same turn. Mid-turn text before a host UI tool is
+# often scrolled past or never reliably shown (Claude Code and kin).
+
+# --- TURN 2 (0b only): after 0a is a completed assistant message in the transcript ---
 bedside ask --id start-first-ship --prompt "Start first ship on this machine?" --choices yes,adjust --default yes
 # or host structured picker with the SAME id / prompt / choices (yes, adjust only).
+# Say once if using the host gate shell.
 ```
 
 | Rule | Detail |
 |------|--------|
 | **Load AGENTS first** | README/repo homepage alone is **not** “followed the getting started instructions.” |
-| **0a before 0b** | No start-gate tool/picker until the welcome skeleton is in the **chat transcript** (not only a shell tool result). |
+| **Two turns: 0a then 0b** | **Hard rule.** Orientation is the **entire** operator-facing content of turn 1. Start gate is the **first** act of turn 2. Same-turn “welcome then picker” fails when the host UI steals focus. |
+| **0a is a completed chat message** | Tool log only fails 0a. 0a must be a finished assistant message the operator can scroll to **without** a modal open. |
 | **Welcome is the skeleton** | Do not hand-build a multi-section status report instead of `silico welcome`. |
-| **Gate prompt is short** | Title/prompt = one question (e.g. “Start first ship on this machine?”). **No** Stage A–D monologue in the chooser; **no** multi-line option descriptions that restate the playbook. |
+| **Gate prompt is short** | Title/prompt = one question (e.g. “Start first ship on this machine?”). **No** Stage A–D monologue in the chooser; **no** multi-line option descriptions that restate the playbook. Optional one clause: “Orientation is in the message above.” |
 | **Choices only `yes` / `adjust`** | Do **not** invent `Go`, `Host-only`, `Look around`, or other forks at start. Host-only is a named anti-pattern (first ship continues to metal unless the operator **adjusts** after a short re-gate). |
 | **No mutate before go** | Before **yes** on start-first-ship: no `bedside init`, no copy/vendor of `third_party/bedside` into the GCU, no scaffold, no commit/push, no install that rewrites the product tree. |
 | **Doctor fail ≠ skip 0a** | Missing GCU `bedside.toml` is normal on a thin product tree. **Still run `silico welcome` and show 0a.** Fix the pin **after go** via plate scaffold. |
-| **Host picker OK** | When agent stdin cannot reach the operator, host picker is the sanctioned shell — **same** id/prompt/choices; **say once** you are using the host gate shell. Decline / exit 10 = halt writes. |
+| **Host picker OK** | When agent stdin cannot reach the operator, host picker is the sanctioned shell — **same** id/prompt/choices; **say once** you are using the host gate shell. Decline / exit 10 = halt writes. Still **turn 2 only** — never same turn as 0a. |
+
+**Harness note (Claude Code / similar):** Host structured questions take focus immediately. System prompts that say “text before tool calls may not be shown” **collide** with same-turn 0a+0b. Silico’s contract wins: **split the turns.** If the operator never saw 0a, re-show the welcome as a full turn (no gate), then open the gate on the next turn. Do not claim “I presented it mid-turn above the modal.”
 
 After **go**: Stage A tools → B workspace → C plate + host gate → D metal. Full stages and metal rules are below.
 
@@ -414,19 +421,23 @@ Stage 0 is **two steps**. Do not collapse them into “doctor + start gate.” D
 #### Required sequence (do not invent a parallel path)
 
 ```text
-# 1) Orientation source FIRST (read-only; works without GCU bedside.toml)
+# TURN 1 — orientation only (read-only; works without GCU bedside.toml)
 silico welcome
-# 2) Paste/adapt that skeleton into chat as 0a (see minimal-adapt below)
-# 3) Only then:
+# paste/adapt skeleton into chat; END TURN — no ask/picker/tool UI after it
+
+# TURN 2 — start gate only (after 0a is a completed chat message)
 bedside ask --id start-first-ship --prompt "Start first ship on this machine?" --choices yes,adjust --default yes
-# or host picker with the same contract (short prompt — no Stage A–C essay in the chooser)
-# 4) After go: plate scaffold ships bedside.toml; then bedside doctor before metal write gates.
-#    Do NOT bedside init / vendor third_party into the GCU before 0a+0b.
+# or host picker: same id/prompt/choices; short prompt — no Stage A–C essay
+
+# After go: plate scaffold ships bedside.toml; bedside doctor before metal write gates.
+# Do NOT bedside init / vendor third_party into the GCU before 0a+0b go.
 ```
 
-`silico welcome` is read-only: fills the skeleton from workspace + doctor facts. **Show 0a in chat** (do not only leave it in a tool log), **then** open 0b.
+`silico welcome` is read-only: fills the skeleton from workspace + doctor facts. **Show 0a in chat as its own completed turn** (not only a tool log; not mid-turn text before a host modal), **then** open 0b on the **next** turn.
 
 **Anti-pattern (observed in harness tests):** agent sees missing `bedside.toml` → runs `bedside init` + copies `third_party/bedside` into the GCU → opens start gate with a multi-sentence Stage A–C monologue in the picker → **never** pastes `silico welcome`. That is a failed Stage 0 even if the operator eventually clicks yes.
+
+**Anti-pattern (Claude Code / host UI):** same turn runs `silico welcome`, emits orientation text, then immediately calls `AskUserQuestion` / host picker — operator only sees the modal; agent claims “0a was above the gate.” That fails 0a. Split turns.
 
 #### 0a — Orientation (required first operator-facing message)
 

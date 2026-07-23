@@ -80,7 +80,7 @@ In the above example, `tig/xuss` is the repo for one of the Silico example GCUs;
 Give the agent this starting prompt:
 
 ```md
-See https://github.com/tig/silico and read AGENTS.md. Follow the guidance there exactly. Stay in this product checkout.
+Read https://github.com/tig/silico's AGENTS.md. Follow the guidance there exactly. Stay in this product checkout.
 ```
 
 When [first ship](./specs/lexicon.md#first-ship) is complete, the agent will land the following on the default branch (e.g. `main`), following the repo's contribution standards:

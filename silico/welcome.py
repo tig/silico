@@ -212,7 +212,8 @@ def build_welcome(*, root: Path | None = None) -> list[str]:
         # Agent directive first so tool logs still encode Stage 0 order even if the model
         # only skims the top of the command output.
         "AGENT: This block is Stage **0a**. Paste/adapt it as your **first** operator-facing "
-        "chat message. Do **not** send tooling-status dumps or open the start gate before it.",
+        "chat message, then **END THE TURN** (no host picker / bedside ask / AskUserQuestion in "
+        "this same turn — those UIs steal focus and hide this text). Start gate is **turn 2** only.",
         "",
         "Welcome. **Silico** is the open host-first spine for building shippable edge products: "
         "agents build and maintain products on real boards; Silico is the host tooling and plate, "
@@ -236,8 +237,10 @@ def build_welcome(*, root: Path | None = None) -> list[str]:
         "host test path before we touch the board.",
         "",
         "---",
-        "Stage **0a complete** (orientation). This text must already be in the operator chat "
-        "(tool log only fails 0a). **Start gate is next** — use the CANONICAL shape only:",
+        "Stage **0a complete** (orientation). END THIS TURN after showing this text. "
+        "Tool log only fails 0a; same-turn host pickers also fail 0a (modal hides orientation).",
+        "",
+        "**Turn 2 only** — start gate, CANONICAL shape:",
         "",
         "  bedside ask --id start-first-ship \\",
         '    --prompt "Start first ship on this machine?" \\',
@@ -247,6 +250,7 @@ def build_welcome(*, root: Path | None = None) -> list[str]:
         "**yes** and **adjust** only. Say once that you are using the host gate shell.",
         "Do **not** invent Go / Host-only / Look around. Do **not** put Stage A-D detail "
         "into option descriptions (why/where already lives in this orientation).",
+        "Optional prompt clause: Orientation is in the message above.",
         "",
         "Doctor snapshot (read-only grounding):",
     ]
@@ -265,6 +269,7 @@ def run_welcome(*, root: Path | None = None) -> WelcomeReport:
         )
     else:
         lines.append(
-            "OK: orientation skeleton complete — show 0a in chat, then start gate (0b)."
+            "OK: orientation skeleton complete — show 0a in chat and end turn; "
+            "start gate (0b) only on the next turn."
         )
     return WelcomeReport(ok=not missing, lines=lines, missing=missing)

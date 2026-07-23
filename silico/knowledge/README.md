@@ -12,6 +12,7 @@ Product domain (idle control, drone songs, vehicle acceptance) stays in the **GC
 | SPI IPS color / INVON / partial paint | [esp32-lcd-ips.md](esp32-lcd-ips.md) |
 | Large binary assets (PCM, images) deploy verify | [deploy-assets.md](deploy-assets.md) |
 | M5GO / Core v2.7 power button | [m5go-power.md](m5go-power.md) |
+| Day-1 product-face pin packs / board profiles | [board-profiles.md](board-profiles.md) |
 | ESP32 USB-serial duplex / console lockout / UART0 | [esp32-usb-serial.md](esp32-usb-serial.md) |
 | First-flash UF2 vs esptool | [first-flash.md](first-flash.md) |
 | Thin / contradictory product `spec.md` (interview mode) | [spec-interview.md](spec-interview.md) |

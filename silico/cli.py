@@ -13,6 +13,13 @@ from silico.first_flash import FirstFlashResult, first_flash, plan_first_flash
 from silico.host_hygiene import run_hygiene
 from silico.inspect_device import inspect
 from silico.monitor import monitor_port
+from silico.board_profile import (
+    list_profiles,
+    load_profile,
+    resolve_profile_id,
+    seed_defaults_candidates,
+    show_profile_lines,
+)
 from silico.parts import fetch_parts, load_parts
 from silico.product_path import run_product_path_check
 from silico.pull_device import pull_device
@@ -48,6 +55,58 @@ def cmd_parts(args: argparse.Namespace) -> int:
     report = fetch_parts() if args.fetch else load_parts()
     _print_lines(report.lines)
     return 0 if report.ok else 1
+
+
+def cmd_board_profile(args: argparse.Namespace) -> int:
+    """List / show / seed Day-1 product-face pin packs for common boards."""
+    action = getattr(args, "bp_action", None) or "list"
+    if action == "list":
+        profiles = list_profiles()
+        if not profiles:
+            _out("FAIL: no board profiles packaged.")
+            return 1
+        _out("Board profiles (Day-1 product-face pin packs):")
+        for p in profiles:
+            face = p.product_face_summary or "(no face summary)"
+            _out(f"  {p.id:16}  {p.name} — {face}")
+        linked = resolve_profile_id()
+        if linked:
+            _out(f"parts.toml links profile: {linked}")
+        else:
+            _out(
+                "No profile linked from parts.toml yet. "
+                "Set profile = \"m5go\" (etc.) on the role=board part."
+            )
+        _out("Show: silico board-profile show <id>")
+        _out("Seed defaults candidates (dry-run): silico board-profile seed [id]")
+        return 0
+
+    if action == "show":
+        pid = args.profile_id or resolve_profile_id()
+        if not pid:
+            _out(
+                "FAIL: pass a profile id or set profile on a board part in parts.toml."
+            )
+            return 1
+        try:
+            profile = load_profile(pid)
+        except FileNotFoundError as e:
+            _out(f"FAIL: {e}")
+            return 1
+        _print_lines(show_profile_lines(profile))
+        return 0
+
+    if action == "seed":
+        pid = args.profile_id or resolve_profile_id()
+        lines, _changed = seed_defaults_candidates(
+            profile_id=pid,
+            yes=bool(getattr(args, "yes", False)),
+        )
+        _print_lines(lines)
+        return 0 if not any(l.startswith("FAIL:") for l in lines) else 1
+
+    _out(f"FAIL: unknown board-profile action {action!r}")
+    return 1
 
 
 def cmd_product_path(_args: argparse.Namespace) -> int:
@@ -208,6 +267,39 @@ def build_parser() -> argparse.ArgumentParser:
     )
     pt.add_argument("--fetch", action="store_true", help="download pointers into .silico/parts/ (git-ignored)")
     pt.set_defaults(func=cmd_parts)
+
+    bp = sub.add_parser(
+        "board-profile",
+        help="Day-1 product-face pin packs: list/show/seed defaults.py candidates",
+    )
+    bp_sub = bp.add_subparsers(dest="bp_action")
+    bp_list = bp_sub.add_parser("list", help="list packaged board profiles")
+    bp_list.set_defaults(bp_action="list")
+    bp_show = bp_sub.add_parser("show", help="show pin pack / face candidates")
+    bp_show.add_argument(
+        "profile_id",
+        nargs="?",
+        default=None,
+        help="profile id (default: parts.toml board profile)",
+    )
+    bp_show.set_defaults(bp_action="show")
+    bp_seed = bp_sub.add_parser(
+        "seed",
+        help="seed firmware/defaults.py from profile candidates (dry-run unless --yes)",
+    )
+    bp_seed.add_argument(
+        "profile_id",
+        nargs="?",
+        default=None,
+        help="profile id (default: parts.toml board profile)",
+    )
+    bp_seed.add_argument(
+        "--yes",
+        action="store_true",
+        help="write defaults.py after operator confirmed this board map",
+    )
+    bp_seed.set_defaults(bp_action="seed")
+    bp.set_defaults(func=cmd_board_profile, bp_action="list", profile_id=None, yes=False)
 
     pp = sub.add_parser(
         "product-path",

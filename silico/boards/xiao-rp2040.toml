@@ -1,0 +1,19 @@
+# Day-1 product-face pin pack: Seeed XIAO RP2040 (plate default board).
+# Candidates only — operator must confirm on metal before claiming product face.
+
+id = "xiao-rp2040"
+name = "Seeed XIAO RP2040"
+family = "xiao"
+mcu = "rp2040"
+notes = "User green LED is the usual Day-1 status face on bare modules."
+
+[product_face]
+summary = "XIAO RP2040 Day-1 face: user green LED"
+led_pin = 16
+led_role = "user green LED (active-low on common plate HAL)"
+
+[defaults_candidates]
+LED_PIN = 16
+
+[pointers]
+docs = "https://wiki.seeedstudio.com/XIAO-RP2040/"

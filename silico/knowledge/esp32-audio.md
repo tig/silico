@@ -17,6 +17,8 @@ Board schematics differ (amp enable, AC couple). Always ground in the product’
 
 **M5-class cores (M5GO / Basic / Fire family):** on-board speaker is commonly driven from **GPIO25** through a small amp. Same pin is often also used for square-wave “voice” via LEDC. Treat DAC and PWM as **one pin, two modes** with a one-way trap (below).
 
+**Day-1 pin pack:** prefer packaged profile **`m5go`** (`silico board-profile show m5go`; side strip **15** + speaker **25**) over inventing pins in chat. Seed candidates: `silico board-profile seed m5go` (see [board-profiles.md](board-profiles.md)).
+
 ## Operator forewarning (manners)
 
 Before deploy/reset that may play a boot riff, long tone, or other non-trivial audio: **state it in agent chat first** (what, how long, what “done” sounds like). See silico root `AGENTS.md` → *Announce surprising metal effects*. Permission to overwrite firmware is not permission to startle.

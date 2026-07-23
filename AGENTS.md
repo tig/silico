@@ -261,6 +261,16 @@ Datasheets are free to download and not free to republish, so silico ships **poi
 - Prefer machine-readable truth when a part has it: an SVD or DT binding beats a 400-page PDF, and community-patched SVDs carry errata the vendor PDFs do not.
 - Never commit fetched documents. The licensing problem evaporates only because the user's own tools fetch the user's own copies.
 
+### Board profiles (Day-1 product-face pin packs)
+
+Do **not** invent GPIO maps for common boards only from chat or knowledge essays. Silico ships **board profiles** (`silico/boards/*.toml`) with **product face** pin **candidates** (e.g. M5GO-class side strip + speaker).
+
+- Link from `parts.toml` on the board part: `profile = "m5go"` (or `xiao-rp2040`, …).
+- `silico board-profile` / `show <id>` — list face candidates.
+- `silico board-profile seed [id]` — dry-run seed into `firmware/defaults.py`; add `--yes` only after operator confirms the map.
+- Still **operator-confirm product face on metal** (Phase D1). Profile seed is not metal done.
+- Detail: [silico/knowledge/board-profiles.md](silico/knowledge/board-profiles.md).
+
 ## Make it better than you found it (non-negotiable)
 
 Anytime the path is rough and you had to **guess, correct, reverse, or research** something that a better doc, plate, script, error message, or small infra fix would have prevented for the **next** agent: do not leave that knowledge only in chat.
@@ -515,7 +525,7 @@ Deploy verify + `FW_VERSION` match prove the **host wrote this build**. They do 
 
 1. There is a documented **product face** — the **“good”** the operator can **see or hear** without serial folklore (product `spec.md` / `install/`: LEDs, boot riff, status pattern, etc.). Define **product face** on first use if not already defined this session.
 2. After soft-reset so the app runs, you **ask the operator** (structured gate or one plain yes/no they answer from the world in front of them) whether that product face is true.
-3. If product docs name a product face (e.g. M5 front-panel / side LEDs, speaker riff) and the plate only toggles a generic/dev-board pin (e.g. XIAO GPIO LED that is not the product face): **that is HW confusion, not Day 1 done.** Resolve it with the operator — map pins from product parts/spec/board knowledge, fix `firmware/` / HAL defaults, host-test, redeploy, re-confirm observe. Filing a GitHub issue is a tracker, not acceptance.
+3. If product docs name a product face (e.g. M5 front-panel / side LEDs, speaker riff) and the plate only toggles a generic/dev-board pin (e.g. XIAO GPIO LED that is not the product face): **that is HW confusion, not Day 1 done.** Resolve it with the operator — prefer **`silico board-profile`** pin packs (e.g. `m5go`: side strip **15**, speaker **25**) and `silico board-profile seed` into `firmware/defaults.py` **after** operator confirm of the map; also use parts/spec/board knowledge. Host-test, redeploy, re-confirm observe. Filing a GitHub issue is a tracker, not acceptance.
 4. Product face gaps that block observe are **in-scope Day 1 metal work**. Silico exists to help the operator through this. Do not label the session “on the metal” / “Day 1 complete” while an open issue still says the product face is unproven.
 
 ##### GPIO / pin / product face ambiguity → **stop and ask** (mandatory)
@@ -526,7 +536,7 @@ When you notice (or should notice) that the **pin, LED, speaker, or product face
 
 1. **Stop advancing** Phase E/F claims. Stay in Phase D metal acceptance.
 2. **State the mismatch in plain language** (what the code drives vs what the product docs say the product face should look/sound like).
-3. **Ask the operator to clarify** with a **structured chooser** (`bedside ask` or host picker) — or one focused free-text question only if the answer is open (e.g. “which LED on the M5 front panel is the product face status light?”). Put the **recommended** guess first when you have one from parts/spec/knowledge.
+3. **Ask the operator to clarify** with a **structured chooser** (`bedside ask` or host picker) — or one focused free-text question only if the answer is open (e.g. “which LED on the M5 front panel is the product face status light?”). Put the **recommended** guess first when you have one from **`silico board-profile`** / parts/spec/knowledge (e.g. `silico board-profile show m5go`).
 4. Only after their answer: implement the mapping, host-test, redeploy, then **confirm observe** (“Do you see/hear X?”).
 5. Optional: file/update an issue **as a tracker after or while** you are driving the clarify → fix loop — never instead of asking.
 

@@ -56,6 +56,7 @@ silico = [
   "plates/**/CMakeLists.txt",
   "plates/**/.gitignore",
   "knowledge/**/*.md",
+  "boards/**/*.toml",
 ]
 
 [tool.pytest.ini_options]

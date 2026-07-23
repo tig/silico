@@ -40,6 +40,8 @@ class Part:
     name: str
     role: str = ""
     notes: str = ""
+    # Optional silico board profile id (Day-1 product-face pin pack). See board_profile.
+    profile: str = ""
     pointers: dict[str, str] = field(default_factory=dict)
 
 
@@ -128,17 +130,39 @@ def load_parts(root: Path | None = None) -> PartsReport:
             )
             continue
 
+        profile = str(entry.get("profile", "")).strip()
+        if profile and not _ID_RE.match(profile):
+            ok = False
+            lines.append(
+                f"FAIL: {pid}.profile {profile!r} is not a safe board-profile id "
+                "(lowercase letters, digits, `-`, `_`)."
+            )
+            profile = ""
+
         parts.append(
             Part(
                 id=pid,
                 name=name,
                 role=str(entry.get("role", "")).strip(),
                 notes=str(entry.get("notes", "")).strip(),
+                profile=profile,
                 pointers=pointers,
             )
         )
+        if profile:
+            lines.append(
+                f"  {pid}: board profile = {profile} "
+                f"(silico board-profile show {profile})"
+            )
 
     lines.append(f"parts.toml: {len(parts)} part(s) valid" + ("" if ok else ", with failures"))
+    if ok:
+        try:
+            from silico.board_profile import report_for_parts
+
+            lines.extend(report_for_parts(root))
+        except Exception:
+            pass
     return PartsReport(ok, parts, lines)
 
 

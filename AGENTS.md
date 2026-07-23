@@ -41,7 +41,7 @@ Prefer **tools that encode manners** (`silico welcome|doctor|wait-device|inspect
 
 We work backwards from:
 
-> With just Claude Code on my Mac, I had the device working end-to-end the next day, and in a potential customer's hand the day after that. Silico is now a foundational piece of our company's technology.
+> With just Claude Code on my Mac and my hardware spec, I had the device working end-to-end in a few hours, and in a field test the day after that. Silico is now a foundational piece of our company's technology.
 
 If a change does not make that sentence more true, it is not v1 work.
 
@@ -654,7 +654,7 @@ Metal bar detail: [BEDSIDE.md](BEDSIDE.md). Spine/DoD: layered table below.
 
 **Not exit criteria:** host gate alone; scaffold alone; deploy verify / version match alone; deferred metal with no poll/inspect; “honesty” note that the product face is unproven while the title says on-the-metal; issue filed instead of resolving observe.
 
-**Update path:** same update path; unit to potential customer or field trial.
+**Update path:** same update path; unit to field test or field trial.
 
 ## Definition of done (layered)
 
@@ -751,13 +751,13 @@ Prefer [silicov1.md](specs/silicov1.md). Do not invent a second architecture.
 | On metal | No | `firmware/` yes |
 | Host pin | N/A (is the package) | `requirements-dev.txt` pins **local** silico clone (`-e ../silico`) |
 | Domain IP | Never | Always |
-| Public codenames | Zakalwe, Quilan, Sma only | Real brands stay private |
+| Public names | Zakalwe, Quilan, Sma (codenames) + short published shape when the owner chooses | Full domain IP stays in the GCU |
 
 When a second GCU needs the same host machinery, promote into silico and bump the pin (**Extract, then open**).
 
 ## Confidentiality
 
-Starter products are confidential. In public silico docs and commits use **Zakalwe**, **Quilan**, **Sma** only. Do not expand codenames to real brands, customers, or markets.
+Public Silico docs name starter GCUs **Zakalwe**, **Quilan**, **Sma**. Short product shape and builder attribution may appear when the owner publishes them (see [gcu-codenames.md](specs/gcu-codenames.md) and README Real World Examples). Do not invent extra brand/market detail or dump private domain IP into the spine.
 
 ## What not to do
 

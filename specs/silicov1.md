@@ -11,7 +11,7 @@ Related: [tenets.md](./tenets.md) (including **Default is a product choice, not 
 
 We work backwards from the Grady experience ([v1 WB](./wb-2026-fall-three-gcus.md)):
 
-> With just Claude Code on my Mac, I had the device working end-to-end the next day, and in a potential customer's hand the day after that. Silico is now a foundational piece of our company's technology.
+> With just Claude Code on my Mac and my hardware spec, I had the device working end-to-end in a few hours, and in a field test the day after that. Silico is now a foundational piece of our company's technology.
 
 Silico tenets: [tenets.md](./tenets.md) (unless you know better ones).
 
@@ -323,7 +323,7 @@ Until then, Quilan owns modem, credentials, and uplink protocol in private app c
 Primary (the sentence we work backwards from):
 
 1. A Grady-shaped path is documented and runnable: Claude Code (or equivalent) on a Mac → device end-to-end in about a day with host gate green.
-2. The same path supports putting that unit with a potential customer the next day (install/verify, not heroics).
+2. The same path supports a field test the next day (install/verify, not heroics).
 3. After the demo week, silico is still the update/prove path (foundational).
 
 Supporting:

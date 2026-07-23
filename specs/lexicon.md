@@ -1,24 +1,24 @@
 # Silico lexicon
 
-Short definitions for phrases that carry load in silico docs. Prefer this file when an agent or human is stuck on jargon. For rules of behavior, see [tenets.md](./tenets.md). For the build target, see [silicov1.md](./silicov1.md). For the Fall 2026 ambition, see [wb-2026-fall-three-gcus.md](./wb-2026-fall-three-gcus.md).
+Short definitions for phrases that carry load in Silico docs. Prefer this file when an agent or human is stuck on jargon. For rules of behavior, see [tenets.md](./tenets.md). For the build target, see [silicov1.md](./silicov1.md). For the Fall 2026 ambition, see [wb-2026-fall-three-gcus.md](./wb-2026-fall-three-gcus.md).
 
-Jump: [Core](#core-product-words) ┬╖ [Done & gates](#done-gates-and-honesty) ┬╖ [Agents](#prompt-agents-operators) ┬╖ [Dependency & architecture](#dependency-and-architecture)
+Jump: [Core](#core-product-words) · [Done & gates](#done-gates-and-honesty) · [Agents](#prompt-agents-operators) · [Dependency & architecture](#dependency-and-architecture)
 
 ---
 
 ## Core product words
 
-### silico
+### Silico
 
-The open [**spine**](#spine) at [github.com/tig/silico](https://github.com/tig/silico): host library, [plate](#plate), agent contracts, doctrine, and CI for those pieces. Not a company SKU. Not a [GCU](#gcu). Not the vertical domain app. Device `firmware/` never imports silico; only Mac/CI [host](#host) paths do.
+The open [**spine**](#spine) at [github.com/tig/silico](https://github.com/tig/silico): host library, [plate](#plate), agent contracts, doctrine, and CI for those pieces. Not a company SKU. Not a [GCU](#gcu). Not the vertical domain app. Device `firmware/` never imports the Silico package; only Mac/CI [host](#host) paths do. Spell **Silico** with a capital S in prose; keep `silico` only for CLI/package examples (`silico doctor`, `pip install -e …`).
 
 See also: [pin](#pin), [plate](#plate).
 
 ### GCU
 
-**General Contact Unit.** One **shippable edge product**: app + [metal](#metal) with end-user value, private domain logic, and a life after the bench. [Silico](#silico) is the [spine](#spine) GCUs [pin](#pin) on the [host](#host). Each GCU is priced and branded as a product; silico is free (Apache-2.0). Public silico docs name starter GCUs only by codenames (see [gcu-codenames.md](./gcu-codenames.md)).
+**General Contact Unit.** One **shippable edge product** with end-user value, private domain logic, and an install/upgrade system. [Silico](#silico) is the [spine](#spine) GCUs [pin](#pin) on the [host](#host). Each GCU is priced and branded as a product; Silico is free (Apache-2.0). Public Silico docs name starter GCUs by codenames, with short published product shape when the owner chooses (see [gcu-codenames.md](./gcu-codenames.md)).
 
-See also: [GCV](#gcv), [plate](#plate).
+See also: [GCV](#gcv), [plate](#plate), [repo](#repo).
 
 ### GCV
 
@@ -26,9 +26,9 @@ Placeholder for a future product class if we need a name beyond [GCU](#gcu). Not
 
 ### spine
 
-Shared [host](#host) infrastructure and contracts that more than one [GCU](#gcu) can [pin](#pin): deploy/verify, [host gate](#host-gate), [plate](#plate) layout, agent docs, non-secret examples. The spine is **not** the product. [Promoting](#promote) private domain into the spine to win a demo is a failure (Apps stay apps).
+The shared [host](#host) tooling and contracts that more than one [GCU](#gcu) can [pin](#pin): deploy/verify, [host gate](#host-gate), [plate](#plate) layout, agent docs, non-secret examples. [Silico](#silico) *is* the spine for those GCUs. The spine is **not** the product—each GCU is. [Promoting](#promote) private domain into the spine to win a demo is a failure (Apps stay apps).
 
-See also: [silico](#silico), [gobbledygook](#gobbledygook).
+See also: [Silico](#silico), [gobbledygook](#gobbledygook).
 
 ### plate
 
@@ -38,9 +38,9 @@ See also: [spine](#spine), [scaffold](#scaffold).
 
 ### scaffold
 
-Also **scaffolding.** The host verb (`silico scaffold`) and the act of **laying down the [plate](#plate)** into a product checkout: standard folders, `silico.toml`, host [pin](#pin), HAL/sim stubs, and CI hooks. Scaffold merges into an existing [GCU](#gcu) without overwriting product `README.md` / `spec.md`. It is not writing domain firmware and not inventing a parallel repo layout.
+Also **scaffolding.** The host verb (`silico scaffold`) and the act of **laying down the [plate](#plate)** into a product checkout: `./AGENTS.md`, standard folders, `silico.toml`, host [pin](#pin), [HAL](#hal)/sim stubs, and CI hooks. Scaffold merges into an existing [GCU](#gcu) without overwriting product `README.md` / `spec.md`. It is not writing domain firmware and not inventing a parallel repo layout.
 
-See also: [plate](#plate), [pin](#pin).
+See also: [plate](#plate), [pin](#pin), [repo](#repo).
 
 ### metal
 
@@ -48,9 +48,21 @@ The physical board (and the behavior that only appears on real hardware). **Meta
 
 See also: [host-first](#host-first), [host gate](#host-gate), [Prompt to metal](#prompt-to-metal), [sim](#sim).
 
+### spec
+
+Also **product spec** / `spec.md`. Written contract for a [GCU](#gcu): hardware, product face, rails, acceptance—what the agent builds against. Need not be perfect; when underspecified or contradictory, agents enter interview mode rather than inventing domain moat.
+
+See also: [GCU](#gcu), [scaffold](#scaffold), [product face](#product-face).
+
+### repo
+
+Also **GCU repo**. The GitHub repository the human created for the [GCU](#gcu). Silico will [scaffold](#scaffold) this repo with everything needed to test, build, deploy, and maintain the GCU over time.
+
+See also: [GCU](#gcu), [scaffold](#scaffold), [plate](#plate).
+
 ### host
 
-The developer or CI machine (Mac, Windows, Linux runner): Python, pytest, [sim](#sim), deploy tools, version parse. [Silico](#silico) as a package lives **on the host only**.
+**The developer or CI machine** (Mac, Windows, Linux runner). The Silico [simulator](#sim), OSS embedded tooling, tests, and deploy tools all run here—not on the board. The Silico package lives **on the host only**.
 
 See also: [host path](#host-path), [host-first](#host-first).
 
@@ -66,7 +78,7 @@ The **human-observable product indication** on the [GCU](#gcu) after the app is 
 
 **Not** the same as: deploy verify success, `FW_VERSION` over REPL, or a generic [plate](#plate) hello on a module GPIO that is not the product’s intended signal.
 
-Always say the full term **product face**. Never shorten to bare “face.” On first use in a session, define it (see silico `AGENTS.md` operator language). First-ship [metal](#metal) acceptance requires the operator to confirm the product face, not only a version string.
+Always say the full term **product face**. Never shorten to bare “face.” On first use in a session, define it (see Silico `AGENTS.md` operator language). First-ship [metal](#metal) acceptance requires the operator to confirm the product face, not only a version string.
 
 See also: [metal](#metal), [host gate](#host-gate), [Help the operator](#help-the-operator), [first ship](#first-ship).
 
@@ -90,12 +102,12 @@ See also: [first ship](#first-ship), [gate](#gate).
 
 ### gate
 
-A **named checkpoint** that must pass before the agent claims progress or advances. In silico talk this usually means either:
+A **named checkpoint** that must pass before the agent claims progress or advances. In Silico talk this usually means either:
 
 1. **[Host gate](#host-gate)** — automated proof on the [host](#host) (pytest / `silico gate` / product-path). Green means the change is claimable as host-done.
 2. **Operator gate** — a structured yes/no or physical confirm (`bedside ask` / `bedside step`, or the agent host's picker) before a scary or irreversible act (board identity, deploy overwrite, plug cable).
 
-Do not say "the gate" to an operator without saying *which* gate and what green/pass means in plain language. On first use in a session, define the term (see silico `AGENTS.md` operator language).
+Do not say "the gate" to an operator without saying *which* gate and what green/pass means in plain language. On first use in a session, define the term (see Silico `AGENTS.md` operator language).
 
 See also: [host gate](#host-gate), [Help the operator](#help-the-operator).
 
@@ -145,7 +157,9 @@ See also: [HAL](#hal), [host-first](#host-first).
 
 ### Prompt to metal
 
-Tagline and tenet: use agent prompts so what the team **cares about** lands on edge devices reliably, safely, and repeatedly. The experience we work backwards from: agent on a Mac, device end-to-end the next day, potential customer's hand the day after, [silico](#silico) still foundational. [Host gates](#host-gate), [version verify](#version-identity), and agent docs are the product surface for that prompt - not folklore.
+> ***[Prompt to metal (n)](https://blog.kindel.com/2026/07/22/prompt-to-metal/)***: *Building hardware products from expressed human intent. The high-judgement engineer and/or product person describes and judges; the machines draw the schematics, route the boards, write the firmware and companion software, run the tests, manage customer feedback, and improve the product.*
+
+Tagline and tenet: use agent prompts so what the team **cares about** lands on edge devices reliably, safely, and repeatedly. The experience we work backwards from: agent on a Mac with a hardware spec, device end-to-end in a few hours, field test the day after, [Silico](#silico) still foundational. [Host gates](#host-gate), [version verify](#version-identity), and agent docs are the product surface for that prompt - not folklore.
 
 See also: [host-first](#host-first), [metal](#metal).
 
@@ -153,7 +167,7 @@ See also: [host-first](#host-first), [metal](#metal).
 
 Also **bedside manners.** Assume low ops literacy; do the work when you can; one step at a time for physical/browser steps; never dump a wall of unexplained shell. Violating this violates Agents operate the host path.
 
-In **silico**, agent docs add domain operator language on top of Bedside (not a fork of the nine principles): (1) the **first prompt** reminds what Silico is and summarizes **this** [GCU](#gcu); (2) silico terms ([GCU](#gcu), [host](#host), [plate](#plate), [scaffold](#scaffold), [first ship](#first-ship), [stage](#stage), [gate](#gate), [host gate](#host-gate), [metal](#metal), [product face](#product-face), [pin](#pin), …) are **defined on first use** and spoken as their **canonical lexicon names** (no invented short forms such as bare “face” for product face); (3) big human steps include **why** and **where** on the first-ship map. Canonical rules: silico root `AGENTS.md` → Operator language.
+In **Silico**, agent docs add domain operator language on top of Bedside (not a fork of the nine principles): (1) the **first prompt** reminds what Silico is and summarizes **this** [GCU](#gcu); (2) Silico terms ([GCU](#gcu), [host](#host), [plate](#plate), [scaffold](#scaffold), [first ship](#first-ship), [stage](#stage), [gate](#gate), [host gate](#host-gate), [metal](#metal), [product face](#product-face), [pin](#pin), …) are **defined on first use** and spoken as their **canonical lexicon names** (no invented short forms such as bare “face” for product face); (3) big human steps include **why** and **where** on the first-ship map. Canonical rules: Silico root `AGENTS.md` → Operator language.
 
 See also: [operator](#operator), [Grady](#grady).
 
@@ -181,13 +195,13 @@ See also: [host path](#host-path), [spine](#spine).
 
 ### pin
 
-Also **package pin.** [GCU](#gcu) `requirements-dev.txt` (or equivalent) depends on [silico](#silico) by **tag or SHA** (or editable path while extracting). Pin is necessary for first-ship foundation; not sufficient without CI [host gate](#host-gate) and real [metal](#metal) path.
+Also **package pin.** [GCU](#gcu) `requirements-dev.txt` (or equivalent) depends on [Silico](#silico) by **tag or SHA** (or editable path while extracting). Pin is necessary for first-ship foundation; not sufficient without CI [host gate](#host-gate) and real [metal](#metal) path.
 
 See also: [plate](#plate).
 
 ### promote
 
-Also **promote to silico.** Move a pattern from a private [GCU](#gcu) into the public [spine](#spine) when a second GCU needs it. Do not promote to win demos or to dump domain logic.
+Also **promote to Silico.** Move a pattern from a private [GCU](#gcu) into the public [spine](#spine) when a second GCU needs it. Do not promote to win demos or to dump domain logic.
 
 See also: [spine](#spine).
 
@@ -199,7 +213,7 @@ See also: [plate](#plate), [ESP32-class](#esp32-class).
 
 ### ESP32-class
 
-MCU class on the silico spine: classic ESP32 and S3-class boards. Supported runtimes: **MicroPython** (esptool first-flash, then mpremote) and **C / ESP-IDF** (`gcu-c` plate; image flash). Not the same as Arduino-core ESP boards as a silico backend.
+MCU class on the Silico spine: classic ESP32 and S3-class boards. Supported runtimes: **MicroPython** (esptool first-flash, then mpremote) and **C / ESP-IDF** (`gcu-c` plate; image flash). Not the same as Arduino-core ESP boards as a Silico backend.
 
 See also: [Pi-class](#pi-class), [plate](#plate).
 

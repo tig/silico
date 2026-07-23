@@ -1,7 +1,8 @@
 from pathlib import Path
 
-from silico.gate_c import run_c_gate, scan_device_includes
+from silico.gate_c import check_hal_init_reachable, run_c_gate, scan_device_includes
 from silico.product_path import run_product_path_check
+from silico.scaffold import plate_root, scaffold
 
 
 def _write_c_fixture(root: Path, *, bad_include: bool = False) -> None:
@@ -47,6 +48,16 @@ project = "firmware"
             encoding="utf-8",
         )
     (root / "firmware" / "main" / "hal_board.c").write_text(board, encoding="utf-8")
+    # HAL init reachable from app_main (gate checks this for language=c).
+    (root / "firmware" / "main" / "main.c").write_text(
+        "void app_main(void) {\n"
+        "  gcu_hal_t *hal = gcu_make_board_hal();\n"
+        "  gcu_state_t st;\n"
+        "  gcu_init(&st, hal);\n"
+        "  for (;;) { gcu_tick(&st); }\n"
+        "}\n",
+        encoding="utf-8",
+    )
 
 
 def test_scan_allows_hal_board_only(tmp_path: Path):
@@ -72,6 +83,34 @@ def test_c_gate_hygiene_fail(tmp_path: Path):
     _write_c_fixture(tmp_path, bad_include=True)
     report = run_c_gate(tmp_path, run_command=False)
     assert not report.ok
+
+
+def test_hal_init_reachable_plate_main():
+    root = plate_root("gcu-c")
+    fails = check_hal_init_reachable(root)
+    assert fails == [], fails
+
+
+def test_hal_init_fails_when_dropped(tmp_path: Path):
+    _write_c_fixture(tmp_path)
+    (tmp_path / "firmware" / "main" / "main.c").write_text(
+        "void app_main(void) {\n  for (;;) { /* loop without HAL */ }\n}\n",
+        encoding="utf-8",
+    )
+    fails = check_hal_init_reachable(tmp_path)
+    assert fails
+    assert any("gcu_make_board_hal" in f for f in fails)
+    assert any("gcu_init" in f for f in fails)
+    report = run_c_gate(tmp_path, run_command=False)
+    assert not report.ok
+
+
+def test_scaffold_gcu_c_gitignore_managed_components(tmp_path: Path):
+    dest = tmp_path / "c-prod"
+    scaffold(dest, plate="gcu-c")
+    gi = (dest / ".gitignore").read_text(encoding="utf-8")
+    assert "managed_components/" in gi
+    assert "firmware/managed_components/" in gi
 
 
 def test_product_path_c(tmp_path: Path):

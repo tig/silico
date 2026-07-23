@@ -47,6 +47,8 @@ static void drain_identity_command(void) {
 void app_main(void) {
   char id[64];
   gcu_state_t st;
+  /* HAL init must stay reachable from app_main (silico gate checks this).
+   * Do not move the forever loop without gcu_make_board_hal + gcu_init (#79). */
   gcu_hal_t *hal = gcu_make_board_hal();
 
   gcu_identity_line(id, (int)sizeof id);

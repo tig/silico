@@ -19,6 +19,8 @@ class DeployPlan:
     chip: str | None = None
     build_cmd: list[str] | None = None
     flash_cmd: list[str] | None = None
+    # language=c data-partition assets (name, path, offset, size)
+    data_assets: list[tuple[str, Path, int, int]] = field(default_factory=list)
 
 
 @dataclass

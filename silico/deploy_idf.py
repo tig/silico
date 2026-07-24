@@ -11,6 +11,12 @@ from pathlib import Path
 
 from silico.config_toml import read_product_identity
 from silico.deploy_types import DeployPlan, DeployResult
+from silico.esptool_util import esptool_available, esptool_cmd_prefix, run_esptool_streaming
+from silico.partition_data import (
+    esptool_write_flash_args,
+    plan_data_lines,
+    resolve_data_assets,
+)
 from silico.ports import IDENTITY_HINT, pick_best_port, port_is_listed
 from silico.progress import ProgressCallback, ProgressLog, stage_header
 from silico.runtime import RuntimeConfig, resolve_runtime
@@ -106,6 +112,19 @@ def plan_idf_deploy(
     lines.append(f"  project: {proj_rel}")
     lines.append(f"  build: {' '.join(build_cmd)}")
     lines.append(f"  flash: {' '.join(flash_cmd)}")
+
+    data_assets, data_errs = resolve_data_assets(root, project=proj_rel)
+    if data_errs:
+        return DeployResult(False, lines + data_errs)
+    data_tuples = [
+        (a.name, a.host_path, a.offset, a.size) for a in data_assets
+    ]
+    lines.extend(plan_data_lines(data_assets, port=chosen.device))
+    if data_assets and not esptool_available():
+        lines.append(
+            "WARN: esptool not found — [[deploy.data]] flash needs esptool after idf image write."
+        )
+
     if not idf_py_available():
         lines.append(
             "WARN: idf.py not on PATH and IDF_PATH unset — write will fail until ESP-IDF is installed."
@@ -113,12 +132,18 @@ def plan_idf_deploy(
     lines.append("Refusing to write without explicit confirmation (--yes).")
     lines.append(
         "Operator must have confirmed BOTH: (1) this port is the product board, "
-        "(2) the application image may be overwritten."
+        "(2) the application image may be overwritten"
+        + (" and data partitions" if data_assets else "")
+        + "."
     )
     lines.append(f"Inspect first: silico inspect --port {chosen.device}")
     lines.append(
         "Progress during --yes: PROGRESS [idf-build] / [idf-flash] stream from idf.py."
     )
+    if data_assets:
+        lines.append(
+            "Progress for data: PROGRESS [esptool] write_flash per [[deploy.data]] asset."
+        )
     return DeployPlan(
         port=chosen.device,
         lines=lines,
@@ -128,6 +153,7 @@ def plan_idf_deploy(
         chip=chip,
         build_cmd=build_cmd,
         flash_cmd=flash_cmd,
+        data_assets=data_tuples,
     )
 
 
@@ -273,6 +299,46 @@ def deploy_idf(
                 log(flash.stdout.strip()[-2000:])
             return DeployResult(False, log.lines)
     log("OK: flash")
+
+    # Data partitions (same --yes; already announced in plan).
+    if planned.data_assets:
+        chip = planned.chip or "esp32"
+        if not esptool_available():
+            log(
+                "FAIL: esptool required for [[deploy.data]] assets "
+                "(pip install esptool)."
+            )
+            return DeployResult(False, log.lines)
+        log(
+            stage_header(
+                "data-flash",
+                f"{len(planned.data_assets)} data partition asset(s)…",
+            )
+        )
+        for name, host_path, offset, size in planned.data_assets:
+            log(
+                f"Writing data {name!r}: {host_path.name} ({size} bytes) @ 0x{offset:x}"
+            )
+            args = esptool_write_flash_args(
+                port=planned.port,
+                chip=chip,
+                offset=offset,
+                file_path=host_path,
+            )
+            if use_stream:
+                code = run_esptool_streaming(args, log=log)
+                if code != 0:
+                    log(f"FAIL: esptool write_flash {name!r} (exit {code})")
+                    return DeployResult(False, log.lines)
+            else:
+                cmd = [*esptool_cmd_prefix(), *args]
+                flash_d = run_fn(cmd, cwd=root)
+                if flash_d.returncode != 0:
+                    log(f"FAIL: esptool write_flash {name!r}")
+                    if flash_d.stderr:
+                        log(flash_d.stderr.strip()[-1000:])
+                    return DeployResult(False, log.lines)
+            log(f"OK: data {name!r}")
 
     if verify:
         name, ver = read_product_identity(root)

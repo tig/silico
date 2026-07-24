@@ -108,6 +108,93 @@ def scan_device_includes(
     return fails
 
 
+# app_main must still reach HAL make + gcu_init (field P0: loop moved, init dropped).
+_APP_MAIN_FN = re.compile(r"\bvoid\s+app_main\s*\(\s*(?:void)?\s*\)\s*\{", re.MULTILINE)
+_HAL_MAKE = re.compile(r"\bgcu_make_board_hal\s*\(")
+_GCU_INIT = re.compile(r"\bgcu_init\s*\(")
+
+
+def _app_main_body(text: str) -> str | None:
+    """Return the brace-balanced body of the first ``app_main`` function, or None.
+
+    Searches only inside the body so helpers/comments elsewhere cannot satisfy
+    the HAL-init gate (PR #80 review).
+    """
+    m = _APP_MAIN_FN.search(text)
+    if not m:
+        return None
+    # m ends at '{'; find matching close brace
+    start = m.end()  # index after '{'
+    depth = 1
+    i = start
+    while i < len(text) and depth > 0:
+        ch = text[i]
+        if ch == "{":
+            depth += 1
+        elif ch == "}":
+            depth -= 1
+        i += 1
+    if depth != 0:
+        return text[start:]  # truncated / unbalanced — still scan what we have
+    return text[start : i - 1]
+
+
+def check_hal_init_reachable(root: Path) -> list[str]:
+    """Return FAIL lines if firmware app_main drops HAL construction or gcu_init.
+
+    Host-checkable plate guard (#79): a living app loop without HAL init is a
+    silent product face death. Scans ``firmware/**/main.c`` (and top-level
+    ``main.c``) for ``app_main`` **body** that still calls ``gcu_make_board_hal``
+    and ``gcu_init`` (not helpers or comments outside the body).
+    """
+    candidates: list[Path] = []
+    for pattern in ("firmware/**/main.c", "main.c"):
+        candidates.extend(p for p in root.glob(pattern) if p.is_file())
+    # de-dupe
+    seen: set[Path] = set()
+    paths: list[Path] = []
+    for p in candidates:
+        rp = p.resolve()
+        if rp not in seen:
+            seen.add(rp)
+            paths.append(p)
+    if not paths:
+        return [
+            "FAIL: no firmware main.c with app_main found — "
+            "cannot verify HAL init reachability (language=c plate expects "
+            "firmware/main/main.c)."
+        ]
+
+    fails: list[str] = []
+    found_app_main = False
+    for path in paths:
+        try:
+            text = path.read_text(encoding="utf-8", errors="replace")
+        except OSError:
+            continue
+        body = _app_main_body(text)
+        if body is None:
+            continue
+        found_app_main = True
+        rel = path.relative_to(root).as_posix()
+        if not _HAL_MAKE.search(body):
+            fails.append(
+                f"FAIL: {rel}: app_main does not call gcu_make_board_hal() — "
+                "HAL init must stay reachable from the app entry (#79)."
+            )
+        if not _GCU_INIT.search(body):
+            fails.append(
+                f"FAIL: {rel}: app_main does not call gcu_init() — "
+                "do not move the app loop without keeping HAL init (#79)."
+            )
+    if not found_app_main:
+        fails.append(
+            "FAIL: firmware main.c present but no app_main() body found — "
+            "HAL init reachability cannot be verified."
+        )
+    return fails
+
+
 def run_host_gate_command(
     root: Path,
     command: str | None = None,
@@ -194,6 +281,13 @@ def run_c_gate(root: Path | None = None, *, run_command: bool = True) -> CGateRe
         lines.extend(fails)
     else:
         lines.append("OK: no illegal device headers outside allowlist")
+
+    hal_fails = check_hal_init_reachable(root)
+    if hal_fails:
+        ok = False
+        lines.extend(hal_fails)
+    else:
+        lines.append("OK: app_main keeps HAL init reachable (gcu_make_board_hal + gcu_init)")
 
     if run_command:
         cmd_ok, cmd_lines = run_host_gate_command(root, cfg.host_gate)

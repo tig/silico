@@ -1,23 +1,67 @@
 # first-ship product-face pin pack: M5GO / M5Stack Core classic ESP32 family.
-# Candidates only — operator must confirm on metal before claiming product face.
+# Candidates only - operator must confirm on metal before claiming product face.
+# Extended face map from field first ship (tig/silico#79): display, buttons, IMU.
 
 id = "m5go"
 name = "M5GO / M5Stack Core (classic ESP32)"
 family = "m5-core"
 mcu = "esp32"
-notes = "Side RGB strip + on-board speaker. Board revs differ; confirm LEDs and amp path on the unit in hand."
+notes = "Side RGB strip + on-board speaker + IPS + front buttons + MPU6886. Board revs differ; confirm on the unit in hand. See knowledge/m5-core.md."
 
 [product_face]
-summary = "M5GO-class first-ship face: side status strip + speaker boot/status tone"
+summary = "M5GO-class first-ship face: side strip, speaker, IPS face, three buttons, IMU Details"
 led_pin = 15
-led_role = "side strip / status (often NeoPixel bus; some revs differ — confirm)"
+led_role = "side strip / status (often NeoPixel bus; some revs differ - confirm)"
 speaker_pin = 25
 speaker_role = "on-board speaker amp (DAC1 / PWM; see knowledge/esp32-audio.md)"
+
+[product_face.display]
+controller = "ILI9342C"
+bus = "SPI3"
+sclk = 18
+mosi = 23
+cs = 14
+dc = 27
+rst = 33
+bl = 32
+invert = true
+color_order = "BGR"
+knowledge = "knowledge/esp32-lcd-ips.md"
+
+[product_face.buttons]
+btn_a = 39
+btn_b = 38
+btn_c = 37
+active = "low"
+note = "GPIO 34-39 have no internal pull-ups; M5 front buttons use external pull-ups"
+
+[product_face.i2c]
+sda = 21
+scl = 22
+mpu6886_addr = "0x68"
+who_am_i = "0x19"
+temp_formula = "raw/326.8+25"
+temp_note = "NOT the MPU6050 formula — wrong scale on MPU6886 (see knowledge/m5-core.md)"
 
 [defaults_candidates]
 # Keys written into firmware/defaults.py by `silico board-profile seed`
 LED_PIN = 15
 SPEAKER_PIN = 25
+# Optional seeds for full-face products (comment in defaults if unused)
+DISPLAY_SCLK = 18
+DISPLAY_MOSI = 23
+DISPLAY_CS = 14
+DISPLAY_DC = 27
+DISPLAY_RST = 33
+DISPLAY_BL = 32
+BTN_A = 39
+BTN_B = 38
+BTN_C = 37
+I2C_SDA = 21
+I2C_SCL = 22
 
 [pointers]
 docs = "https://docs.m5stack.com/en/core/m5go"
+knowledge = "silico/knowledge/m5-core.md"
+audio = "silico/knowledge/esp32-audio.md"
+lcd = "silico/knowledge/esp32-lcd-ips.md"

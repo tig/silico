@@ -33,6 +33,20 @@ def test_load_m5go_face_pins():
     assert "side" in p.product_face_summary.lower() or "strip" in p.product_face_summary.lower()
     assert p.product_face.get("led_pin") == 15
     assert p.product_face.get("speaker_pin") == 25
+    # Full face pack (#79): display / buttons / I2C-IMU
+    display = p.product_face.get("display")
+    assert isinstance(display, dict)
+    assert display.get("controller") == "ILI9342C"
+    assert display.get("sclk") == 18
+    assert display.get("bl") == 32
+    buttons = p.product_face.get("buttons")
+    assert isinstance(buttons, dict)
+    assert buttons.get("btn_a") == 39
+    assert buttons.get("btn_c") == 37
+    i2c = p.product_face.get("i2c")
+    assert isinstance(i2c, dict)
+    assert i2c.get("sda") == 21
+    assert "326.8" in str(i2c.get("temp_formula", ""))
 
 
 def test_load_xiao_led_pin():
@@ -119,3 +133,26 @@ def test_show_profile_lines_mention_candidates():
     assert "15" in joined
     assert "SPEAKER_PIN" in joined
     assert "25" in joined
+    assert "display:" in joined
+    assert "ILI9342C" in joined
+    assert "buttons:" in joined
+    assert "39" in joined
+    assert "i2c:" in joined
+    assert "326.8" in joined
+
+
+def test_m5_core_knowledge_documents_mpu6886():
+    from pathlib import Path
+
+    from silico.board_profile import profiles_root
+
+    # knowledge lives next to boards under silico/
+    knowledge = Path(__file__).resolve().parents[1] / "silico" / "knowledge" / "m5-core.md"
+    assert knowledge.is_file()
+    text = knowledge.read_text(encoding="utf-8")
+    assert "MPU6886" in text
+    assert "326.8" in text
+    assert "MPU6050" in text  # footgun callout
+    assert "0x19" in text
+    # profile pointer
+    del profiles_root

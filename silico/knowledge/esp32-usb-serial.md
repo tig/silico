@@ -30,14 +30,19 @@ If inspect/deploy says app owns console / door stayed shut:
 | Identity/telem TX only | Proves outbound CDC, not host→device RX |
 | Deploy `--verify` then soft-reset into deaf app | Verify used REPL; app may never hear host (#49 race) |
 | DTR/RTS pulse before C identity knock on CH9102 | Resets into ROM / download; `silico inspect` captures 0 bytes while bare pyserial (dtr=rts=False + `identity`) works (#78) |
+| Clear RX after boot wait on pulse path | Discards boot-printed `fw_name=` on boot-only C plates (#81 CR) |
 
 ## C / ESP-IDF identity (language=c)
 
 `silico inspect` uses serial knock (`identity` + CR/LF), not mpremote.
 
-1. Open with **DTR/RTS deasserted** and knock **without** a reset pulse (default; CH9102 / M5GO).
-2. Capture window ~3s (longer than a single boot greeting).
-3. Opt in only if needed: `probe_serial_identity(..., reset=True)` for pulse + boot wait.
+1. Open with **DTR/RTS deasserted** and knock **without** a reset pulse first (default; CH9102 / M5GO).
+2. **Re-knock** on a short interval for the full listen window so a boot greeting cannot bury a one-shot line (#79).
+3. Capture window defaults longer than a single boot greeting (~3s).
+4. Opt in only if needed: `probe_serial_identity(..., reset=True)` for pulse + boot wait — clears **before** pulse only; never after boot wait (#81 CR).
+5. Auto fallback: `reset=None` tries deasserted then pulse.
+
+**Product requirement:** the C image must **answer** `identity` on the link, not only print at boot. Boot-print-only becomes invisible the moment the banner scrolls past. Plate `gcu-c` main shows both: boot line + knock responder. Boot-only plates: use `reset=True` so the boot line is not discarded.
 
 Manual check when inspect is empty but the app is alive: open the COM with dtr/rts false, write `identity` and a newline, read the response.
 

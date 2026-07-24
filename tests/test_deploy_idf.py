@@ -126,6 +126,74 @@ def test_deploy_idf_mock_build_flash(tmp_path: Path, monkeypatch):
     assert any("OK: flash" in x for x in live)
 
 
+def test_deploy_idf_yes_writes_data_partition(tmp_path: Path, monkeypatch):
+    """[[deploy.data]] must esptool write_flash only after --yes (shipped deploy_idf path)."""
+    root = _c_root(tmp_path)
+    import silico.deploy_idf as m
+    import silico.ports as ports
+
+    csv = """\
+# Name, Type, SubType, Offset, Size, Flags
+storage, data, spiffs, 0x210000, 0xF0000,
+"""
+    (root / "firmware" / "partitions.csv").write_text(csv, encoding="utf-8")
+    assets = root / "assets"
+    assets.mkdir()
+    blob = assets / "song.raw"
+    blob.write_bytes(b"\xab" * 64)
+    toml = (root / "silico.toml").read_text(encoding="utf-8")
+    (root / "silico.toml").write_text(
+        toml
+        + """
+[[deploy.data]]
+name = "song"
+file = "assets/song.raw"
+partition = "storage"
+""",
+        encoding="utf-8",
+    )
+
+    monkeypatch.setattr(
+        ports,
+        "list_scored_ports",
+        lambda: [PortInfo("COM7", 0x1A86, 0x55D4, "CH9102", "m", 55, "ESP")],
+    )
+    monkeypatch.setattr(ports, "port_is_listed", lambda d: True)
+    monkeypatch.setattr(m, "idf_py_available", lambda: True)
+    monkeypatch.setattr(m, "esptool_available", lambda: True)
+
+    class Fake:
+        def __init__(self, code=0):
+            self.returncode = code
+            self.stdout = "ok"
+            self.stderr = ""
+
+    calls: list[list[str]] = []
+
+    def run_fn(cmd, *, cwd):
+        calls.append(list(cmd))
+        return Fake(0)
+
+    # Without --yes: no esptool, no build
+    aborted = deploy_idf(port="COM7", yes=False, verify=False, root=root, run_fn=run_fn)
+    assert not aborted.ok
+    assert calls == []
+    assert any("Data partitions" in x or "0x210000" in x for x in aborted.lines)
+
+    # With --yes: build + flash + esptool write_flash @ partition offset
+    r = deploy_idf(port="COM7", yes=True, verify=False, root=root, run_fn=run_fn)
+    assert r.ok, r.lines
+    assert len(calls) >= 3
+    assert any("build" in c for c in calls[0])
+    assert any("flash" in c for c in calls[1])
+    data_cmds = [c for c in calls if any("write_flash" in str(x) for x in c)]
+    assert data_cmds, f"expected esptool write_flash in calls={calls!r}"
+    flat = " ".join(str(x) for x in data_cmds[0])
+    assert "0x210000" in flat
+    assert "song.raw" in flat
+    assert any("OK: data" in x and "song" in x for x in r.lines)
+
+
 def test_deploy_dispatch_idf_passes_on_progress(tmp_path: Path, monkeypatch):
     """CLI deploy --yes with language=c must forward on_progress (not silent)."""
     from silico import deploy as deploy_mod

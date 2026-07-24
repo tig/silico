@@ -8,4 +8,7 @@ __pycache__/
 sdkconfig
 sdkconfig.old
 dependencies.lock
+# ESP-IDF component manager (project root and firmware/ project layouts)
 managed_components/
+firmware/managed_components/
+**/managed_components/

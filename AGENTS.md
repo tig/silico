@@ -91,6 +91,17 @@ Context is finite. **Do not** open every manners file into the active window.
 
 Prefer **tools that encode manners** (`silico welcome|doctor|wait-device|inspect|deploy`, `bedside doctor|eval|ask|step`) over re-loading essays. If two files say the same rule, follow the **canonical owner** and treat the other as a pointer.
 
+**Stage packs (token lever, #79):** do not paste the entire `AGENTS.md` into every turn. Keep Stage 0 + hard rules (manners tools required, decline = halt) as the session core; load one stage on demand:
+
+```text
+silico agents --stage list
+silico agents --stage core    # manners tools hard rules
+silico agents --stage d       # hello metal only
+silico agents --stage lang-c  # C / ESP-IDF backend
+```
+
+Same file is the only source of truth — packs are extracts, not a soft-fork.
+
 ### Manners tools are the operator path (required, not optional)
 
 **Hard rule:** On first ship (and any operator-facing metal/host path), the manners tools **are** the path. They are not optional flavor on top of a self-driven install script.
@@ -822,6 +833,10 @@ For non-blocking gaps (and after **interactive path** from interview mode):
 4. Edit the product spec only after a clear **yes**.
 5. Expect re-run / rebuild later when the operator chose interactive path and the contract later gets stronger.
 
+### Review pass per product slice (recommended)
+
+After each meaningful product slice (plate green, audio path, UI face, link door, …), run an **independent review** of that slice’s diff before claiming host-done or stacking the next domain change (#79 field report). Compile + ctest + CI miss boot-paint and HAL-init drops that a focused review catches. Costly in tokens; cheaper than a silent metal miss.
+
 ### first-ship exit criteria (before the update path)
 
 Metal bar detail: [BEDSIDE.md](BEDSIDE.md). Spine/DoD: layered table below.
@@ -871,8 +886,10 @@ Opt-in plate: `silico scaffold . --plate gcu-c`. Runtime from `silico.toml` (`la
 |------|------------|
 | `gate` | Device-header allowlist (`#include`) + `[host].gate` (cmake/ctest) when `build/host` exists |
 | `product-path` | Host C tests must use shipped defaults table (compiled use) |
-| `inspect` | Serial identity line; no mpremote; no `--apply-mpy-pin` |
+| `inspect` | Serial identity knock (not mpremote); no `--apply-mpy-pin`. Default: DTR/RTS **deasserted** first, re-knock over a short window, pulse only as fallback (#78 / #79) |
 | `deploy` | `idf.py build` + flash; plan says full image overwrite; `--prune` / `--verify-import` refuse |
+
+**C identity-on-link (hard):** the image must **answer** `identity` on the UART with `fw_name=… fw_version=…`. Boot-print only is not metal inspect-ready once the banner scrolls past. Plate `gcu-c` documents and implements the knock responder.
 
 Default plate stays MicroPython. Arduino is not this path (see issue #59). First consumer for C first ship is **tig/xuss-c** (spec-first product; not closed by hello-metal alone).
 

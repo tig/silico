@@ -105,6 +105,11 @@ def run_doctor(*, root: Path | None = None) -> DoctorReport:
             lines.append("OK: cmake on PATH (C host gate)")
         else:
             lines.append("WARN: cmake not on PATH (needed for C host gate)")
+        # EIM / Espressif tool roots (#79) — resolved paths, not hand-parsed JSON.
+        from silico.c_toolchain import doctor_c_toolchain_lines
+
+        lines.append("--- C toolchain (EIM / IDF) ---")
+        lines.extend(doctor_c_toolchain_lines())
     else:
         if mpremote_available():
             lines.append("OK: mpremote available (device ops)")

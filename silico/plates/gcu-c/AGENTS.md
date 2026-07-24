@@ -69,12 +69,14 @@ ESP-IDF must be installed (`idf.py` or `IDF_PATH`). First flash and update flash
 Portable domain under `include/` + `src/` must not include freertos / esp_* / driver headers.
 Only stems listed in `[hal].allow_device_headers` (default `hal_board`) may touch device headers.
 
-## Identity
+## Identity (required on the link)
 
-Boot (or `identity` command) must print:
+**Boot-print alone is not enough** for `silico inspect` after a greeting or banner scrolls past (#78 / #79). The image **must answer** the host word `identity` (CR/LF framed) with:
 
 ```text
 fw_name=GCU fw_version=0.0.1
 ```
+
+Plate `main.c` shows the pattern: print once at boot **and** respond when the host knocks. A boot-print-only app is invisible to inspect as soon as the banner is gone.
 
 Escape hatch (`repl` / `reboot`) is a product requirement for reclaim without hard reset when possible.

@@ -14,6 +14,7 @@ from pathlib import Path
 _HEADING_TO_ID: list[tuple[re.Pattern[str], str]] = [
     (re.compile(r"^manners tools are the operator path", re.I), "core"),
     (re.compile(r"^operator gates:", re.I), "gates"),
+    (re.compile(r"^product truth is head", re.I), "head"),
     (re.compile(r"^stage\s*0\b", re.I), "0"),
     (re.compile(r"^stage\s*a\b", re.I), "a"),
     (re.compile(r"^stage\s*b\b", re.I), "b"),
@@ -33,6 +34,11 @@ _ALIAS: dict[str, str] = {
     "gates": "gates",
     "gate": "gates",
     "ask": "gates",
+    "head": "head",
+    "product-truth": "head",
+    "past-head": "head",
+    "salvage": "head",
+    "no-salvage": "head",
     "0": "0",
     "stage0": "0",
     "stage-0": "0",
@@ -138,7 +144,21 @@ def list_stage_ids(text: str | None = None) -> list[tuple[str, str]]:
             return []
         text = path.read_text(encoding="utf-8", errors="replace")
     idx = index_stages(text)
-    order = ["core", "gates", "0", "a", "b", "c", "d", "e", "f", "lang-c", "interview", "dod"]
+    order = [
+        "core",
+        "gates",
+        "head",
+        "0",
+        "a",
+        "b",
+        "c",
+        "d",
+        "e",
+        "f",
+        "lang-c",
+        "interview",
+        "dod",
+    ]
     out: list[tuple[str, str]] = []
     for sid in order:
         if sid not in idx:

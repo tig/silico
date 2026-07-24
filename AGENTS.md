@@ -382,7 +382,34 @@ When the operator’s goal is a **fresh first-ship harness run**, all three prac
 **Anti-pattern:** invent a PR workflow on **tig/xuss**, **tig/xuss-c**, or **tig/xuss-lame** because of leftover harness PR history.  
 **Anti-pattern:** five open PRs titled variations of “first ship scaffold,” “L0 product face,” … with no operator request to split.  
 **Anti-pattern:** choose PRs and never watch CI — that skips the reason PRs exist for that team.  
-**Anti-pattern:** first-ship mutate on a practice GCU whose `origin/main` tip is not the product-only clean start, without telling the operator.
+**Anti-pattern:** first-ship mutate on a practice GCU whose `origin/main` tip is not the product-only clean start, without telling the operator.  
+**Anti-pattern:** tip is clean start (docs only) but the agent cherry-picks or replays a previous attempt’s display/audio/UI firmware from older commits / other branches / “last session worked” — that is **past-HEAD salvage** (see **Product truth is HEAD**). Verboten.
+
+### Product truth is HEAD (no past-HEAD salvage)
+
+**Hard rule (first ship, clean start, abort-and-retry SOP — all GCUs, not only practice trees):**  
+Implement product domain and **product face** from **this checkout at current HEAD** (plus uncommitted work from **this** session), the **operator**, and the **silico spine** (plate, board profiles, knowledge, parts pointers). Do **not** treat git history or prior attempts as free inventory.
+
+This is the same honesty bar as xuss-lame anti-cheat, generalized: a user who aborted mid-flight and wants a **fresh** first ship must get real prompt-to-metal work, not a silent replay of last week’s tree.
+
+| In scope (allowed) | Out of scope (verboten) |
+|--------------------|-------------------------|
+| Files at **current HEAD** in the product cwd | `git cherry-pick` / `git show oldsha:firmware/…` / restoring abandoned branches for product domain without operator go |
+| Operator answers and structured gates | “Previous attempt already had the smiley — I’ll replay that commit” |
+| `silico` plate, `board-profile`, knowledge, `parts.toml` / datasheet pointers | Mining `git log` for a prior product-face implementation to skip Stage C–D engineering |
+| Host tests you write **in this path** | Other worktrees / stashes / local mid-flight trees of the same GCU used as a code buffet |
+| Re-implementing from **this** `spec.md` / README | Training or prior-session memory of a full vertical implementation used to fill a thin/clean-start tree |
+
+**Board still shows a full product face while HEAD is thin (docs/plate only):** that is almost always **stale flash** from an earlier image — not proof that “the code is already here.” Flash **this** build after you implement in **this** tree; then confirm product face against **this** deploy. Do not invent a story that history was “integrated” without the operator asking to continue that attempt.
+
+**Continue a prior attempt (explicit only):** the operator must clearly say something like *continue last attempt*, *use branch X*, *not a clean start*, or *keep the work already on main*. Then that line of history is in scope. **Silent** cherry-pick / replay / “mostly from a previous attempt” is never OK.
+
+**What “done” still means:** host gate + metal acceptance for **this** HEAD. Claiming first ship complete after replaying old commits and re-flashing them is a forbidden close (layered lying).
+
+**Anti-pattern:** Stage D1 “product face works on the bench” + honesty note “mostly from previous attempt commits A/B/C, this session only polished deploy.”  
+**Better:** implement face/domain from current `spec.md` + plate + operator; land commits that this session authored (or that clearly continue an **operator-approved** prior branch).
+
+Load on demand: `silico agents --stage head` (or `past-head` / `salvage`).
 
 #### Announce surprising metal effects (before they happen)
 
@@ -715,6 +742,8 @@ Then: do **not** claim the product is fully specified; implement the current sli
 
 **Required for first-ship exit** (not optional polish). Goal: board **talks over USB**, is **prepped** (REPL when that is the runtime), then a **distinct, documented, operator-observable product face** (what the operator sees or hears when the app runs); reconnect is **repeatable**.
 
+**Product face code** must come from **this HEAD** (or an operator-approved continue path) — not past-HEAD salvage of a previous attempt. See **Product truth is HEAD**.
+
 Metal COM / first-flash / identity / deploy rules: **[BEDSIDE.md](BEDSIDE.md)** + **[silico/knowledge/first-flash.md](silico/knowledge/first-flash.md)**. USB duplex / lockout: **[silico/knowledge/esp32-usb-serial.md](silico/knowledge/esp32-usb-serial.md)** (open only when needed). Prefer tools: `silico wait-device`, `inspect`, `pull`, `deploy`, `monitor`, and `bedside ask` / `bedside step`. Every physical or overwrite prompt uses **Big steps: why + where**.
 
 #### Stage D0 - Device talks (prep) before any deploy plan
@@ -906,6 +935,8 @@ Default plate stays MicroPython. Arduino is not this path (see issue #59). First
 - Do **not** invent short forms of lexicon terms (e.g. bare “face” for **product face**) in operator-facing prose.
 - Do **not** present stage forks as free-text `1. / 2. / 3.` menus in chat when a structured chooser exists (or `bedside ask` is available).
 - Do **not** invent a PR workflow on a quiet/simple GCU without asking — recommend **main** first (see **Repo workflow**). Do **not** invent a PR path on **tig/xuss**, **tig/xuss-c**, or **tig/xuss-lame** (always main; check clean start first). Do **not** open a fan-out of PRs for sequential first ship / same-session work unless the operator asked to stage multi-PR.
+- Do **not** implement or claim product face / domain by **past-HEAD salvage**: cherry-pick, replay, or copy firmware from older commits, other branches, stashes, or prior attempts without explicit operator go to continue that line (see **Product truth is HEAD**). Applies to every GCU clean start and abort-and-retry, not only practice trees.
+- Do **not** treat a board still showing a full app while HEAD is docs/plate-only as “code already landed” — re-flash **this** build after implementing in **this** tree.
 - Do **not** deploy, soft-reset, or otherwise drive metal that may play loud/long audio, flash bright patterns, or move actuators without a clear operator-facing forewarning of what will happen and for how long.
 - Do **not** claim metal serial OK from identity/telem TX alone, or enable `kbd_intr(-1)` before round-trip + working `repl` re-entry (see serial readiness ladder; #62).
 - Do **not** thrash full-erase/redeploy when the console is locked; recover once, park stock MP, stop.
@@ -983,6 +1014,8 @@ Public Silico docs name starter GCUs **Zakalwe**, **Quilan**, **Sma**. Short pro
 14. Do not treat manners tools as optional: skip `silico welcome`, skip/abandon `bedside ask|step`, or replace Stage 0 with a host-tool install script narrative.
 15. Do not keep mutating (commit/push/scaffold/deploy) after an operator gate decline / exit 10; halt, short re-gate, or stop.
 16. Do not read “Prefer doing over instructing” as “drive past the operator’s gates.”
+17. Do not past-HEAD salvage product domain (cherry-pick / replay prior attempts / git archaeology for firmware) on first ship or clean start without explicit operator go to continue that line.
+18. Do not treat stale board flash as proof the current tree already contains the product face.
 
 ## Commands (host)
 

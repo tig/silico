@@ -48,6 +48,8 @@ def test_normalize_stage_aliases():
     assert normalize_stage("lang-c") == "lang-c"
     assert normalize_stage("idf") == "lang-c"
     assert normalize_stage("core") == "core"
+    assert normalize_stage("head") == "head"
+    assert normalize_stage("past-head") == "head"
     assert normalize_stage("nope") is None
 
 
@@ -84,9 +86,14 @@ def test_real_agents_md_has_stages():
     assert "0" in ids
     assert "d" in ids
     assert "core" in ids
+    assert "head" in ids
     ok, lines = stage_pack("core", agents_path=path)
     assert ok
     assert any("manners" in ln.lower() or "required" in ln.lower() for ln in lines)
+    ok_h, lines_h = stage_pack("head", agents_path=path)
+    assert ok_h
+    joined_h = "\n".join(lines_h).lower()
+    assert "past-head" in joined_h or "salvage" in joined_h or "current head" in joined_h
     ok_d, lines_d = stage_pack("d", agents_path=path)
     assert ok_d
     # stage d pack must not dump entire AGENTS

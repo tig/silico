@@ -46,6 +46,8 @@ Private **`tig/xuss-lame`**: written like an operator’s rough first draft (min
 
 **Anti-cheat (enforced here, not in the product repo):** when implementing **that** checkout, do **not** open, clone, or fetch **`tig/xuss`** or **`tig/xuss-c`**, and do not treat training/prior-session knowledge of those products as requirements. Only `xuss-lame` files + operator answers define the product. Cheating by importing the polished Xuss contract defeats the exercise.
 
+**Same honesty for every GCU (including polished xuss / xuss-c after clean start or abort-and-retry):** do **not** past-HEAD salvage product domain (cherry-pick / replay prior attempts / git archaeology for firmware) without explicit operator go to continue that line. Product truth is **current HEAD** + operator + silico spine. See silico root AGENTS **Product truth is HEAD**.
+
 Provenance for maintainers: degraded from public `tig/xuss` `main` product-manual shape (Rev 0.3 era); refresh by re-roughening from current `tig/xuss` tip if needed — never by pointing agents at the good tree mid-session.
 
 ## Anti-patterns

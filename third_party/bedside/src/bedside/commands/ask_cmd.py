@@ -54,7 +54,16 @@ def run_ask(
     stdin_isatty: bool | None = None,
     stdin: TextIO | None = None,
 ) -> CommandResult:
-    """One structured gate. Exit 0 if recommended chosen; 10 declined/needed; 30 setup."""
+    """One structured gate.
+
+    Exit **0** when the human selects **any valid choice** (including non-recommended
+    scary yes when default is no — silico#84). Exit **10** only when no valid answer
+    yet (pending / non-TTY without --answer / empty). Exit **30** setup error.
+
+    Agents: read ``choice`` and ``matched_recommended``; do not treat exit 0 +
+    matched_recommended=false as "declined" — that is an explicit alternate fork.
+    Halt writes when choice is the safe no (or gate-specific decline labels).
+    """
     gate_id = (gate_id or "").strip()
     prompt = (prompt or "").strip()
     if not gate_id:
@@ -143,7 +152,8 @@ def run_ask(
             return r
 
     matched = selected == recommended
-    code = OK if matched else HUMAN_NEEDED
+    # Any valid selection is OK (0). Explicit scary yes is not HUMAN_NEEDED (#84).
+    code = OK
 
     payload = {
         "id": gate_id,
@@ -165,8 +175,9 @@ def run_ask(
     r.line(f"matched_recommended: {'true' if matched else 'false'}")
     if not matched:
         r.line(
-            "Not the recommended path. Agent should treat this as human declined "
-            "or alternate fork (exit 10)."
+            "Not the recommended path (exit 0 still = valid human selection). "
+            "Agents: branch on choice= / matched_recommended; halt only if choice "
+            "is the safe decline for this gate (often 'no'), not merely non-default."
         )
     r.line(
         f"Record: bedside.ask id={gate_id} choice={selected} "

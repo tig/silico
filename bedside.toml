@@ -2,7 +2,8 @@
 # Upstream: https://github.com/tig/bedside
 # Refresh: replace third_party/bedside from a new commit; update pin below + VENDOR.md
 
-pin = "868e3b8"
+# Vendored ask semantics: valid non-recommended choice is exit 0 (silico#84); pin is local tree SHA note.
+pin = "silico-local-ask-explicit-yes-0"
 contract_path = "third_party/bedside/contract"
 surface_path = "third_party/bedside/surface"
 eval_path = "third_party/bedside/eval"

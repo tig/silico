@@ -271,6 +271,26 @@ def doctor_c_toolchain_lines(
             "HINT: cmake missing on PATH — activate the EIM script above in this shell, "
             "or run: silico env --print"
         )
+    # macOS / Codex: PowerShell export.ps1 often breaks idf.py paths (#84).
+    if sys.platform == "darwin":
+        lines.append(
+            "HINT (macOS/Codex): prefer bash or shell-free `python -m`/`idf.py` after "
+            "sourcing export.sh — PowerShell export.ps1 may emit Windows-style paths."
+        )
+        py_ver = sys.version_info
+        if py_ver < (3, 11):
+            lines.append(
+                f"WARN: this Python is {py_ver.major}.{py_ver.minor}; ESP-IDF 5.3+ "
+                "often needs 3.11+ (set IDF_PYTHON_ENV_PATH to an idf*_py3.12_env)."
+            )
+        idf_py_env = (env or os.environ).get("IDF_PYTHON_ENV_PATH", "")
+        if idf_py_env:
+            lines.append(f"  IDF_PYTHON_ENV_PATH: {idf_py_env}")
+        else:
+            lines.append(
+                "INFO: IDF_PYTHON_ENV_PATH unset — if install.sh used system Python 3.9, "
+                "re-run with a 3.12 interpreter first (see knowledge/macos-codex-esp-idf.md)."
+            )
     return lines
 
 

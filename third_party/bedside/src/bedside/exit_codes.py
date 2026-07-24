@@ -2,8 +2,10 @@
 
 Future tui-cs/cli adapters should preserve these values.
 
-0  OK (including recommended ask path / confirmed step)
-10 Human needed, declined, or non-recommended ask choice
+0  OK — valid human selection on ask (recommended or not), or confirmed step.
+   For ask: inspect ``choice`` / ``matched_recommended`` (JSON or key=value record).
+   Explicit scary yes with default no is still exit 0 (tig/silico#84).
+10 Human needed — no answer yet, empty input, step declined, or still pending.
 20 Manners fail (eval expect mismatch)
 30 Tool or setup error
 """

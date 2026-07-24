@@ -45,6 +45,7 @@ def plan_idf_deploy(
     port: str | None = None,
     root: Path | None = None,
     cfg: RuntimeConfig | None = None,
+    yes: bool = False,
 ) -> DeployPlan | DeployResult:
     root = (root or Path.cwd()).resolve()
     cfg = cfg or resolve_runtime(root)
@@ -129,13 +130,18 @@ def plan_idf_deploy(
         lines.append(
             "WARN: idf.py not on PATH and IDF_PATH unset — write will fail until ESP-IDF is installed."
         )
-    lines.append("Refusing to write without explicit confirmation (--yes).")
-    lines.append(
-        "Operator must have confirmed BOTH: (1) this port is the product board, "
-        "(2) the application image may be overwritten"
-        + (" and data partitions" if data_assets else "")
-        + "."
-    )
+    if yes:
+        lines.append(
+            "Write confirmed (--yes). Operator already confirmed identity + image overwrite."
+        )
+    else:
+        lines.append("Refusing to write without explicit confirmation (--yes).")
+        lines.append(
+            "Operator must have confirmed BOTH: (1) this port is the product board, "
+            "(2) the application image may be overwritten"
+            + (" and data partitions" if data_assets else "")
+            + "."
+        )
     lines.append(f"Inspect first: silico inspect --port {chosen.device}")
     lines.append(
         "Progress during --yes: PROGRESS [idf-build] / [idf-flash] stream from idf.py."
@@ -232,7 +238,7 @@ def deploy_idf(
     root = (root or Path.cwd()).resolve()
     cfg = resolve_runtime(root)
     log = ProgressLog(on_progress)
-    planned = plan_idf_deploy(port=port, root=root, cfg=cfg)
+    planned = plan_idf_deploy(port=port, root=root, cfg=cfg, yes=yes)
     if isinstance(planned, DeployResult):
         log.extend(planned.lines)
         return DeployResult(planned.ok, log.lines)
@@ -299,6 +305,22 @@ def deploy_idf(
                 log(flash.stdout.strip()[-2000:])
             return DeployResult(False, log.lines)
     log("OK: flash")
+
+    # CDC often re-enumerates after idf-flash; wait before identity (#84).
+    log(stage_header("wait-port", f"waiting for {planned.port} after flash (up to 30s)"))
+    wait_start = time.monotonic()
+    deadline = wait_start + 30.0
+    while time.monotonic() < deadline:
+        if port_is_listed(planned.port):
+            time.sleep(0.5)
+            log(f"OK: port {planned.port} listed after flash")
+            break
+        time.sleep(0.25)
+    else:
+        log(
+            f"WARN: port {planned.port} not listed within 30s after flash; "
+            "identity verify may fail (re-plug / wait-device)."
+        )
 
     # Data partitions (same --yes; already announced in plan).
     if planned.data_assets:

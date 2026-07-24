@@ -94,6 +94,7 @@ def plan_deploy(
     remote_names: list[str] | None = None,
     prune: bool = False,
     root: Path | None = None,
+    yes: bool = False,
 ) -> DeployPlan | DeployResult:
     root = root or Path.cwd()
     cfg = resolve_runtime(root)
@@ -117,7 +118,7 @@ def plan_deploy(
                     "C deploy overwrites the application image."
                 ],
             )
-        return plan_idf_deploy(port=port, root=root, cfg=cfg)
+        return plan_idf_deploy(port=port, root=root, cfg=cfg, yes=yes)
 
     if not mpremote_available():
         return DeployResult(False, ["FAIL: mpremote not available (pip install mpremote)"])
@@ -199,13 +200,18 @@ def plan_deploy(
         else:
             lines.append("WARN: could not ls device for prune plan")
 
-    lines.append("Refusing to write without explicit confirmation (--yes).")
-    lines.append(
-        "Operator must have confirmed BOTH: (1) this port is the product board, "
-        "(2) these files may be written"
-        + (" and orphans removed" if prune_remotes else "")
-        + "."
-    )
+    if yes:
+        lines.append(
+            "Write confirmed (--yes). Operator already confirmed identity + overwrite."
+        )
+    else:
+        lines.append("Refusing to write without explicit confirmation (--yes).")
+        lines.append(
+            "Operator must have confirmed BOTH: (1) this port is the product board, "
+            "(2) these files may be written"
+            + (" and orphans removed" if prune_remotes else "")
+            + "."
+        )
     lines.append("Inspect first: silico inspect --port " + chosen.device)
     return DeployPlan(
         port=chosen.device,
@@ -387,7 +393,7 @@ def deploy(
         )
 
     log = ProgressLog(on_progress)
-    planned = plan_deploy(files, port=port, prune=prune, root=root)
+    planned = plan_deploy(files, port=port, prune=prune, root=root, yes=yes)
     if isinstance(planned, DeployResult):
         log.extend(planned.lines)
         return DeployResult(planned.ok, log.lines)

@@ -11,5 +11,6 @@
 | m5go-power | M5GO / Core v2.7 red button on/off (double-click off) | [m5go-power.md](m5go-power.md) |
 | board-profiles | first-ship product-face pin packs; board-profile seed → defaults.py | [board-profiles.md](board-profiles.md) |
 | spec-interview | Thin/contradictory product specs; interview vs interactive path | [spec-interview.md](spec-interview.md) |
+| macos-codex-esp-idf | macOS Codex PowerShell/export.ps1 + IDF Python env | [macos-codex-esp-idf.md](macos-codex-esp-idf.md) |
 
 Add a row when you add a file.

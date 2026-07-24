@@ -1,5 +1,7 @@
 ![Silico - Prompt to metal](docs/hero.jpg)
 
+<!-- Hero video (first ship of Xuss): produce/reproduce via docs/hero-video/ -->
+
 Silico makes building maintainable firmware for embedded devices simple. Given a device [spec](./specs/lexicon.md#spec), it first guides AI agents to [scaffold](./specs/lexicon.md#scaffold) a GitHub repository set up for long-term maintainability.
 
 Agents then loop to engineer robust firmware, unit and smoke tests, a simulator, continuous integration (CI) using both real devices and the simulator, and an end-user install/upgrade tool.
@@ -142,3 +144,4 @@ These may appear *inside* a GCU's own tree; they are **not** first-class Silico 
 | [specs/tenets.md](specs/tenets.md) | Tenets |
 | [specs/lexicon.md](specs/lexicon.md) | Phrase book (GCU, spine, host-honest, Help the operator, …) |
 | [specs/gcu-codenames.md](specs/gcu-codenames.md) | Public GCU codenames |
+| [docs/hero-video/](docs/hero-video/) | Reproduce the README hero video (script, capture checklist, ffmpeg assemble) |

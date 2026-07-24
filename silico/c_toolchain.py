@@ -145,20 +145,33 @@ def select_install(
 
 
 def _which_under(tools_root: Path | None, name: str) -> str | None:
-    """Find *name* on PATH or under Espressif tools trees."""
+    """Find *name* on PATH or under Espressif tools trees.
+
+    Prefer the EIM layout (``tools/<name>/<ver>/bin/<name>``) before a full
+    recursive scan — walking all of ``C:\\Espressif\\tools`` is slow (PR #80 CR).
+    """
     found = shutil.which(name)
     if found:
         return found
     if tools_root is None or not tools_root.is_dir():
         return None
-    # EIM layout: tools/cmake/<ver>/bin/cmake.exe, tools/ninja/<ver>/ninja.exe
-    patterns = [
+    # Narrow first: EIM layout tools/cmake/<ver>/bin/cmake[.exe]
+    narrow = [
+        f"{name}/*/bin/{name}.exe",
+        f"{name}/*/bin/{name}",
+        f"{name}/*/{name}.exe",
+        f"{name}/*/{name}",
+    ]
+    for pat in narrow:
+        for hit in tools_root.glob(pat):
+            if hit.is_file():
+                return str(hit)
+    # Fallback: broader scan only if the tool is not in the usual place
+    broad = [
         f"**/{name}.exe",
         f"**/{name}",
-        f"**/bin/{name}.exe",
-        f"**/bin/{name}",
     ]
-    for pat in patterns:
+    for pat in broad:
         for hit in tools_root.glob(pat):
             if hit.is_file():
                 return str(hit)

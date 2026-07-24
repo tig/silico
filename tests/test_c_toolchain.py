@@ -94,6 +94,39 @@ def test_env_print_missing_is_honest(tmp_path: Path):
     assert any("No IDF" in ln for ln in lines)
 
 
+def test_which_under_prefers_eim_layout_not_full_tree_scan(tmp_path: Path, monkeypatch):
+    """CR: do not recursive-** the whole tools tree first (#79 review)."""
+    tools = tmp_path / "tools"
+    # Deep noise that would be expensive to walk first
+    deep = tools / "noise" / "a" / "b" / "c"
+    deep.mkdir(parents=True)
+    (deep / "cmake.exe").write_text("nope", encoding="utf-8")
+    # Canonical EIM layout
+    cmake_bin = tools / "cmake" / "3.30.2" / "bin"
+    cmake_bin.mkdir(parents=True)
+    good = cmake_bin / "cmake.exe"
+    good.write_text("ok", encoding="utf-8")
+
+    calls: list[str] = []
+    real_glob = Path.glob
+
+    def tracking_glob(self, pattern):
+        calls.append(str(pattern))
+        return real_glob(self, pattern)
+
+    monkeypatch.setattr(Path, "glob", tracking_glob)
+    monkeypatch.setattr("silico.c_toolchain.shutil.which", lambda _n: None)
+
+    from silico.c_toolchain import _which_under
+
+    found = _which_under(tools, "cmake")
+    assert found is not None
+    assert found.replace("\\", "/").endswith("cmake/3.30.2/bin/cmake.exe")
+    # First search patterns should be narrow (cmake/<ver>/...), not leading **
+    assert calls, "expected glob calls"
+    assert not calls[0].startswith("**"), f"first pattern too broad: {calls[0]}"
+
+
 def test_cli_env_print(tmp_path: Path, monkeypatch, capsys):
     from silico.cli import main
     import silico.c_toolchain as ct

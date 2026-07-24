@@ -114,13 +114,38 @@ _HAL_MAKE = re.compile(r"\bgcu_make_board_hal\s*\(")
 _GCU_INIT = re.compile(r"\bgcu_init\s*\(")
 
 
+def _app_main_body(text: str) -> str | None:
+    """Return the brace-balanced body of the first ``app_main`` function, or None.
+
+    Searches only inside the body so helpers/comments elsewhere cannot satisfy
+    the HAL-init gate (PR #80 review).
+    """
+    m = _APP_MAIN_FN.search(text)
+    if not m:
+        return None
+    # m ends at '{'; find matching close brace
+    start = m.end()  # index after '{'
+    depth = 1
+    i = start
+    while i < len(text) and depth > 0:
+        ch = text[i]
+        if ch == "{":
+            depth += 1
+        elif ch == "}":
+            depth -= 1
+        i += 1
+    if depth != 0:
+        return text[start:]  # truncated / unbalanced — still scan what we have
+    return text[start : i - 1]
+
+
 def check_hal_init_reachable(root: Path) -> list[str]:
     """Return FAIL lines if firmware app_main drops HAL construction or gcu_init.
 
     Host-checkable plate guard (#79): a living app loop without HAL init is a
     silent product face death. Scans ``firmware/**/main.c`` (and top-level
-    ``main.c``) for ``app_main`` that still calls ``gcu_make_board_hal`` and
-    ``gcu_init``.
+    ``main.c``) for ``app_main`` **body** that still calls ``gcu_make_board_hal``
+    and ``gcu_init`` (not helpers or comments outside the body).
     """
     candidates: list[Path] = []
     for pattern in ("firmware/**/main.c", "main.c"):
@@ -147,16 +172,17 @@ def check_hal_init_reachable(root: Path) -> list[str]:
             text = path.read_text(encoding="utf-8", errors="replace")
         except OSError:
             continue
-        if not _APP_MAIN_FN.search(text):
+        body = _app_main_body(text)
+        if body is None:
             continue
         found_app_main = True
         rel = path.relative_to(root).as_posix()
-        if not _HAL_MAKE.search(text):
+        if not _HAL_MAKE.search(body):
             fails.append(
                 f"FAIL: {rel}: app_main does not call gcu_make_board_hal() — "
                 "HAL init must stay reachable from the app entry (#79)."
             )
-        if not _GCU_INIT.search(text):
+        if not _GCU_INIT.search(body):
             fails.append(
                 f"FAIL: {rel}: app_main does not call gcu_init() — "
                 "do not move the app loop without keeping HAL init (#79)."

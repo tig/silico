@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import os
 from pathlib import Path
 
 from silico.partition_data import (
@@ -67,6 +68,40 @@ partition = "storage"
     joined = "\n".join(lines)
     assert "0x210000" in joined
     assert "song" in joined
+
+
+def test_resolve_rejects_path_escape_outside_root(tmp_path: Path):
+    """CR: file=../outside must not flash arbitrary host paths (#79 review)."""
+    outside = tmp_path.parent / f"outside-{tmp_path.name}.bin"
+    outside.write_bytes(b"\x00" * 8)
+    try:
+        (tmp_path / "firmware").mkdir(exist_ok=True)
+        (tmp_path / "firmware" / "partitions.csv").write_text(CSV, encoding="utf-8")
+        rel = os.path.relpath(outside, tmp_path).replace("\\", "/")
+        (tmp_path / "silico.toml").write_text(
+            f"""
+[runtime]
+language = "c"
+[deploy]
+mode = "idf-flash"
+project = "firmware"
+[[deploy.data]]
+name = "evil"
+file = "{rel}"
+partition = "storage"
+""",
+            encoding="utf-8",
+        )
+        specs = read_deploy_data_specs(tmp_path)
+        resolved, errs = resolve_data_assets(tmp_path, specs)
+        assert resolved == []
+        assert errs
+        assert any(
+            "outside" in e.lower() or "escape" in e.lower() or "root" in e.lower()
+            for e in errs
+        )
+    finally:
+        outside.unlink(missing_ok=True)
 
 
 def test_plan_idf_includes_data_partition(tmp_path: Path, monkeypatch):

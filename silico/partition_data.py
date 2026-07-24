@@ -144,7 +144,20 @@ def resolve_data_assets(
     resolved: list[ResolvedDataAsset] = []
     errors: list[str] = []
     for spec in specs:
-        host = (root / spec.file).resolve()
+        # Refuse path escape: resolved file must stay under the GCU root (PR #80 CR).
+        try:
+            host = (root / spec.file).resolve()
+        except OSError as e:
+            errors.append(f"FAIL: deploy.data {spec.name!r}: bad path {spec.file!r}: {e}")
+            continue
+        try:
+            host.relative_to(root)
+        except ValueError:
+            errors.append(
+                f"FAIL: deploy.data {spec.name!r}: file escapes repo root "
+                f"({spec.file!r}) — keep assets under the GCU checkout."
+            )
+            continue
         if not host.is_file():
             errors.append(f"FAIL: deploy.data {spec.name!r}: file missing: {spec.file}")
             continue

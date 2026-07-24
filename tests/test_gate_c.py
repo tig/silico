@@ -105,6 +105,27 @@ def test_hal_init_fails_when_dropped(tmp_path: Path):
     assert not report.ok
 
 
+def test_hal_init_ignores_helpers_and_comments(tmp_path: Path):
+    """CR: calls outside app_main body must not satisfy the gate (#79 review)."""
+    _write_c_fixture(tmp_path)
+    (tmp_path / "firmware" / "main" / "main.c").write_text(
+        "// gcu_make_board_hal(); gcu_init();\n"
+        "static void helper(void) {\n"
+        "  gcu_hal_t *hal = gcu_make_board_hal();\n"
+        "  gcu_state_t st;\n"
+        "  gcu_init(&st, hal);\n"
+        "}\n"
+        "void app_main(void) {\n"
+        "  for (;;) { /* dropped init */ }\n"
+        "}\n",
+        encoding="utf-8",
+    )
+    fails = check_hal_init_reachable(tmp_path)
+    assert fails
+    assert any("gcu_make_board_hal" in f for f in fails)
+    assert any("gcu_init" in f for f in fails)
+
+
 def test_scaffold_gcu_c_gitignore_managed_components(tmp_path: Path):
     dest = tmp_path / "c-prod"
     scaffold(dest, plate="gcu-c")

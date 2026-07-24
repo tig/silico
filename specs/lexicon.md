@@ -2,7 +2,7 @@
 
 Short definitions for phrases that carry load in Silico docs. Prefer this file when an agent or human is stuck on jargon. For rules of behavior, see [tenets.md](./tenets.md). For the build target, see [silicov1.md](./silicov1.md). For the Fall 2026 ambition, see [prfaq.md](./prfaq.md).
 
-Jump: [Core](#core-product-words) · [Done & gates](#done-gates-and-honesty) · [Agents](#prompt-agents-operators) · [Dependency & architecture](#dependency-and-architecture)
+Jump: [Core](#core-product-words) · [Done & gates](#done-gates-and-honesty) · [Agents](#prompt-agents-operators) · [Dependency & architecture](#dependency-and-architecture) · [compound](#compound)
 
 ---
 
@@ -188,6 +188,21 @@ See also: [operator](#operator).
 The hard boring edge ops that vertical teams should not re-learn: port discovery, multi-COM hazards, deploy file sets, [version verify](#version-identity), recovery, anti-patterns, CI that means something about [metal](#metal). [Silico](#silico) invests here so [GCUs](#gcu) do not each invent it.
 
 See also: [host path](#host-path), [spine](#spine).
+
+### compound
+
+Also **compounding** / **to compound.** The agent-facing name for the tenet **[Make it better than you found it](./tenets.md)** (tenet 4): when the path was rough—guess, reverse, research, harness fail, review finding—**do not leave recovery only in chat.** Land a durable fix or issue in the right place so the **next** agent is faster:
+
+| Friction kind | Land in |
+|---------------|---------|
+| Portable manners | **tig/bedside** |
+| Host/metal spine, first-ship path | **tig/silico** (`AGENTS.md`, plate, CLI, tests) |
+| Board/host capability truth | **`silico/knowledge/`** |
+| Product domain | the **GCU** repo |
+
+**Compound** is the verb for the end of a stage or first ship (especially practice GCUs): notice → durable fix or issue → optional short note. It is **not** a second tenet and not Every’s product brand; it is Silico’s synonym for Make-it-better, aligned with compound-engineering style loops (plan/work/review/**compound**). Define on first use; then use **compound** freely.
+
+See also: [first ship](#first-ship), [stage](#stage), [Help the operator](#help-the-operator).
 
 ---
 

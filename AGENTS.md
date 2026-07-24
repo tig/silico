@@ -139,7 +139,7 @@ Full text: [specs/tenets.md](specs/tenets.md) (unless you know better ones).
 1. **Software is not the moat.**
 2. **Agents write the code.**
 3. **Agents operate the host path.**
-4. **Make it better than you found it.**
+4. **Make it better than you found it** (also **compound** — [lexicon](specs/lexicon.md#compound)).
 5. **Edge that just works is hard.**
 6. **Vertical teams are the customer.**
 7. **Prompt to metal.**
@@ -208,6 +208,7 @@ Anytime you use a **silico term** for the **first time in the session**, define 
 | **product face** | What the operator is supposed to **see or hear** when the product app is running (status LEDs, light pattern, boot sound, etc.) — not a serial version string or a random module GPIO |
 | **pin** | Locking Silico (or another package) to a known version in the product’s host deps |
 | **deploy** | Writing product files to the board (only after identity + write confirmation) |
+| **compound** | Make it better than you found it: turn friction into a durable fix/issue so the next agent is faster (not chat-only recovery) |
 
 If you need a fuller definition, open [specs/lexicon.md](specs/lexicon.md) for that term only — do not dump the whole lexicon into chat.
 
@@ -424,9 +425,9 @@ Do **not** invent GPIO maps for common boards only from chat or knowledge essays
 - Still **operator-confirm product face on metal** (Stage D1). Profile seed is not metal done.
 - Detail: [silico/knowledge/board-profiles.md](silico/knowledge/board-profiles.md).
 
-## Make it better than you found it (non-negotiable)
+## Make it better than you found it / **compound** (non-negotiable)
 
-Anytime the path is rough and you had to **guess, correct, reverse, or research** something that a better doc, plate, script, error message, or small infra fix would have prevented for the **next** agent: do not leave that knowledge only in chat.
+Also called **[compound](specs/lexicon.md#compound)** (lexicon name for this tenet). Anytime the path is rough and you had to **guess, correct, reverse, or research** something that a better doc, plate, script, error message, or small infra fix would have prevented for the **next** agent: do not leave that knowledge only in chat. **Compound** before claiming a stage or first ship done (practice GCUs: compound is exit-required).
 
 1. **Notice friction.** Wrong default port, missing UF2 step, bedside eval miss, Windows-only failure, tool flag that changed: if this agent stumbled, the next one will too.
 2. **Prefer a durable fix in the right repo.**
@@ -441,7 +442,7 @@ Anytime the path is rough and you had to **guess, correct, reverse, or research*
 4. **Do not soft-fork Bedside principles** into a kinder local AGENTS section. Pin the contract; improve upstream.
 5. **Do not invent a parallel spine** in the GCU to avoid filing upstream.
 
-Leaving tribal recovery in chat only violates **Make it better than you found it**.
+Leaving tribal recovery in chat only violates **Make it better than you found it** / fails to **compound**.
 
 ## Getting started for agents (first ship)
 
@@ -849,6 +850,7 @@ Metal bar detail: [BEDSIDE.md](BEDSIDE.md). Spine/DoD: layered table below.
 - [ ] Silico pinned as host dependency.
 - [ ] Operator helped through first flash/serial without assumed ops expertise.
 - [ ] Any “what next?” stage fork used a **structured chooser**, not a free-text numbered menu.
+- [ ] **Compounded:** friction from the path landed as a durable fix/issue (not chat-only). Required for practice GCUs (xuss / xuss-c / xuss-lame).
 
 **Not exit criteria:** host gate alone; scaffold alone; deploy verify / version match alone; deferred metal with no poll/inspect; “honesty” note that the product face is unproven while the title says on-the-metal; issue filed instead of resolving observe.
 

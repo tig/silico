@@ -238,9 +238,9 @@ def test_scaffold_ships_ci_workflow(tmp_path: Path):
 
 
 def test_gcu_c_plate_ships_ci_workflow():
-    """#76: gcu-c must ship host-gate CI (cmake host_test), not only the MicroPython plate.
+    """#76 + #77 CR: cmake host_test and silico gate (include hygiene) on CI.
 
-    C host gate needs no silico sibling on the runner — pure cmake -S host -B build/host.
+    Sibling silico checkout enables ``silico gate`` without inventing a second pin layout.
     """
     root = plate_root("gcu-c")
     ci = root / ".github" / "workflows" / "ci.yml"
@@ -248,9 +248,11 @@ def test_gcu_c_plate_ships_ci_workflow():
     text = ci.read_text(encoding="utf-8")
     assert "cmake -S host -B build/host" in text
     assert "host_test" in text
-    # Do not require the MicroPython sibling-silico pip layout on C plate CI.
-    assert "requirements-dev.txt" not in text
+    assert "path: silico" in text
+    assert "repository: tig/silico" in text
+    assert "silico gate" in text
     assert "pytest" not in text
+    assert "requirements-dev.txt" not in text
 
 
 def test_scaffold_gcu_c_ships_ci_workflow(tmp_path: Path):
@@ -260,7 +262,8 @@ def test_scaffold_gcu_c_ships_ci_workflow(tmp_path: Path):
     assert ci.is_file()
     text = ci.read_text(encoding="utf-8")
     assert "cmake -S host -B build/host" in text
-    assert "--target host_test" in text or "host_test" in text
+    assert "host_test" in text
+    assert "silico gate" in text
 
 
 def test_scaffold_merges_without_clobbering_product_readme(tmp_path: Path):

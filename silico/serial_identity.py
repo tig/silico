@@ -40,6 +40,13 @@ def _hold_deasserted(ser) -> None:
         pass
 
 
+def _clear_input(ser) -> None:
+    try:
+        ser.reset_input_buffer()
+    except Exception:  # noqa: BLE001
+        pass
+
+
 def _knock_once(ser) -> None:
     """Single identity knock (CR/LF then ``identity``)."""
     ser.write(b"\r\n")
@@ -65,7 +72,8 @@ def _listen_with_knock_retries(
     """Listen for *listen_s*, re-knocking on an interval so boot greetings cannot
     permanently bury a one-shot identity line (#79).
 
-    Returns (raw_bytes, knock_count).
+    Returns (raw_bytes, knock_count). Does not clear the RX buffer — callers must
+    not clear after a boot wait if they want a boot-printed identity (#81 CR).
     """
     buf = bytearray()
     knocks = 0
@@ -87,7 +95,6 @@ def _listen_with_knock_retries(
         if chunk:
             buf.extend(chunk)
             if _identity_in_raw(bytes(buf)) is not None:
-                # drain a little more for a complete line, then stop
                 try:
                     extra = ser.read(256)
                     if extra:
@@ -101,7 +108,12 @@ def _listen_with_knock_retries(
 
 
 def _attempt_plans(reset: bool | None) -> list[tuple[str, bool]]:
-    """Return (label, do_reset) attempts. None = no-pulse first, then pulse fallback."""
+    """Return (label, do_reset) attempts.
+
+    - True: pulse only
+    - False: deasserted only (default CH9102-safe)
+    - None: deasserted first, then pulse fallback (#79)
+    """
     if reset is True:
         return [("DTR/RTS pulse", True)]
     if reset is False:
@@ -118,7 +130,7 @@ def probe_serial_identity(
     baud: int = 115200,
     listen_s: float = 3.0,
     boot_wait_s: float = 1.5,
-    reset: bool | None = None,
+    reset: bool | None = False,
     knock: bool = True,
     knock_interval_s: float = 0.45,
     expect_name: str | None = None,
@@ -126,12 +138,17 @@ def probe_serial_identity(
 ) -> SerialIdentityResult:
     """Open *port*, knock ``identity``, parse response.
 
-    Default ``reset=None`` (auto): knock with DTR/RTS **deasserted** first — required
-    on CH9102-class bridges where a best-effort pulse resets into ROM / misses the
-    app (tig/silico#78). Within each attempt, re-knock on *knock_interval_s* for the
-    full *listen_s* window so a boot greeting cannot swallow a single knock (#79).
-    If no identity, optionally pulse and wait for boot, then knock again.
-    ``reset=True`` forces pulse-only; ``reset=False`` never pulses.
+    Default ``reset=False``: DTR/RTS **deasserted**, no pulse (tig/silico#78).
+    CH9102/M5GO: a pulse often lands ROM so the app never answers.
+
+    Within each attempt, re-knock on *knock_interval_s* for the full *listen_s*
+    window so a boot greeting cannot swallow a single knock (#79).
+
+    ``reset=True``: clear stale RX **before** the pulse only, wait for boot, then
+    listen **without** clearing again so a boot-printed ``fw_name=`` line is kept
+    (#81 CR). Never ``reset_input_buffer`` after the boot wait.
+
+    ``reset=None``: try deasserted first, then pulse fallback.
 
     Does not use mpremote. Never writes firmware.
     """
@@ -165,16 +182,19 @@ def probe_serial_identity(
             lines.append(f"Attempt: {label}")
             _hold_deasserted(ser)
             if do_reset:
+                # Drop pre-pulse noise only. Never clear after boot wait — boot-only
+                # C plates print identity once and that line must survive (#81 CR).
+                _clear_input(ser)
                 lines.append("Pulse DTR/RTS (best-effort reset)...")
                 _pulse_reset(ser)
                 _hold_deasserted(ser)
                 if boot_wait_s > 0:
                     lines.append(f"Wait {boot_wait_s:g}s for app boot after pulse...")
                     time.sleep(boot_wait_s)
-            try:
-                ser.reset_input_buffer()
-            except Exception:  # noqa: BLE001
-                pass
+                # Intentionally no reset_input_buffer here (preserve boot identity).
+            else:
+                # Stale RX only — no pulse, so no boot line to preserve from this open.
+                _clear_input(ser)
             if knock:
                 lines.append(
                     f"Knock: CR/LF + identity (retry every {knock_interval_s:g}s "
@@ -225,9 +245,11 @@ def probe_serial_identity(
     lines.append("RESULT: no identity line found on serial")
     lines.append(
         "C images must answer identity on the link (not boot-print only) — "
-        "print fw_name=… fw_version=… when the host sends the word identity."
+        "print fw_name=… fw_version=… when the host sends the word identity. "
+        "Boot-only plates: probe with reset=True so the boot line is not discarded."
     )
     lines.append(
-        "Hint: CH9102/M5GO — prefer no DTR/RTS pulse (default auto tries deasserted first)."
+        "Hint: CH9102/M5GO — default is no DTR/RTS pulse; "
+        "manual: open COM with dtr=rts=False, write identity + newline."
     )
     return SerialIdentityResult(False, lines, identity=None, raw=last_raw or bytes(raw_all))

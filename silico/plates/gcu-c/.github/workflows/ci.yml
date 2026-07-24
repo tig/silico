@@ -5,17 +5,37 @@ on:
     branches: [main, master, develop]
   pull_request:
 
-# CI scope: cmake host_test only (silico.toml [host].gate).
-# Does NOT run `silico gate` or `silico product-path` — those need a local silico pin
-# (sibling clone). Green Actions here is not full local host-path proof.
-# No Python / silico sibling checkout on the runner.
+# C plate host path on CI:
+#   1) cmake host_test (pure C; no silico required for that step)
+#   2) silico gate include-hygiene (+ [host].gate) via sibling tig/silico checkout
+# product-path still wants a local pin; gate covers the HAL boundary Codex flagged on #77.
 jobs:
   host-gate:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: gcu
     steps:
       - name: Checkout GCU
         uses: actions/checkout@v4
+        with:
+          path: gcu
+      - name: Checkout silico (sibling host spine)
+        uses: actions/checkout@v4
+        with:
+          repository: tig/silico
+          path: silico
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install silico (editable) + bedside
+        run: |
+          python -m pip install -U pip
+          python -m pip install -e ../silico
+          python -m pip install -e ../silico/third_party/bedside
       - name: Configure host tests
         run: cmake -S host -B build/host
-      - name: Host gate
+      - name: CMake host_test
         run: cmake --build build/host --target host_test
+      - name: silico gate (include hygiene + host.gate)
+        run: silico gate

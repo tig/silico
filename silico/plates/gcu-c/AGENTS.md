@@ -45,10 +45,10 @@ silico gate
 silico product-path
 ```
 
-Plate ships `.github/workflows/ci.yml` that runs the **cmake host_test** steps on
-`push` / `pull_request` (no silico sibling on the runner). CI is **not** a full
-local host path: still run `silico gate` and `silico product-path` on a machine
-with a silico pin before claiming host-done.
+Plate ships `.github/workflows/ci.yml` that on `push` / `pull_request`:
+checks out this GCU and **sibling** `tig/silico`, runs **cmake host_test**, then
+**`silico gate`** (include hygiene + `[host].gate`). Still run
+`silico product-path` locally when claiming a full host path.
 
 ## Metal
 

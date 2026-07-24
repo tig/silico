@@ -331,14 +331,44 @@ Before the first push of first ship (or when locking the product workspace), **i
 | Issues | `gh issue list --limit 5`; issue count / activity |
 | Default branch protection / required checks | only if already visible; do not dig for policy theater |
 
-**Simple repo** (typical early GCU / first-ship practice tree): few or no extra branches, little or no PR history, thin issue tracker.
+##### Maintainer practice GCUs: always `main` (hard override)
 
-1. **Recommend committing and pushing straight to `main`** (or the default branch).
+These remotes are **first-ship / harness practice trees**, not product teams with a merge queue. **Always use the direct-to-`main` strategy** — even if `gh pr list` shows past PR history (prior harness runs leave noise).
+
+| Remote | Role |
+|--------|------|
+| [tig/xuss](https://github.com/tig/xuss) | MicroPython demo GCU |
+| [tig/xuss-c](https://github.com/tig/xuss-c) | C / ESP-IDF demo GCU |
+| [tig/xuss-lame](https://github.com/tig/xuss-lame) | Thin/messy interview practice GCU |
+
+**Do not** open a “repo workflow” chooser offering `pr` vs `main` for these three. **Do not** invent a PR path because “this repo has recent PR history.” Land first ship as **individual commits on `main`** (watch CI on push).
+
+**Clean start point (before mutating Stage A–C):** for the practice GCU you are shipping, verify **`origin`’s default branch tip is the product-only clean start**, not a mid-flight scaffold from a previous agent.
+
+| Check | How |
+|-------|-----|
+| Tip message | `gh api repos/tig/<repo>/commits/main --jq .commit.message` (or `git log -1 origin/main`) |
+| Clean start looks like | Subject contains **`product-only clean start`** (e.g. `chore: product-only clean start (no silico agent guidance)`) — thin product docs only, no plate/`firmware` first-ship residue from a prior run |
+| Local matches remote | `git fetch origin` then `git status -sb` / `git rev-parse HEAD origin/main` — do not build on a dirty or divergent checkout without operator go |
+
+If tip is **not** clean start (e.g. prior “Scaffold plate…”, half-done first ship on `main`):
+
+1. **Stop** committing more first-ship work as if this were a fresh path.
+2. Tell the operator in plain language: remote is past clean start; options are **reset to clean start** (only with explicit operator go — destructive) or **continue this tree** as an update path.
+3. Do **not** silently open a PR “to keep main clean” as a substitute for checking clean start.
+
+When the operator’s goal is a **fresh first-ship harness run**, all three practice remotes they care about should be at clean start **before** go (at least the one cwd targets; if they named the whole Xuss family, check each).
+
+**Anti-pattern:** Stage C green → “repo has PR history → recommend `pr`” on `tig/xuss-c` (or xuss / xuss-lame). That is the failure this override exists to prevent.
+
+**Simple repo** (typical early GCU / first-ship practice tree — **and always the three practice GCUs above**): few or no extra branches, little or no PR history, thin issue tracker.
+
+1. **Recommend committing and pushing straight to `main`** (or the default branch). For **xuss / xuss-c / xuss-lame**, this is **required**, not optional.
 2. Say in plain language: PRs can wait until the product is more active; direct-to-main keeps CI on every push without merge-queue overhead.
-3. Use a **structured chooser** if they might prefer PRs anyway; recommended option first: **commit to main**.
+3. Use a **structured chooser** if they might prefer PRs anyway; recommended option first: **commit to main**. **Skip the chooser** for the three practice GCUs (already decided: main).
 4. Land first ship as **individual, reviewable commits** on that branch. Issues stage intent; **issues ≠ a PR each**.
 
-**Well-used repo** (active branches, open or recent PRs, non-trivial issue history, or operator already works via PR):
+**Well-used repo** (active branches, open or recent PRs, non-trivial issue history, or operator already works via PR) — **does not apply** to tig/xuss, tig/xuss-c, tig/xuss-lame (see override above):
 
 1. **Do not silently force direct-to-main.**
 2. **Verify with the operator** (structured chooser) whether changes should go through **PRs** or **direct commits to the default branch**.
@@ -348,8 +378,10 @@ Before the first push of first ship (or when locking the product workspace), **i
 **Only open multiple PRs when** the operator clearly asks to stage, split review, or stack work (e.g. “separate PRs per issue,” Graphite stack). Then say how they relate and merge order — do not invent a multi-PR plan unprompted.
 
 **Anti-pattern:** invent a PR workflow on a quiet repo that only needed `main` commits.  
+**Anti-pattern:** invent a PR workflow on **tig/xuss**, **tig/xuss-c**, or **tig/xuss-lame** because of leftover harness PR history.  
 **Anti-pattern:** five open PRs titled variations of “first ship scaffold,” “L0 product face,” … with no operator request to split.  
-**Anti-pattern:** choose PRs and never watch CI — that skips the reason PRs exist for that team.
+**Anti-pattern:** choose PRs and never watch CI — that skips the reason PRs exist for that team.  
+**Anti-pattern:** first-ship mutate on a practice GCU whose `origin/main` tip is not the product-only clean start, without telling the operator.
 
 #### Announce surprising metal effects (before they happen)
 
@@ -567,7 +599,7 @@ When a human must install or approve something, use **Big steps: why + where** (
 2. If cwd is already a git GCU with `origin`, use it.
 3. If create new: confirm a product or codename (**not** `silico`); `gh` create private; clone **or** init in the empty cwd.
 4. Remind them: silico stays `github.com/tig/silico`; **their product** is the GCU repo.
-5. Once the GCU remote is known: **inspect repo workflow** (branches / PRs / issues) and apply **Repo workflow: inspect, then choose main vs PRs** before the first push.
+5. Once the GCU remote is known: **inspect repo workflow** (branches / PRs / issues) and apply **Repo workflow: inspect, then choose main vs PRs** before the first push. If remote is **tig/xuss**, **tig/xuss-c**, or **tig/xuss-lame**: **main only** (no PR chooser); **verify clean start** tip before mutating (see that section).
 
 ### Stage C - Local silico checkout, pin, and scaffold the GCU
 
@@ -674,7 +706,7 @@ Then: do **not** claim the product is fully specified; implement the current sli
 
 **Anti-patterns:** block forever on a perfect spec; invent vertical moat without judgment; free-text choice walls; skip metal poll when metal is in scope; leave recovery only in chat.
 
-**Practice GCU (maintainers / interview dry-run):** private [tig/xuss-lame](https://github.com/tig/xuss-lame) is a thin, messy first-draft product tree (not labeled as a test in-repo). When first ship is aimed at that checkout, product truth is **only** that tree + the operator — do **not** open `tig/xuss` or `tig/xuss-c` (or use prior knowledge of them) to “complete” the contract. Detail: [silico/knowledge/spec-interview.md](silico/knowledge/spec-interview.md).
+**Practice GCU (maintainers / interview dry-run):** private [tig/xuss-lame](https://github.com/tig/xuss-lame) is a thin, messy first-draft product tree (not labeled as a test in-repo). When first ship is aimed at that checkout, product truth is **only** that tree + the operator — do **not** open `tig/xuss` or `tig/xuss-c` (or use prior knowledge of them) to “complete” the contract. Detail: [silico/knowledge/spec-interview.md](silico/knowledge/spec-interview.md). Repo workflow for **xuss / xuss-c / xuss-lame**: always **direct-to-`main`**; confirm **product-only clean start** on `origin/main` before first-ship mutates (see **Repo workflow** → Maintainer practice GCUs).
 
 ### Stage D - Talk to real hardware (hello metal)
 
@@ -871,7 +903,7 @@ Default plate stays MicroPython. Arduino is not this path (see issue #59). First
 - Do **not** notice GPIO / product face mismatch and skip asking the operator to clarify (honesty note or issue alone is not a clarify gate).
 - Do **not** invent short forms of lexicon terms (e.g. bare “face” for **product face**) in operator-facing prose.
 - Do **not** present stage forks as free-text `1. / 2. / 3.` menus in chat when a structured chooser exists (or `bedside ask` is available).
-- Do **not** invent a PR workflow on a quiet/simple GCU without asking — recommend **main** first (see **Repo workflow**). Do **not** open a fan-out of PRs for sequential first ship / same-session work unless the operator asked to stage multi-PR.
+- Do **not** invent a PR workflow on a quiet/simple GCU without asking — recommend **main** first (see **Repo workflow**). Do **not** invent a PR path on **tig/xuss**, **tig/xuss-c**, or **tig/xuss-lame** (always main; check clean start first). Do **not** open a fan-out of PRs for sequential first ship / same-session work unless the operator asked to stage multi-PR.
 - Do **not** deploy, soft-reset, or otherwise drive metal that may play loud/long audio, flash bright patterns, or move actuators without a clear operator-facing forewarning of what will happen and for how long.
 - Do **not** claim metal serial OK from identity/telem TX alone, or enable `kbd_intr(-1)` before round-trip + working `repl` re-entry (see serial readiness ladder; #62).
 - Do **not** thrash full-erase/redeploy when the console is locked; recover once, park stock MP, stop.

@@ -172,7 +172,27 @@ def probe_serial_identity(
         ser.open()
         _hold_deasserted(ser)
     except Exception as e:  # noqa: BLE001
-        return SerialIdentityResult(False, [f"FAIL: open {port}: {e}"])
+        msg = str(e).lower()
+        lines = [f"FAIL: open {port}: {e}"]
+        if any(
+            x in msg
+            for x in (
+                "access is denied",
+                "permission denied",
+                "busy",
+                "resource busy",
+                "in use",
+                "could not open port",
+                "errno 16",
+                "errno 13",
+            )
+        ):
+            lines.append(
+                "HINT: port may be held by another process (silico monitor, serial "
+                "console, IDE). Stop the other reader, then re-run inspect/verify "
+                "(tig/silico#84)."
+            )
+        return SerialIdentityResult(False, lines)
 
     raw_all = bytearray()
     last_raw = b""
@@ -213,7 +233,7 @@ def probe_serial_identity(
             lines.append(f"Captured {len(raw)} bytes @ {baud}")
             if raw:
                 preview = raw[:160]
-                lines.append(f"  raw: {preview!r}{'…' if len(raw) > 160 else ''}")
+                lines.append(f"  raw: {preview!r}{'...' if len(raw) > 160 else ''}")
 
             got = _identity_in_raw(raw)
             if got is None:

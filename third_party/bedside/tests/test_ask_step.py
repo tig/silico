@@ -28,7 +28,8 @@ def test_ask_recommended_exit_zero():
     assert "bedside.ask id=confirm-deploy" in joined
 
 
-def test_ask_non_recommended_exit_human_needed():
+def test_ask_scary_yes_on_default_no_is_ok_not_decline():
+    """tig/silico#84: explicit non-default yes must not be exit 10."""
     r = run_ask(
         gate_id="confirm-deploy",
         prompt="Deploy to production now?",
@@ -36,8 +37,11 @@ def test_ask_non_recommended_exit_human_needed():
         default="no",
         answer="yes",
     )
-    assert r.exit_code == HUMAN_NEEDED
-    assert "matched_recommended: false" in "\n".join(r.messages)
+    assert r.exit_code == OK
+    joined = "\n".join(r.messages)
+    assert "matched_recommended: false" in joined
+    assert "Selected: yes" in joined
+    assert "valid human selection" in joined.lower() or "Not the recommended path" in joined
 
 
 def test_ask_index_and_case():
@@ -48,7 +52,7 @@ def test_ask_index_and_case():
         default="continue",
         answer="2",
     )
-    assert r.exit_code == HUMAN_NEEDED
+    assert r.exit_code == OK  # valid alternate fork
     assert "Selected: pause" in "\n".join(r.messages)
 
     r2 = run_ask(

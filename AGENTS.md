@@ -273,7 +273,17 @@ bedside ask --id confirm-deploy --prompt "Overwrite device firmware on COM9 now?
 bedside step --id plug-usb --prompt "Plug a data USB cable into the board." --expect "Board power LED on or new COM in wait-device."
 ```
 
-Exit codes (agents): **0** recommended path / step confirmed; **10** declined, other choice, or human still needed; **30** setup error.
+Exit codes (agents) for **`bedside ask`** (vendored bedside after #84):
+
+| Exit | Meaning |
+|------|---------|
+| **0** | Human selected a **valid choice** (recommended **or** explicit non-default, including scary **yes** when default is **no**). Read `choice=` / `matched_recommended` / JSON. |
+| **10** | Human **still needed** (no answer, non-TTY without `--answer`, empty input) **or** step declined. |
+| **30** | Setup error (bad flags). |
+
+**Do not** treat exit 0 + `matched_recommended=false` as “declined.” That is an **explicit** alternate fork (e.g. confirm-deploy default no → operator yes). Halt writes when **choice is the safe decline** for that gate (usually `no` / `adjust` where that means stop), not merely because the choice was not recommended.
+
+For **`bedside step`**: **0** confirmed; **10** declined / still needed.
 
 #### Gate prompt shape (short — no essay inside the chooser)
 
@@ -285,14 +295,15 @@ The **why + where** map belongs in the **chat turn before** the gate (Big steps)
 | Recommended choice first | Multi-paragraph status + the chooser at the bottom |
 | Default that matches bedside (e.g. confirm-board default **no**) | Hiding the scary act inside a long monologue |
 
-#### Decline / exit 10 = halt writes (hard rule)
+#### Decline / halt writes (hard rule)
 
-When the operator **declines**, picks **adjust** / non-recommended, or the gate returns **exit 10** (or the host picker equivalent):
+When the operator **declines** (choice is the safe stop for that gate — often `no`), picks **adjust** meaning “stop/change” for start-first-ship, or the gate returns **exit 10** (human still needed / step declined) (or the host picker equivalent):
 
 1. **Stop mutating** for that gated act: no further scaffold overwrite, commit, push, deploy, first-flash, or “full first-ship status” monologue as if you were still green.
 2. **One short reply:** acknowledge the decline in plain language; offer **one** next gate (adjust path) **or** stop cleanly. Do not invent “continue with best judgment” past a no.
 3. **Do not** commit + push + open PR + summarize the whole first-ship map while a board/start/deploy gate is declined or still open.
 4. Host product nudges (“continue with best judgment”) **never** override an explicit operator **no** on a bedside-shaped gate.
+5. **Scary yes is go:** if confirm-deploy default is `no` and the operator selects **yes**, exit is **0** with `matched_recommended=false` — **proceed** with deploy (that is the point of the gate).
 
 Nothing in this file licenses: *system said declined → I still committed, pushed, and monologued.*
 
@@ -402,7 +413,27 @@ This is the same honesty bar as xuss-lame anti-cheat, generalized: a user who ab
 
 **Board still shows a full product face while HEAD is thin (docs/plate only):** that is almost always **stale flash** from an earlier image — not proof that “the code is already here.” Flash **this** build after you implement in **this** tree; then confirm product face against **this** deploy. Do not invent a story that history was “integrated” without the operator asking to continue that attempt.
 
-**Continue a prior attempt (explicit only):** the operator must clearly say something like *continue last attempt*, *use branch X*, *not a clean start*, or *keep the work already on main*. Then that line of history is in scope. **Silent** cherry-pick / replay / “mostly from a previous attempt” is never OK.
+**Continue a prior attempt (explicit only):** the operator must clearly say something like *continue last attempt*, *use branch X*, *not a clean start*, or *keep the work already on main* — or pick **`reuse-prior-attempt`** on the structured gate below. Then that line of history is in scope. **Silent** cherry-pick / replay / “mostly from a previous attempt” is never OK.
+
+**When you discover prior product implementation** (old commits, tags, PRs, other worktrees with face/firmware):
+
+```text
+bedside ask --id prior-attempt \
+  --prompt "Build fresh from current HEAD, or reuse a prior attempt?" \
+  --choices build-fresh-from-current-checkout,reuse-prior-attempt \
+  --default build-fresh-from-current-checkout
+```
+
+Recommended path only for evaluation/clean start. If reuse: final claims **must** say implementation was imported/replayed; do not call that a pure first-ship proof.
+
+**Session provenance (first-class):** at Stage B/C before first mutating ship work on a harness run:
+
+```text
+silico session start --mode evaluation --agent codex   # or claude / grok
+silico session show   # start_commit + reset recipe
+```
+
+Writes gitignored `.silico/session.toml`. Use the reset recipe only after operator go when unwinding a failed eval. Stage/final summaries: **authored-this-session** vs **imported**.
 
 **What “done” still means:** host gate + metal acceptance for **this** HEAD. Claiming first ship complete after replaying old commits and re-flashing them is a forbidden close (layered lying).
 
@@ -470,6 +501,31 @@ Also called **[compound](specs/lexicon.md#compound)** (lexicon name for this ten
 5. **Do not invent a parallel spine** in the GCU to avoid filing upstream.
 
 Leaving tribal recovery in chat only violates **Make it better than you found it** / fails to **compound**.
+
+### Stage review (default at boundaries)
+
+At **stage boundaries** (C host green, D metal claim, E CI claim, first-ship exit) — not only when the operator types `/code-review` — run a multi-lens review (skill if available; else structured self-check):
+
+1. **Bedside / gates** — free-text cliff? essay in chooser? same-turn 0a+0b?
+2. **Host honesty** — gate/product-path green? CI scope honest?
+3. **Metal honesty** — product face vs version string? surprising effects announced? provenance clean?
+4. **Simplify** — overbuilt fork of plate?
+5. **Compound** — friction left only in chat?
+
+### PR review feedback loop (when you own a PR)
+
+When an open PR you opened (or the operator names) has review comments:
+
+1. Collect comments (`gh api` / `gh pr view` / review threads).
+2. Fix **test-first** where possible.
+3. **Reply on each thread** with the resolution.
+4. Watch CI + merge conflicts until green (or operator halt).
+
+Do not leave bot/human CR sitting while claiming merge-ready.
+
+### Mac / Codex host path
+
+Open [silico/knowledge/macos-codex-esp-idf.md](silico/knowledge/macos-codex-esp-idf.md) when using ESP-IDF under Codex on macOS (PowerShell vs bash, `IDF_PYTHON_ENV_PATH`). Prefer `silico doctor` / `silico env --print`. Do not run serial monitor and inspect/verify on the same port in parallel.
 
 ## Getting started for agents (first ship)
 
@@ -1039,8 +1095,10 @@ silico welcome          # REQUIRED Stage 0a FIRST (paste to chat, then start gat
 # bedside ask --id confirm-board --prompt "Is COMx the product board?" --choices yes,no --default no
 # bedside ask --id confirm-deploy --prompt "Overwrite firmware on COMx now?" --choices yes,no --default no
 # bedside step --id plug-usb --prompt "Plug a data USB cable." --expect "Board shows power / new COM."
-# exit 10 / decline → halt writes; do not monologue past no
+# ask exit 0 = any valid choice (check choice=); exit 10 = still needed / step decline — not "scary yes"
 # missing pin after go → plate bedside.toml / sibling vendor; never invent prose path
+silico session start --mode evaluation --agent codex   # provenance; gitignored .silico/session.toml
+silico session show
 silico doctor
 silico wait-device
 silico scaffold .
@@ -1051,6 +1109,7 @@ silico inspect --port COMx
 silico deploy --port COMx
 # AFTER bedside ask (or equivalent) confirms identity + write:
 # live PROGRESS [write] i/n name (size) lines stream as each file copies
+# --yes plan must NOT say "Refusing to write without --yes"
 silico deploy --port COMx --yes --verify
 # first-flash MicroPython once (esptool progress streams; or UF2 with --uf2-dest):
 # silico first-flash ESP32_GENERIC-….bin --port COMx --yes

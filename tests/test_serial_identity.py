@@ -217,3 +217,25 @@ def test_listen_with_knock_retries_reknocks_until_identity(monkeypatch):
     assert b"fw_name=XUSSC" in raw
     assert n >= 3
     assert knocks["n"] >= 3
+
+
+def test_open_port_busy_hint(monkeypatch):
+    class _Busy:
+        def __init__(self):
+            self.port = None
+            self.baudrate = 0
+            self.timeout = 0
+            self.write_timeout = 0
+            self.dtr = False
+            self.rts = False
+
+        def open(self):
+            raise OSError("Access is denied.")
+
+    class _SerialMod:
+        Serial = staticmethod(lambda: _Busy())
+
+    monkeypatch.setitem(__import__("sys").modules, "serial", _SerialMod)
+    r = probe_serial_identity("COM7", listen_s=0.01)
+    assert not r.ok
+    assert any("port may be held" in ln.lower() or "HINT" in ln for ln in r.lines)

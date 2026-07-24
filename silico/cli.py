@@ -25,6 +25,7 @@ from silico.welcome import run_welcome
 from silico.product_path import run_product_path_check
 from silico.pull_device import pull_device
 from silico.scaffold import scaffold
+from silico.session import show_session, start_session
 from silico.wait_device import TIMEOUT_SOP, format_port_snapshot, wait_for_board
 
 
@@ -295,6 +296,24 @@ def cmd_version(_args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_session(args: argparse.Namespace) -> int:
+    """First-ship provenance: record start commit / show session (tig/silico#84)."""
+    action = getattr(args, "session_action", None)
+    if action == "start":
+        report = start_session(
+            mode=getattr(args, "mode", None) or "evaluation",
+            agent=getattr(args, "agent", None) or "",
+            workflow=getattr(args, "workflow", None) or "main",
+        )
+    elif action == "show" or action is None:
+        report = show_session()
+    else:
+        _out(f"FAIL: unknown session action {action!r} (use start|show)")
+        return 1
+    _print_lines(report.lines)
+    return 0 if report.ok else 1
+
+
 def build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(
         prog="silico",
@@ -341,6 +360,32 @@ def build_parser() -> argparse.ArgumentParser:
         help="Stage 0a first ship orientation skeleton (before start gate); read-only",
     )
     wel.set_defaults(func=cmd_welcome)
+
+    sess = sub.add_parser(
+        "session",
+        help="first-ship provenance: record start commit / show reset recipe (#84)",
+    )
+    sess_sub = sess.add_subparsers(dest="session_action")
+    sess_start = sess_sub.add_parser("start", help="write .silico/session.toml at cwd")
+    sess_start.add_argument(
+        "--mode",
+        choices=("evaluation", "product-update"),
+        default="evaluation",
+        help="evaluation (harness) vs real product update (default: evaluation)",
+    )
+    sess_start.add_argument(
+        "--workflow",
+        choices=("main", "branch"),
+        default="main",
+        help="commit target; practice GCUs should stay main (default: main)",
+    )
+    sess_start.add_argument(
+        "--agent",
+        default="",
+        help="agent host label (codex, claude, grok, …)",
+    )
+    sess_sub.add_parser("show", help="print current session + reset recipe")
+    sess.set_defaults(func=cmd_session)
 
     g = sub.add_parser(
         "gate",

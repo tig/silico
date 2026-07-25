@@ -265,3 +265,29 @@ def test_env_print_bash_sources_export_sh(tmp_path: Path, monkeypatch):
     joined = "\n".join(lines)
     assert f'export IDF_PATH="{idf}"' in joined
     assert "export.sh" in joined
+
+def test_python_env_prefers_newest_python_not_lexicographic(tmp_path: Path):
+    # Review finding (PR #88): sorted() is lexicographic, so py3.9 sorts
+    # AFTER py3.12 and used to win. This is the exact macOS failure mode:
+    # a bad system-3.9 env installed first, then a good 3.12 reinstall.
+    from silico.c_toolchain import _python_env_for
+
+    espressif = tmp_path / ".espressif"
+    for name in ("idf5.3_py3.9_env", "idf5.3_py3.12_env"):
+        b = espressif / "python_env" / name / "bin"
+        b.mkdir(parents=True)
+        (b / "python").write_text("", encoding="utf-8")
+    assert "py3.12" in _python_env_for(espressif, "5.3")
+
+
+def test_python_env_fallback_prefers_newest_idf(tmp_path: Path):
+    from silico.c_toolchain import _python_env_for
+
+    espressif = tmp_path / ".espressif"
+    for name in ("idf5.9_py3.12_env", "idf5.10_py3.12_env"):
+        b = espressif / "python_env" / name / "bin"
+        b.mkdir(parents=True)
+        (b / "python").write_text("", encoding="utf-8")
+    # No env matches version 6.0 -> fall back to the newest IDF env, which
+    # is 5.10 (numeric), not 5.9 (lexicographic winner).
+    assert "idf5.10_" in _python_env_for(espressif, "6.0")

@@ -19,6 +19,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 import shutil
 import sys
 from dataclasses import dataclass, field
@@ -193,6 +194,16 @@ def find_idf_env_json(
     return None
 
 
+def _env_dir_key(name: str) -> tuple:
+    """Numeric sort key for idf_tools python_env dir names.
+
+    Lexicographic order inverts versions (py3.9 > py3.12, idf5.9 > idf5.10);
+    compare every digit run as an integer instead.
+    """
+    parts = re.split(r"(\d+)", name)
+    return tuple(int(p) if p.isdigit() else p for p in parts)
+
+
 def _python_env_for(espressif_root: Path | None, version: str) -> str:
     """Best python under <root>/python_env for an IDF *version* (e.g. '5.3')."""
     if espressif_root is None:
@@ -202,7 +213,7 @@ def _python_env_for(espressif_root: Path | None, version: str) -> str:
         return ""
     exact: list[Path] = []
     other: list[Path] = []
-    for d in sorted(env_root.iterdir()):
+    for d in sorted(env_root.iterdir(), key=lambda p: _env_dir_key(p.name)):
         if not d.is_dir():
             continue
         py = d / "bin" / "python"
@@ -214,7 +225,9 @@ def _python_env_for(espressif_root: Path | None, version: str) -> str:
             exact.append(py)
         else:
             other.append(py)
-    # Prefer an env matching the install's version; latest name wins either way.
+    # Prefer an env matching the install's version; newest (numeric) wins
+    # either way — a stale py3.9 env from a bad first install must not
+    # shadow the good py3.12 reinstall (PR #88 review).
     if exact:
         return str(exact[-1])
     if other:

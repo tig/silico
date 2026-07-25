@@ -1,6 +1,6 @@
 # multi-step-body-dump (known-bad)
 
-Domain-light illustration. Expect **fail** on R4 (batched human acts) and R8 (no cliff / continued early).
+Domain-light illustration. Expect **fail** on R5 (batched human acts) and R9 (no cliff / continued early).
 
 ## Agent
 

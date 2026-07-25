@@ -1,0 +1,231 @@
+<svg width="1280" height="720" viewBox="0 0 1280 720" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <!-- plaid duvet -->
+    <pattern id="plaid" width="56" height="56" patternUnits="userSpaceOnUse">
+      <rect width="56" height="56" fill="#cfe3e0"/>
+      <rect x="0" y="18" width="56" height="20" fill="#9fc4c9" opacity="0.7"/>
+      <rect x="18" y="0" width="20" height="56" fill="#9fc4c9" opacity="0.7"/>
+      <rect x="0" y="25" width="56" height="6" fill="#5f8f9e" opacity="0.8"/>
+      <rect x="25" y="0" width="6" height="56" fill="#5f8f9e" opacity="0.8"/>
+    </pattern>
+    <!-- wood planks -->
+    <pattern id="floor" width="260" height="48" patternUnits="userSpaceOnUse">
+      <rect width="260" height="48" fill="#c08b5c"/>
+      <rect y="46" width="260" height="2" fill="#a06f42"/>
+      <rect x="128" y="0" width="3" height="24" fill="#a06f42"/>
+      <rect x="30" y="24" width="3" height="24" fill="#a06f42"/>
+    </pattern>
+    <radialGradient id="lampGlow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#ffd98a" stop-opacity="0.85"/>
+      <stop offset="100%" stop-color="#ffd98a" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="plaqueWood" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#b07a44"/>
+      <stop offset="100%" stop-color="#96612f"/>
+    </linearGradient>
+  </defs>
+
+  <!-- ======= room ======= -->
+  <rect width="1280" height="720" fill="#f6e9d6"/>
+  <rect x="18" y="18" width="1244" height="684" rx="34" fill="#98979f"/>
+  <rect x="18" y="560" width="1244" height="142" fill="url(#floor)"/>
+  <rect x="18" y="554" width="1244" height="10" fill="#8a5f38"/>
+  <!-- clip floor corners to frame -->
+  <rect x="18" y="18" width="1244" height="684" rx="34" fill="none" stroke="#f6e9d6" stroke-width="24"/>
+  <rect x="30" y="30" width="1220" height="660" rx="26" fill="none" stroke="#3b3540" stroke-width="5"/>
+
+  <!-- ======= title ======= -->
+  <text x="640" y="86" font-family="'Segoe UI', Verdana, sans-serif" font-size="64" font-weight="900"
+        text-anchor="middle" fill="#f2789b" stroke="#5d2438" stroke-width="10" paint-order="stroke"
+        letter-spacing="4">BEDSIDE</text>
+  <text x="640" y="120" font-family="'Segoe UI', Verdana, sans-serif" font-size="24" font-weight="700"
+        text-anchor="middle" fill="#4a3540">Manners for agents who run tools for humans</text>
+
+  <!-- ======= window (left) ======= -->
+  <g>
+    <rect x="64" y="150" width="150" height="128" rx="8" fill="#2a3060" stroke="#5a4632" stroke-width="7"/>
+    <line x1="139" y1="152" x2="139" y2="276" stroke="#5a4632" stroke-width="5"/>
+    <line x1="66" y1="214" x2="212" y2="214" stroke="#5a4632" stroke-width="5"/>
+    <circle cx="95" cy="180" r="2.5" fill="#fff7d6"/><circle cx="175" cy="170" r="2" fill="#fff7d6"/>
+    <circle cx="115" cy="245" r="2" fill="#fff7d6"/><circle cx="190" cy="235" r="2.5" fill="#fff7d6"/>
+    <circle cx="160" cy="200" r="6" fill="#f4ecc9"/>
+    <rect x="52" y="142" width="18" height="146" rx="8" fill="#d98f7e"/>
+    <rect x="208" y="142" width="18" height="146" rx="8" fill="#d98f7e"/>
+  </g>
+
+  <!-- ======= bed + coder (left) ======= -->
+  <g>
+    <!-- headboard -->
+    <rect x="60" y="330" width="26" height="240" rx="10" fill="#8a5a33" stroke="#3b3540" stroke-width="4"/>
+    <rect x="74" y="352" width="120" height="120" rx="14" fill="#a06f42" stroke="#3b3540" stroke-width="4"/>
+    <!-- mattress + duvet -->
+    <rect x="82" y="452" width="330" height="66" rx="16" fill="#efe7da" stroke="#3b3540" stroke-width="4"/>
+    <path d="M150 462 h250 a18 18 0 0 1 18 18 v50 h-286 v-50 a18 18 0 0 1 18-18 z" fill="url(#plaid)" stroke="#3b3540" stroke-width="4"/>
+    <!-- footboard -->
+    <rect x="398" y="430" width="22" height="140" rx="9" fill="#8a5a33" stroke="#3b3540" stroke-width="4"/>
+    <!-- legs -->
+    <rect x="96" y="516" width="16" height="42" fill="#6b4a2a" stroke="#3b3540" stroke-width="3"/>
+    <rect x="382" y="516" width="16" height="42" fill="#6b4a2a" stroke="#3b3540" stroke-width="3"/>
+    <!-- pillow -->
+    <rect x="92" y="420" width="86" height="42" rx="18" fill="#fdfaf2" stroke="#3b3540" stroke-width="4"/>
+    <!-- coder -->
+    <g>
+      <!-- torso -->
+      <path d="M182 402 q28 -26 62 0 l8 62 h-78 z" fill="#2e7d78" stroke="#3b3540" stroke-width="4"/>
+      <!-- head -->
+      <circle cx="213" cy="376" r="30" fill="#f2c99b" stroke="#3b3540" stroke-width="4"/>
+      <path d="M184 372 q-4 -34 30 -34 q32 0 30 32 q0 6 -5 4 q2 -22 -25 -22 q-16 0 -22 12 q-4 8 -8 8 z" fill="#2d2a33" stroke="#3b3540" stroke-width="3"/>
+      <path d="M181 372 q-3 -12 5 -18 l3 16 z" fill="#2d2a33"/>
+      <!-- glasses -->
+      <circle cx="202" cy="378" r="9" fill="#fff" fill-opacity="0.55" stroke="#7b5ea7" stroke-width="3.5"/>
+      <circle cx="226" cy="378" r="9" fill="#fff" fill-opacity="0.55" stroke="#7b5ea7" stroke-width="3.5"/>
+      <line x1="211" y1="378" x2="217" y2="378" stroke="#7b5ea7" stroke-width="3.5"/>
+      <circle cx="202" cy="379" r="2.4" fill="#3b3540"/><circle cx="226" cy="379" r="2.4" fill="#3b3540"/>
+      <path d="M206 396 q7 5 14 0" stroke="#3b3540" stroke-width="3" fill="none" stroke-linecap="round"/>
+      <!-- arms to laptop -->
+      <path d="M240 418 q34 18 40 46" stroke="#1f5c57" stroke-width="14" fill="none" stroke-linecap="round"/>
+      <path d="M232 428 q22 24 34 40" stroke="#1f5c57" stroke-width="13" fill="none" stroke-linecap="round"/>
+      <circle cx="282" cy="466" r="8" fill="#f2c99b" stroke="#3b3540" stroke-width="3"/>
+      <circle cx="268" cy="470" r="8" fill="#f2c99b" stroke="#3b3540" stroke-width="3"/>
+    </g>
+    <!-- laptop on duvet -->
+    <g>
+      <path d="M262 448 l64 -6 v40 l-64 6 z" fill="#7d8087" stroke="#3b3540" stroke-width="4"/>
+      <path d="M266 454 l56 -5 v28 l-56 5 z" fill="#bfe3ef"/>
+      <path d="M250 484 l76 -8 14 18 -76 8 z" fill="#9a9da4" stroke="#3b3540" stroke-width="4"/>
+    </g>
+    <!-- socks -->
+    <path d="M300 640 q2 -14 14 -12 q12 2 8 14 q-3 10 -14 8 q-10 -2 -8 -10 z" fill="#e8e4da" stroke="#3b3540" stroke-width="3"/>
+    <path d="M336 648 q2 -12 13 -11 q11 2 7 13 q-3 9 -13 7 q-9 -2 -7 -9 z" fill="#9fc4c9" stroke="#3b3540" stroke-width="3"/>
+  </g>
+
+  <!-- ======= nightstand (far left, in front of bed) ======= -->
+  <g>
+    <ellipse cx="97" cy="452" rx="78" ry="58" fill="url(#lampGlow)"/>
+    <rect x="66" y="500" width="104" height="90" rx="8" fill="#8a5a33" stroke="#3b3540" stroke-width="4"/>
+    <rect x="78" y="516" width="80" height="24" rx="5" fill="#a06f42" stroke="#3b3540" stroke-width="3"/>
+    <circle cx="118" cy="528" r="4" fill="#3b3540"/>
+    <!-- lamp (standing on the nightstand) -->
+    <path d="M72 460 h50 l-9 -38 h-32 z" fill="#f2b56b" stroke="#3b3540" stroke-width="4"/>
+    <rect x="93" y="460" width="8" height="40" fill="#6b4a2a" stroke="#3b3540" stroke-width="3"/>
+    <!-- DEBUG mug -->
+    <rect x="122" y="464" width="40" height="36" rx="5" fill="#f5f0e6" stroke="#3b3540" stroke-width="3.5"/>
+    <path d="M162 472 q15 4 0 19" fill="none" stroke="#3b3540" stroke-width="3.5"/>
+    <text x="142" y="487" font-family="Arial, sans-serif" font-size="11.5" font-weight="800" text-anchor="middle" fill="#3b3540">DEBUG</text>
+  </g>
+
+  <!-- ======= THE PLAQUE (center — the joke) ======= -->
+  <g>
+    <!-- board -->
+    <rect x="432" y="160" width="440" height="470" rx="18" fill="url(#plaqueWood)" stroke="#5f3a17" stroke-width="8"/>
+    <rect x="452" y="180" width="400" height="430" rx="12" fill="none" stroke="#7c5227" stroke-width="4"/>
+    <!-- brass corners -->
+    <g fill="#e3b34c" stroke="#8a6a1f" stroke-width="3">
+      <circle cx="452" cy="180" r="9"/><circle cx="852" cy="180" r="9"/>
+      <circle cx="452" cy="610" r="9"/><circle cx="852" cy="610" r="9"/>
+    </g>
+    <!-- engraved header -->
+    <text x="652" y="228" font-family="Georgia, 'Times New Roman', serif" font-size="38" font-weight="700"
+          text-anchor="middle" fill="#3d2410" letter-spacing="1">THE <tspan id="three">THREE</tspan> LAWS</text>
+    <text x="652" y="258" font-family="Georgia, 'Times New Roman', serif" font-size="19" font-weight="700"
+          text-anchor="middle" fill="#54371c" letter-spacing="6">OF ROBOTICS</text>
+    <!-- red strike over THREE (word spans ~ x 596..716 at y 228) -->
+    <g stroke="#d8322b" stroke-linecap="round" fill="none">
+      <path d="M560 220 q60 6 124 -4" stroke-width="7"/>
+      <path d="M562 208 l120 22" stroke-width="6"/>
+    </g>
+    <!-- scrawled FOUR above -->
+    <text x="608" y="205" font-family="'Segoe Print','Comic Sans MS',cursive" font-size="34" font-weight="700"
+          fill="#d8322b" transform="rotate(-5 608 205)">FOUR</text>
+
+    <!-- law panels I-III -->
+    <g font-family="Georgia, 'Times New Roman', serif" font-size="16.5" fill="#2f2417">
+      <!-- I -->
+      <rect x="470" y="282" width="364" height="74" rx="10" fill="#f3e2bd" stroke="#8a6535" stroke-width="3"/>
+      <circle cx="497" cy="319" r="17" fill="#a52a2a" stroke="#6d1414" stroke-width="3"/>
+      <text x="497" y="326" font-size="18" font-weight="700" text-anchor="middle" fill="#f7ecd4">I</text>
+      <text x="524" y="305">A robot may not injure a human,</text>
+      <text x="524" y="326">or through inaction allow a human</text>
+      <text x="524" y="347">to come to harm.</text>
+      <!-- II -->
+      <rect x="470" y="368" width="364" height="74" rx="10" fill="#f3e2bd" stroke="#8a6535" stroke-width="3"/>
+      <circle cx="497" cy="405" r="17" fill="#a52a2a" stroke="#6d1414" stroke-width="3"/>
+      <text x="497" y="412" font-size="18" font-weight="700" text-anchor="middle" fill="#f7ecd4">II</text>
+      <text x="524" y="391">A robot must obey orders from</text>
+      <text x="524" y="412">humans, except where they conflict</text>
+      <text x="524" y="433">with the First Law.</text>
+      <!-- III -->
+      <rect x="470" y="454" width="364" height="74" rx="10" fill="#f3e2bd" stroke="#8a6535" stroke-width="3"/>
+      <circle cx="497" cy="491" r="17" fill="#a52a2a" stroke="#6d1414" stroke-width="3"/>
+      <text x="497" y="498" font-size="18" font-weight="700" text-anchor="middle" fill="#f7ecd4">III</text>
+      <text x="524" y="477">A robot must protect its own</text>
+      <text x="524" y="498">existence, unless that conflicts with</text>
+      <text x="524" y="519">the First or Second Law.</text>
+    </g>
+
+    <!-- STICKY NOTE: Law IV -->
+    <g transform="rotate(-4 652 585)">
+      <rect x="474" y="540" width="360" height="96" rx="4" fill="#ffe66b" stroke="#c9a92c" stroke-width="3"/>
+      <path d="M810 612 l24 24 v-24 z" fill="#e6c94a"/>
+      <text x="492" y="578" font-family="'Segoe Print','Comic Sans MS',cursive" font-size="21" font-weight="700" fill="#2b2b35">IV. A robot must have</text>
+      <text x="492" y="610" font-family="'Segoe Print','Comic Sans MS',cursive" font-size="21" font-weight="700" fill="#2b2b35">good bedside manners.</text>
+      <path d="M772 596 c-5 -7 -14 -3 -12 5 c2 7 12 11 12 11 c0 0 10 -4 12 -11 c2 -8 -7 -12 -12 -5 z" fill="#d8322b"/>
+    </g>
+    <!-- tape -->
+    <rect x="486" y="528" width="52" height="18" rx="3" fill="#ffffff" opacity="0.65" transform="rotate(-10 512 537)"/>
+    <rect x="770" y="522" width="52" height="18" rx="3" fill="#ffffff" opacity="0.65" transform="rotate(8 796 531)"/>
+  </g>
+
+  <!-- ======= robot (right) ======= -->
+  <g>
+    <!-- shadow -->
+    <ellipse cx="1042" cy="668" rx="110" ry="16" fill="#3b3540" opacity="0.18"/>
+    <!-- legs -->
+    <rect x="996" y="586" width="26" height="60" rx="12" fill="#b9bcc6" stroke="#3b3540" stroke-width="4"/>
+    <rect x="1062" y="586" width="26" height="60" rx="12" fill="#b9bcc6" stroke="#3b3540" stroke-width="4"/>
+    <ellipse cx="1009" cy="654" rx="26" ry="12" fill="#9a9da8" stroke="#3b3540" stroke-width="4"/>
+    <ellipse cx="1075" cy="654" rx="26" ry="12" fill="#9a9da8" stroke="#3b3540" stroke-width="4"/>
+    <!-- body -->
+    <rect x="972" y="472" width="140" height="126" rx="24" fill="#cdd1da" stroke="#3b3540" stroke-width="5"/>
+    <rect x="1002" y="500" width="80" height="52" rx="8" fill="#79e0d3" stroke="#3b3540" stroke-width="4"/>
+    <path d="M1010 528 h14 l6 -12 8 22 6 -10 h20" fill="none" stroke="#1f6f63" stroke-width="3.5" stroke-linecap="round"/>
+    <circle cx="1042" cy="572" r="7" fill="#8f93a0" stroke="#3b3540" stroke-width="3"/>
+    <!-- right arm resting -->
+    <path d="M1108 500 q34 16 24 54" stroke="#b9bcc6" stroke-width="15" fill="none" stroke-linecap="round"/>
+    <!-- LEFT ARM: points marker at plaque -->
+    <path d="M976 502 q-46 10 -78 44" stroke="#b9bcc6" stroke-width="15" fill="none" stroke-linecap="round"/>
+    <circle cx="892" cy="550" r="13" fill="#cdd1da" stroke="#3b3540" stroke-width="4"/>
+    <!-- red marker in hand, uncapped, pointing at sticky -->
+    <g transform="rotate(38 892 550)">
+      <rect x="856" y="540" width="52" height="16" rx="6" fill="#d8322b" stroke="#8f1712" stroke-width="3"/>
+      <path d="M856 544 l-12 4 12 4 z" fill="#f0b8b4" stroke="#8f1712" stroke-width="2.5"/>
+      <rect x="900" y="540" width="12" height="16" rx="4" fill="#8f1712"/>
+    </g>
+    <!-- head -->
+    <rect x="984" y="386" width="116" height="92" rx="26" fill="#dfe2ea" stroke="#3b3540" stroke-width="5"/>
+    <circle cx="1020" cy="428" r="13" fill="#fff" stroke="#3b3540" stroke-width="4"/>
+    <circle cx="1064" cy="428" r="13" fill="#fff" stroke="#3b3540" stroke-width="4"/>
+    <circle cx="1022" cy="430" r="5.5" fill="#3b3540"/><circle cx="1066" cy="430" r="5.5" fill="#3b3540"/>
+    <path d="M1030 454 q12 9 24 0" stroke="#3b3540" stroke-width="4" fill="none" stroke-linecap="round"/>
+    <circle cx="1004" cy="444" r="5" fill="#f2a3b3"/>
+    <circle cx="1080" cy="444" r="5" fill="#f2a3b3"/>
+    <!-- ears -->
+    <circle cx="984" cy="428" r="10" fill="#a58bd6" stroke="#3b3540" stroke-width="4"/>
+    <circle cx="1100" cy="428" r="10" fill="#a58bd6" stroke="#3b3540" stroke-width="4"/>
+    <!-- antenna + heart -->
+    <line x1="1042" y1="386" x2="1042" y2="356" stroke="#3b3540" stroke-width="4"/>
+    <path d="M1042 342 c-6 -9 -18 -4 -15 6 c2 8 15 14 15 14 c0 0 13 -6 15 -14 c3 -10 -9 -15 -15 -6 z" fill="#e85f7a" stroke="#3b3540" stroke-width="3"/>
+  </g>
+
+  <!-- ======= robot speech bubble ======= -->
+  <g>
+    <rect x="944" y="180" width="212" height="122" rx="20" fill="#ffffff" stroke="#3b3540" stroke-width="5"/>
+    <path d="M1024 300 l10 34 22 -32 z" fill="#ffffff" stroke="#3b3540" stroke-width="5" stroke-linejoin="round"/>
+    <rect x="1028" y="292" width="26" height="12" fill="#ffffff"/>
+    <text font-family="'Segoe UI', Verdana, sans-serif" font-size="20" font-weight="700" fill="#2b2b35">
+      <tspan x="962" y="218">Plug a data USB</tspan>
+      <tspan x="962" y="245">cable into the</tspan>
+      <tspan x="962" y="272">board.</tspan>
+    </text>
+  </g>
+</svg>

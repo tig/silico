@@ -1,6 +1,6 @@
 # BEDSIDE.md (GCU domain notes only)
 
-Portable manners (nine principles, ask/step) live in the Bedside **contract**
+Portable manners (eleven tenets, ask/step) live in the Bedside **contract**
 pinned by `bedside.toml`. Do not soft-fork them here.
 
 **Metal / host path for this product:** follow the Silico spine

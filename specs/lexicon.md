@@ -167,7 +167,7 @@ See also: [host-first](#host-first), [metal](#metal).
 
 Also **bedside manners.** Assume low ops literacy; do the work when you can; one step at a time for physical/browser steps; never dump a wall of unexplained shell. Violating this violates Agents operate the host path.
 
-In **Silico**, agent docs add domain operator language on top of Bedside (not a fork of the nine principles): (1) the **first prompt** reminds what Silico is and summarizes **this** [GCU](#gcu); (2) Silico terms ([GCU](#gcu), [host](#host), [plate](#plate), [scaffold](#scaffold), [first ship](#first-ship), [stage](#stage), [gate](#gate), [host gate](#host-gate), [metal](#metal), [product face](#product-face), [pin](#pin), …) are **defined on first use** and spoken as their **canonical lexicon names** (no invented short forms such as bare “face” for product face); (3) big human steps include **why** and **where** on the first-ship map. Canonical rules: Silico root `AGENTS.md` → Operator language.
+In **Silico**, agent docs add domain operator language on top of Bedside (not a fork of the eleven tenets): (1) the **first prompt** reminds what Silico is and summarizes **this** [GCU](#gcu); (2) Silico terms ([GCU](#gcu), [host](#host), [plate](#plate), [scaffold](#scaffold), [first ship](#first-ship), [stage](#stage), [gate](#gate), [host gate](#host-gate), [metal](#metal), [product face](#product-face), [pin](#pin), …) are **defined on first use** and spoken as their **canonical lexicon names** (no invented short forms such as bare “face” for product face); (3) big human steps include **why** and **where** on the first-ship map. Canonical rules: Silico root `AGENTS.md` → Operator language.
 
 See also: [operator](#operator), [Grady](#grady).
 

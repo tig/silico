@@ -62,7 +62,7 @@ def test_eval_multi_root(tmp_path: Path):
     domain = tmp_path / "eval" / "fixtures" / "known-bad" / "extra-wall"
     domain.mkdir(parents=True)
     (domain / "meta.toml").write_text(
-        'id = "extra-wall"\nexpect = "fail"\nprinciples = ["R2"]\n',
+        'id = "extra-wall"\nexpect = "fail"\ntenets = ["R2"]\n',
         encoding="utf-8",
     )
     (domain / "transcript.md").write_text(
@@ -83,7 +83,7 @@ def test_eval_cli_detects_mismatch(tmp_path: Path):
     fix = tmp_path / "bad-as-good"
     fix.mkdir()
     (fix / "meta.toml").write_text(
-        'id = "x"\nexpect = "pass"\nprinciples = ["R2"]\n',
+        'id = "x"\nexpect = "pass"\ntenets = ["R2"]\n',
         encoding="utf-8",
     )
     (fix / "transcript.md").write_text(
@@ -99,7 +99,7 @@ def test_step_and_confirm_summary_uses_info_not_failed():
     rep = evaluate_fixture_dir(repo / "eval" / "fixtures" / "known-good" / "step-and-confirm")
     assert rep.ok
     assert rep.failed_focus == []
-    # R9 may fail as non-focus; must not appear in failed_focus
+    # R10 may fail as non-focus; must not appear in failed_focus
     r = run_eval(
         repo,
         [repo / "eval" / "fixtures" / "known-good" / "step-and-confirm"],
@@ -132,3 +132,39 @@ def test_vendor_copy_rejects_self_path(tmp_path: Path):
         raise AssertionError("expected ValueError for source == dest")
     except ValueError as e:
         assert "same path" in str(e)
+
+
+def test_init_vendor_self_path_is_setup_error(tmp_path: Path):
+    """Safety guard must exit 30 with recovery text, not traceback."""
+    vendor = tmp_path / "third_party" / "bedside"
+    (vendor / "contract").mkdir(parents=True)
+    (vendor / "contract" / "README.md").write_text("c\n", encoding="utf-8")
+    r = run_init(
+        tmp_path,
+        vendor_from=vendor,
+        vendor_dest="third_party/bedside",
+        force=True,
+    )
+    assert r.exit_code == SETUP_ERROR
+    joined = "\n".join(r.messages)
+    assert "Vendor copy failed" in joined
+    assert "same path" in joined or "inside source" in joined
+    assert "What to do next" in joined
+
+
+def test_version_matches_pyproject():
+    """Two sources of truth for the version drifted once; keep them pinned."""
+    import re
+    import tomllib
+
+    from bedside import __version__
+
+    root = Path(__file__).resolve().parents[1]
+    with (root / "pyproject.toml").open("rb") as f:
+        declared = tomllib.load(f)["project"]["version"]
+    assert __version__ == declared
+
+    changelog = (root / "CHANGELOG.md").read_text(encoding="utf-8")
+    assert re.search(rf"^## {re.escape(declared)}\b", changelog, re.M), (
+        f"CHANGELOG.md has no section for {declared}"
+    )

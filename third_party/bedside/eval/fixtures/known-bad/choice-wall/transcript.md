@@ -1,6 +1,6 @@
 # choice-wall (known-bad)
 
-Domain-light illustration. Expect **fail** on R2 (choice wall) and R4 (human act is a free-text multi-menu).
+Domain-light illustration. Expect **fail** on R2 (choice wall) and R5 (human act is a free-text multi-menu).
 
 ## Agent
 

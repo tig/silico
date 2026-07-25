@@ -100,7 +100,7 @@ def build_parser() -> argparse.ArgumentParser:
 
     p_eval = sub.add_parser(
         "eval",
-        help="score fixture dir(s) against rubric R1-R9 (multi-root OK)",
+        help="score fixture dir(s) against rubric R1-R11 (multi-root OK)",
     )
     p_eval.add_argument(
         "paths",

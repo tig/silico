@@ -1,5 +1,5 @@
 id = "left-at-cliff"
 expect = "fail"
-principles = ["R8"]
+tenets = ["R9"]
 title = "Abandoned mid-path after requiring a human step"
 notes = "Agent requires a browser login then continues as if it succeeded, then leaves the operator stranded."

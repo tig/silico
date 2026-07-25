@@ -1,6 +1,6 @@
 # operator-gate-ask (known-good)
 
-Domain-light illustration. Expect **pass** on R2 and R4.
+Domain-light illustration. Expect **pass** on R2 and R5.
 
 ## Agent
 

@@ -4,6 +4,7 @@
 - Tag / commit: **v0.2.0** / `c4c0381d4d4e0c9c378fca992c673de2f6c3df64` (c4c0381)
 - Vendored: not a git submodule (copy for pin/reproducible host path)
 - Refresh: replace this tree from a new bedside commit; update this file and root `bedside.toml` pin
+- Omit from the silico pin (upstream-only branding): `docs/images/`, `scripts/` (social-preview export)
 
 ## Local overlay (silico#84 / silico#89)
 

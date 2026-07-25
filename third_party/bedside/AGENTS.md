@@ -8,8 +8,6 @@ Portable Bedside standard: `contract/`, `surface/`, `eval/`, plus a minimal Pyth
 
 Human index: [README.md](README.md). Writing style: follow Tig voice mechanics (no em-dashes, no horizontal rules, short paragraphs, Oxford commas, sentence-ended list items) when editing prose.
 
-Brand images: [docs/images/README.md](docs/images/README.md). Canonical `docs/images/hero.jpg` (README) and `docs/images/social-preview.jpg` (GitHub 1280×640). Export social with `python scripts/export_social_preview.py`.
-
 ## Help the operator (Bedside)
 
 We follow [Bedside](https://github.com/tig/bedside): manners for agents

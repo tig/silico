@@ -14,6 +14,8 @@ Touched after each re-vendor:
 - `src/bedside/commands/ask_cmd.py`
 - `src/bedside/exit_codes.py` (module docstring)
 - `tests/test_ask_step.py` (scary-yes / alternate-fork expectations)
+- Exit-code prose in `README.md`, `AGENTS.md`, `surface/README.md`, and
+  `eval/fixtures/known-good/operator-gate-ask/transcript.md` (keep docs matching the overlay)
 
 Root `bedside.toml` pin note: `silico-local-ask-explicit-yes-0`.
 

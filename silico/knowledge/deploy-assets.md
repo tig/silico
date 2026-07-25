@@ -19,3 +19,21 @@ Host notes for GCUs that ship **binary files** next to firmware (PCM riffs, font
 1. List required non-`.py` assets and expected byte sizes in the GCU (README or deploy notes).
 2. After deploy, verify each large asset size before operator audio acceptance.
 3. If you invent a more reliable upload path, extend **this file** or improve `silico deploy` — do not leave the recipe only in chat.
+
+## ESP-IDF path: SPIFFS partition (language=c)
+
+Under ESP-IDF there is no mpremote filesystem — ship multi-MB assets in a
+dedicated flash partition instead of embedding them in the app binary:
+
+1. Add a `storage` **SPIFFS** partition to `partitions.csv` sized for the
+   asset (a 16 MB flash module fits app + multi-MB audio comfortably;
+   confirm the module size before assuming >4 MB).
+2. `spiffs_create_partition_image(storage <dir> FLASH_IN_PROJECT)` in the
+   component CMake builds and flashes the image with `idf.py flash`.
+3. **Do not commit the generated binary asset.** Keep the *source* asset or
+   a regeneration script (e.g. `tools/make_song.sh` ffmpeg → raw u8 PCM) in
+   the repo, gitignore the output, and document “regenerate before first
+   build on a fresh checkout” in the GCU README.
+4. Firmware fails closed on missing/zero-length asset (rule 4 above) — a
+   fresh checkout that skipped regeneration must show a clear error, not
+   silence.

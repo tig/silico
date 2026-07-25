@@ -8,7 +8,7 @@ Related: [esp32-audio.md](esp32-audio.md), [esp32-lcd-ips.md](esp32-lcd-ips.md),
 
 | Surface | Candidate | Notes |
 |---------|-----------|--------|
-| Side status strip | GPIO **15** | Often NeoPixel bus; confirm LED count/order |
+| Side status strip | GPIO **15** | **SK6812** ×10 (5/side) on M5GO base; drive via **RMT** under ESP-IDF (`led_strip` component, GRB order) — bit-bang loops fight the flash cache. Updates during tight DAC loops couple amp noise; batch or pause strip refresh while streaming audio |
 | Speaker | GPIO **25** | DAC1 / amp; see esp32-audio |
 | IPS | **ILI9342C** on **SPI3** | SCLK **18**, MOSI **23**, CS **14**, DC **27**, RST **33**, BL **32** |
 | Display flags | invert **ON**, color **BGR** | Wrong flags → washed/inverted colors (see esp32-lcd-ips) |

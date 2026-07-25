@@ -69,7 +69,10 @@ static void drain_identity_command(void) {
       n = 0; /* overflow: drop */
     }
   }
-  /* Clear sticky errno from EAGAIN/EWOULDBLOCK after empty non-block read. */
+  /* Clear sticky stream state after empty non-blocking reads: EOF/error
+   * flags latch on FILE* and errno keeps EAGAIN. Without both resets the
+   * NEXT drain can see a phantom EOF and never read again (#87). */
+  clearerr(stdin);
   if (errno == EAGAIN || errno == EWOULDBLOCK) {
     errno = 0;
   }

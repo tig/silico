@@ -1,14 +1,25 @@
-"""Windows / Espressif EIM C-toolchain discovery (language=c host path).
+"""Espressif C-toolchain discovery (language=c host path).
 
 Agents should not hand-parse ``eim_idf.json`` or re-probe
 ``C:\\Espressif\\tools`` every shell. ``silico doctor`` and ``silico env --print``
 surface activation scripts and resolved tool paths (tig/silico#79).
+
+Two catalogs exist in the field:
+
+* **EIM** (``eim_idf.json``): list-shaped ``idfInstalled`` with activation
+  scripts (Windows-first).
+* **idf_tools.py** (``~/.espressif/idf-env.json``): dict-shaped
+  ``idfInstalled`` keyed by install id — the normal macOS/Linux
+  ``install.sh`` result. A pre-installed IDF registered here is invisible on
+  PATH until ``export.sh`` is sourced; discovery must find it before
+  concluding "no ESP-IDF" (tig/silico#87).
 """
 
 from __future__ import annotations
 
 import json
 import os
+import re
 import shutil
 import sys
 from dataclasses import dataclass, field
@@ -42,6 +53,7 @@ class CToolchainReport:
     ninja: str | None = None
     idf_py: str | None = None
     eim_json: Path | None = None
+    idf_env_json: Path | None = None
 
 
 def eim_json_search_paths(
@@ -119,7 +131,7 @@ def load_eim_installs(
 ) -> tuple[Path | None, list[IdfInstall], str | None]:
     """Load installs from *path* or auto-discovered eim_idf.json."""
     p = path or find_eim_json(env=env, extra=extra)
-    if p is None:
+    if p is None or not p.is_file():
         return None, [], None
     try:
         data = json.loads(p.read_text(encoding="utf-8"))
@@ -142,6 +154,142 @@ def select_install(
             if inst.id == selected_id:
                 return inst
     return installs[0]
+
+
+# --- idf_tools.py catalog (~/.espressif/idf-env.json) — macOS/Linux (#87) ---
+
+
+def idf_env_search_paths(
+    *,
+    env: dict[str, str] | None = None,
+    extra: list[Path] | None = None,
+) -> list[Path]:
+    """Ordered paths to probe for idf_tools.py's idf-env.json."""
+    env = env if env is not None else os.environ
+    out: list[Path] = []
+    if extra:
+        out.extend(extra)
+    tools = env.get("IDF_TOOLS_PATH")
+    if tools:
+        out.append(Path(tools) / "idf-env.json")
+    out.append(Path.home() / ".espressif" / "idf-env.json")
+    seen: set[str] = set()
+    uniq: list[Path] = []
+    for p in out:
+        key = str(p).lower()
+        if key not in seen:
+            seen.add(key)
+            uniq.append(p)
+    return uniq
+
+
+def find_idf_env_json(
+    *,
+    env: dict[str, str] | None = None,
+    extra: list[Path] | None = None,
+) -> Path | None:
+    for p in idf_env_search_paths(env=env, extra=extra):
+        if p.is_file():
+            return p
+    return None
+
+
+def _env_dir_key(name: str) -> tuple:
+    """Numeric sort key for idf_tools python_env dir names.
+
+    Lexicographic order inverts versions (py3.9 > py3.12, idf5.9 > idf5.10);
+    compare every digit run as an integer instead.
+    """
+    parts = re.split(r"(\d+)", name)
+    return tuple(int(p) if p.isdigit() else p for p in parts)
+
+
+def _python_env_for(espressif_root: Path | None, version: str) -> str:
+    """Best python under <root>/python_env for an IDF *version* (e.g. '5.3')."""
+    if espressif_root is None:
+        return ""
+    env_root = espressif_root / "python_env"
+    if not env_root.is_dir():
+        return ""
+    exact: list[Path] = []
+    other: list[Path] = []
+    for d in sorted(env_root.iterdir(), key=lambda p: _env_dir_key(p.name)):
+        if not d.is_dir():
+            continue
+        py = d / "bin" / "python"
+        if not py.is_file():
+            py = d / "Scripts" / "python.exe"
+            if not py.is_file():
+                continue
+        if version and d.name.startswith(f"idf{version}_"):
+            exact.append(py)
+        else:
+            other.append(py)
+    # Prefer an env matching the install's version; newest (numeric) wins
+    # either way — a stale py3.9 env from a bad first install must not
+    # shadow the good py3.12 reinstall (PR #88 review).
+    if exact:
+        return str(exact[-1])
+    if other:
+        return str(other[-1])
+    return ""
+
+
+def parse_idf_env_json(
+    data: dict,
+    *,
+    espressif_root: Path | None = None,
+) -> tuple[list[IdfInstall], str | None]:
+    """Parse idf_tools.py idf-env.json body → (installs, selected_id).
+
+    Schema differs from EIM: ``idfInstalled`` is a **dict** keyed by install
+    id, each value carrying ``version`` and ``path``. The bash activation is
+    the install's ``export.sh`` (there is no activationScript field).
+    """
+    raw = data.get("idfInstalled")
+    installs: list[IdfInstall] = []
+    if isinstance(raw, dict):
+        for key, item in raw.items():
+            if not isinstance(item, dict):
+                continue
+            path = str(item.get("path") or "").strip()
+            if not path:
+                continue
+            version = str(item.get("version") or "").strip()
+            export_sh = Path(path) / "export.sh"
+            installs.append(
+                IdfInstall(
+                    name=f"ESP-IDF {version}".strip() if version else path,
+                    path=path,
+                    idf_tools_path=str(espressif_root) if espressif_root else "",
+                    activation_script=str(export_sh) if export_sh.is_file() else "",
+                    python=_python_env_for(espressif_root, version),
+                    id=str(key),
+                )
+            )
+    selected = data.get("idfSelectedId")
+    selected_id = str(selected).strip() if selected else None
+    return installs, selected_id
+
+
+def load_idf_env_installs(
+    path: Path | None = None,
+    *,
+    env: dict[str, str] | None = None,
+    extra: list[Path] | None = None,
+) -> tuple[Path | None, list[IdfInstall], str | None]:
+    """Load installs from *path* or auto-discovered idf-env.json."""
+    p = path or find_idf_env_json(env=env, extra=extra)
+    if p is None:
+        return None, [], None
+    try:
+        data = json.loads(p.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return p, [], None
+    if not isinstance(data, dict):
+        return p, [], None
+    installs, selected_id = parse_idf_env_json(data, espressif_root=p.parent)
+    return p, installs, selected_id
 
 
 def _which_under(tools_root: Path | None, name: str) -> str | None:
@@ -204,9 +352,18 @@ def discover_c_toolchain(
         eim_json, env=env, extra=extra_json_paths
     )
     selected = select_install(installs, selected_id)
+
+    # Fall back to idf_tools.py's ~/.espressif/idf-env.json (macOS/Linux, #87):
+    # a pre-installed IDF lives there without touching PATH or IDF_PATH.
+    idf_env_path: Path | None = None
+    if selected is None:
+        idf_env_path, env_installs, env_selected_id = load_idf_env_installs(env=env)
+        if env_installs:
+            installs = env_installs
+            selected = select_install(env_installs, env_selected_id)
     cmake, ninja, idf_py = resolve_tools(selected)
 
-    # Fall back to env IDF_PATH if EIM missing but IDF is active
+    # Fall back to env IDF_PATH if catalogs missing but IDF is active
     if selected is None and env.get("IDF_PATH"):
         selected = IdfInstall(
             name="IDF_PATH",
@@ -226,6 +383,7 @@ def discover_c_toolchain(
         ninja=ninja,
         idf_py=idf_py,
         eim_json=path,
+        idf_env_json=idf_env_path,
     )
     return report
 
@@ -240,13 +398,16 @@ def doctor_c_toolchain_lines(
     lines: list[str] = []
     if r.eim_json:
         lines.append(f"EIM catalog: {r.eim_json}")
+    elif r.idf_env_json:
+        lines.append(f"IDF catalog: {r.idf_env_json} (idf_tools.py install.sh)")
     else:
         lines.append(
-            "INFO: no eim_idf.json found (checked IDF_TOOLS_PATH and C:\\Espressif\\tools). "
-            "Install Espressif EIM or export IDF_PATH."
+            "INFO: no ESP-IDF catalog found (checked eim_idf.json under "
+            "IDF_TOOLS_PATH / C:\\Espressif\\tools, and ~/.espressif/idf-env.json). "
+            "Install ESP-IDF (install.sh / EIM) or export IDF_PATH."
         )
     if r.installs:
-        lines.append(f"IDF installs known to EIM: {len(r.installs)}")
+        lines.append(f"IDF installs known: {len(r.installs)}")
         for inst in r.installs:
             mark = " (selected)" if r.selected and inst.id == r.selected.id else ""
             lines.append(f"  - {inst.name}: {inst.path}{mark}")
@@ -254,9 +415,14 @@ def doctor_c_toolchain_lines(
         lines.append(f"Active IDF: {r.selected.name} @ {r.selected.path}")
         if r.selected.activation_script:
             lines.append(f"  activation: {r.selected.activation_script}")
-            lines.append(
-                "  PowerShell: . '" + r.selected.activation_script.replace("'", "''") + "'"
-            )
+            if r.selected.activation_script.endswith(".sh"):
+                lines.append(
+                    '  bash/zsh: . "' + r.selected.activation_script + '"'
+                )
+            else:
+                lines.append(
+                    "  PowerShell: . '" + r.selected.activation_script.replace("'", "''") + "'"
+                )
         if r.selected.idf_tools_path:
             lines.append(f"  IDF_TOOLS_PATH: {r.selected.idf_tools_path}")
         if r.selected.python:

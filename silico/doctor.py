@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import importlib
 import shutil
 import sys
 from dataclasses import dataclass, field
@@ -20,6 +21,67 @@ from silico.workspace import detect_workspace
 class DoctorReport:
     ok: bool
     lines: list[str] = field(default_factory=list)
+
+
+def host_python_health_lines(*, import_module=None) -> tuple[bool, list[str]]:
+    """Check stdlib C-extension linkage that ESP-IDF tooling depends on (#87).
+
+    Homebrew pythons can rot (pyexpat linked against a removed libexpat),
+    which breaks idf_tools.py / install.sh in confusing ways. Surface it
+    here with an actionable fix instead of letting ESP-IDF installs fail.
+    """
+    imp = import_module or importlib.import_module
+    try:
+        imp("pyexpat")
+    except Exception as e:  # ImportError or loader-level OSError
+        return False, [
+            f"WARN: stdlib pyexpat is broken ({e}) — typical Homebrew python "
+            "linkage rot; ESP-IDF installers need it. Fix: use a uv-managed "
+            "interpreter (`uv venv --python 3.11`) or reinstall python.",
+        ]
+    return True, ["OK: pyexpat imports (stdlib XML linkage healthy)"]
+
+
+_CMAKE_PROBE_DIRS = (Path("/opt/homebrew/bin"), Path("/usr/local/bin"))
+
+
+def cmake_hint_lines(*, which=shutil.which, probe_dirs=None) -> list[str]:
+    """cmake presence for the C host gate, with an off-PATH rescue hint (#87)."""
+    if which("cmake"):
+        return ["OK: cmake on PATH (C host gate)"]
+    dirs = _CMAKE_PROBE_DIRS if probe_dirs is None else probe_dirs
+    for d in dirs:
+        cand = Path(d) / "cmake"
+        if cand.is_file():
+            return [
+                f"WARN: cmake not on PATH but found at {cand} — add {d} to PATH "
+                '(e.g. `eval "$(/opt/homebrew/bin/brew shellenv)"`).'
+            ]
+    return ["WARN: cmake not on PATH (needed for C host gate) — install via brew/apt or EIM"]
+
+
+def esp_idf_summary_lines(tc, deploy_ready: bool) -> list[str]:
+    """One honest ESP-IDF availability line for language=c (#87, PR #88 CR).
+
+    ``deploy_ready`` must mirror what `silico deploy` actually accepts
+    (idf.py on PATH or IDF_PATH). A catalog-only install (idf-env.json /
+    EIM) is real but NOT deploy-ready until its export script is sourced —
+    report needs-activation, never a false OK.
+    """
+    if deploy_ready:
+        return [f"OK: ESP-IDF tools available ({tc.idf_py or 'idf.py on PATH / IDF_PATH'})"]
+    if tc.idf_py:
+        hint = ""
+        if tc.selected and tc.selected.activation_script:
+            hint = f' — activate: . "{tc.selected.activation_script}"'
+        return [
+            f"WARN: ESP-IDF installed but not activated ({tc.idf_py} via catalog); "
+            "deploy needs idf.py on PATH or IDF_PATH" + hint
+        ]
+    return [
+        "WARN: ESP-IDF tools not found — language=c deploy needs idf.py "
+        "(PATH, IDF_PATH, EIM, or ~/.espressif/idf-env.json)"
+    ]
 
 
 def run_doctor(*, root: Path | None = None) -> DoctorReport:
@@ -82,6 +144,8 @@ def run_doctor(*, root: Path | None = None) -> DoctorReport:
         ok = False
     else:
         lines.append("OK: Python >= 3.11")
+    _, py_health = host_python_health_lines()
+    lines.extend(py_health)
 
     if shutil.which("git"):
         lines.append("OK: git on PATH")
@@ -95,19 +159,14 @@ def run_doctor(*, root: Path | None = None) -> DoctorReport:
 
     # Tooling hints for C intent even if config has FAILs (language still "c").
     if cfg.language == "c":
-        if idf_py_available():
-            lines.append("OK: ESP-IDF tools available (idf.py or IDF_PATH)")
-        else:
-            lines.append(
-                "WARN: ESP-IDF tools not found — language=c deploy needs idf.py / IDF_PATH"
-            )
-        if shutil.which("cmake"):
-            lines.append("OK: cmake on PATH (C host gate)")
-        else:
-            lines.append("WARN: cmake not on PATH (needed for C host gate)")
-        # EIM / Espressif tool roots (#79) — resolved paths, not hand-parsed JSON.
-        from silico.c_toolchain import doctor_c_toolchain_lines
+        # One discovery pass drives both the summary line and the section
+        # below, so they can't contradict each other (#87).
+        from silico.c_toolchain import discover_c_toolchain, doctor_c_toolchain_lines
 
+        tc = discover_c_toolchain()
+        lines.extend(esp_idf_summary_lines(tc, deploy_ready=idf_py_available()))
+        lines.extend(cmake_hint_lines())
+        # EIM / idf_tools.py catalogs (#79, #87) — resolved paths, not hand-parsed JSON.
         lines.append("--- C toolchain (EIM / IDF) ---")
         lines.extend(doctor_c_toolchain_lines())
     else:

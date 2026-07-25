@@ -170,6 +170,24 @@ Native ESP-IDF continuous DAC (DMA) is the right path for multi-minute PCM on `l
 
 Hard-disable mid-queue = click or multi-hundred-ms “catch-up” dump.
 
+**Stop must actually stop.** A “stopped” player that leaves the channel
+enabled keeps the last DMA sample on the pin — a DC level biasing the amp
+(warm amp, hiss, faster battery drain). After drain, either disable the
+channel or write a silence/mid-level buffer and verify the pin parks.
+
+**Pause position ≠ submitted position.** If pause records how much you
+*submitted*, resume skips whatever was still in the DMA backlog when you
+stopped feeding (an audible gap at deep queues). Track the *played* position
+(bytes drained / conversion-done callback), or keep the queue shallow enough
+that the difference is inaudible.
+
+**Signal “done” on every task exit path.** The audio task must set its
+done/idle flag (and release the channel) on *all* exits — end of file,
+stop request, **and** open/enable/config failure. A task that errors out
+before the main loop and never signals leaves the UI stuck on “playing”
+forever. Structure as single exit (`goto out` / cleanup block), not early
+returns.
+
 ### Sample rate from the asset
 
 - Clock the DAC continuous config from the **asset header rate** (or sidecar), not a hard-coded constant that drifts from the file.

@@ -69,6 +69,23 @@ ESP-IDF must be installed (`idf.py` or `IDF_PATH`). First flash and update flash
 Portable domain under `include/` + `src/` must not include freertos / esp_* / driver headers.
 Only stems listed in `[hal].allow_device_headers` (default `hal_board`) may touch device headers.
 
+### Time is int64_t milliseconds
+
+The HAL clock hook is `int64_t now_ms` (see `include/gcu/hal.h`). On ESP32
+(ILP32) `long` is **32 bits**: millisecond math in `long`/`int` overflows in
+under 10 hours and wraps at ~24.8 days. Host `long` is 64-bit, so host tests
+only catch this if they seed the clock past 2^31 — `host/test_time.c` does
+exactly that; keep that seed when you extend the domain.
+
+## ESP-IDF environment gotchas
+
+- If the agent/GCU **venv is on PATH ahead of the IDF python env**, `idf.py`
+  resolves the wrong interpreter and fails on missing packages. Deactivate or
+  strip the venv from PATH before `. $IDF_PATH/export.sh`.
+- An existing install is usually recorded in `~/.espressif/idf-env.json` —
+  `silico doctor` reads it; check before installing another IDF.
+- More: `silico/knowledge/macos-codex-esp-idf.md`.
+
 ## Identity (required on the link)
 
 **Boot-print alone is not enough** for `silico inspect` after a greeting or banner scrolls past (#78 / #79). The image **must answer** the host word `identity` (CR/LF framed) with:

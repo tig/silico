@@ -31,6 +31,7 @@ If inspect/deploy says app owns console / door stayed shut:
 | Deploy `--verify` then soft-reset into deaf app | Verify used REPL; app may never hear host (#49 race) |
 | DTR/RTS pulse before C identity knock on CH9102 | Resets into ROM / download; `silico inspect` captures 0 bytes while bare pyserial (dtr=rts=False + `identity`) works (#78) |
 | Clear RX after boot wait on pulse path | Discards boot-printed `fw_name=` on boot-only C plates (#81 CR) |
+| Non-blocking stdio drain without `clearerr(stdin)` | EOF/error flags latch on `FILE*`; next drain sees phantom EOF and the link goes deaf while TX still works (#87) — clear both `clearerr(stdin)` and sticky `EAGAIN` errno after each empty drain |
 
 ## C / ESP-IDF identity (language=c)
 

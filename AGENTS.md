@@ -393,6 +393,17 @@ When the operator’s goal is a **fresh first-ship harness run**, all three prac
 **Anti-pattern:** invent a PR workflow on **tig/xuss**, **tig/xuss-c**, or **tig/xuss-lame** because of leftover harness PR history.  
 **Anti-pattern:** five open PRs titled variations of “first ship scaffold,” “L0 product face,” … with no operator request to split.  
 **Anti-pattern:** choose PRs and never watch CI — that skips the reason PRs exist for that team.  
+
+##### Push rejected: workflow scope
+
+If the branch being pushed **adds or edits `.github/workflows/*`**, a push
+with a token lacking the `workflow` scope is **refused by GitHub** (clear
+`refusing to allow ... workflow` error). Ambient CI tokens (`GH_TOKEN` /
+`GITHUB_TOKEN`) often lack it. Fix: push with the operator's keyring token —
+`KT=$(env -u GH_TOKEN -u GITHUB_TOKEN gh auth token)` then
+`git push "https://x-access-token:${KT}@github.com/<owner>/<repo>.git" <branch>` —
+and scrub the tokenized remote/upstream afterwards. Do not drop the workflow
+file to make the push pass.
 **Anti-pattern:** first-ship mutate on a practice GCU whose `origin/main` tip is not the product-only clean start, without telling the operator.  
 **Anti-pattern:** tip is clean start (docs only) but the agent cherry-picks or replays a previous attempt’s display/audio/UI firmware from older commits / other branches / “last session worked” — that is **past-HEAD salvage** (see **Product truth is HEAD**). Verboten.
 

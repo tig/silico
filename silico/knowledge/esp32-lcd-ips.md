@@ -34,6 +34,21 @@ Do **not** copy this blindly to every ILI9341 module; **measure**. Document the 
 - Fix **panel path** first; only then tune theme RGB tables.
 - Pure primaries on LEDs (`(255,0,0)` not `(255,48,48)`) make mismatches obvious.
 
+### Measured: ILI9342C on M5GO / Core (ESP-IDF `esp_lcd`)
+
+One bench-verified init that produced correct colors and stable SPI (#87):
+
+- `esp_lcd_new_panel_ili9341`-style driver works for ILI9342C with:
+  **MADCTL = 0x08** (BGR bit only — no row/col exchange for landscape M5),
+  **INVON** (`esp_lcd_panel_invert_color(panel, true)`),
+  no gap, no mirror.
+- Pixel clock **26.7 MHz** (80 MHz / 3) was stable; 40 MHz corrupted on
+  some units/wiring.
+- The panel returns no dummy byte on reads — if the driver exposes it, set
+  the “no dummy” / skip-read-dummy flag rather than fighting shifted reads.
+- Landscape 320×240 comes from the panel’s native orientation with this
+  MADCTL; verify with an asymmetric test pattern before layout work.
+
 ## Partial updates (SPI thrash)
 
 Full-panel `fill` every animation tick:

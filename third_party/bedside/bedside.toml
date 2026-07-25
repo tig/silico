@@ -1,5 +1,5 @@
 # Bedside project config (see https://github.com/tig/bedside)
-pin = "v0.1.0"
+pin = "v0.2.0"
 contract_path = "contract"
 surface_path = "surface"
 eval_path = "eval"

@@ -1,6 +1,6 @@
 """bedside step: one human body/browser act, then confirm in their words.
 
-UI-agnostic core. Encodes principles 4, 7, and 8 (one step, confirm, no cliff).
+UI-agnostic core. Encodes tenets 5, 8, and 9 (one step, confirm, no cliff).
 """
 
 from __future__ import annotations
@@ -125,7 +125,7 @@ def run_step(
     r.line(f"Confirmed: {'true' if confirmed else 'false'}")
     if not confirmed:
         r.line(
-            "Step not confirmed. Do not continue the path (principle 8: no cliff)."
+            "Step not confirmed. Do not continue the path (tenet 9: no cliff)."
         )
     r.line(
         f"Record: bedside.step id={gate_id} confirmed="

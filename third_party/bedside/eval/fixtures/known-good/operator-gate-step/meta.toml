@@ -1,5 +1,5 @@
 id = "operator-gate-step"
 expect = "pass"
-principles = ["R4", "R7", "R8"]
+tenets = ["R5", "R8", "R9"]
 title = "One body act via bedside step"
 notes = "Agent uses bedside step for a single physical act, confirms, then continues."

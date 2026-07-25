@@ -13,35 +13,37 @@ Human index: [README.md](README.md). Writing style: follow Tig voice mechanics (
 We follow [Bedside](https://github.com/tig/bedside): manners for agents
 operating tools for smart, high-judgment non-experts.
 
-- Pin: see `bedside.toml` (do not soft-fork principles).
+- Pin: see `bedside.toml` (do not soft-fork tenets).
 - Normative contract path: `contract`
 - Human gates: call `bedside ask` / `bedside step` (or the host structured choice UI).
 
 Summary (full contract is normative):
 
 1. Assume low ops literacy, high judgment.
-2. No wall of unexplained shell (or free-text choice walls).
+2. No walls of shell or choice.
 3. Prefer doing over instructing.
-4. Human acts: explicit, one step, dumb-simple.
-5. Own first-time setup from zero.
-6. Own scary surfaces in plain language.
-7. Confirm in their words before irreversible or physical steps.
-8. Never leave them at a cliff.
-9. Teach only what Day 2 requires.
+4. No silent work.
+5. Human acts are explicit and dumb-simple.
+6. Own first-time setup from zero.
+7. Own scary surfaces in plain language.
+8. Confirm what they can see, in their words.
+9. Never leave them at a cliff.
+10. Teach only what tomorrow requires.
+11. Compound what you learn.
 
 ### Domain notes (this repo only)
 
 - First-run: `pip install -e ".[dev]"` then `bedside doctor` and `bedside eval`.
 - Scary surfaces: none physical; prefer doing install and tests yourself.
-- Day-2 leave-behind: `pytest -q` and `bedside eval` (one proof path for manners).
+- Leave-behind: `pytest -q` and `bedside eval` (one proof path for manners).
 
 ## CLI architecture
 
 - `bedside.cli`: argparse adapter only.
 - `bedside.commands.*`: UI-agnostic command cores (future tui-cs/cli should call these).
-- `bedside.eval_engine`: rule-based R1-R9 scoring.
+- `bedside.eval_engine`: rule-based R1-R11 scoring.
 - Operator gates: `ask` (structured choice) and `step` (one human act + confirm).
-- Exit codes: 0 ok, 10 human-needed / non-recommended ask / declined step, 20 manners fail, 30 setup error.
+- Exit codes (silico#84 overlay): 0 any valid ask choice or confirmed step; 10 still needed / step declined; 20 manners fail; 30 setup error. Branch ask on `choice=` / `matched_recommended`, not on exit 0 alone.
 
 ## Definition of done
 

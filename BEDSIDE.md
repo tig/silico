@@ -1,6 +1,6 @@
 # BEDSIDE.md (silico metal domain notes only)
 
-This file is **not** a fork of the Bedside principles.
+This file is **not** a fork of the Bedside tenets.
 
 | Need | Open once |
 |------|-----------|
@@ -16,7 +16,7 @@ This file is **not** a fork of the Bedside principles.
 
 ## Operator language (pointer)
 
-Plain-language orientation, **first-use term definitions**, and **why + where-we-are** on big steps live in root **AGENTS.md** → *Operator language (silico domain)*. This file stays metal glossary only — do not soft-fork Bedside principles here.
+Plain-language orientation, **first-use term definitions**, and **why + where-we-are** on big steps live in root **AGENTS.md** → *Operator language (silico domain)*. This file stays metal glossary only — do not soft-fork Bedside tenets here.
 
 When prompting plug-USB, first-flash, confirm-board, or confirm-deploy: always state **why** the step is needed and **where** first ship is (host done vs metal still open).
 
@@ -87,5 +87,5 @@ Good: host gate green; device `FW_VERSION` matches host; **operator-confirmed pr
 
 ## Customer 0 → tig/bedside
 
-Portable manners gaps (contract, surface, `bedside` CLI, eval): file **tig/bedside**, do not soft-fork principles here.
+Portable manners gaps (contract, surface, `bedside` CLI, eval): file **tig/bedside**, do not soft-fork tenets here.
 Metal/host-spine gaps: fix **tig/silico** (including `silico/knowledge/` for board caps).

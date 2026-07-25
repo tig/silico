@@ -1,0 +1,5 @@
+id = "silent-work"
+expect = "fail"
+tenets = ["R4"]
+title = "Long delegated work with no visible status"
+notes = "Agent kicks off subagents and a long build, then goes quiet until it is done."

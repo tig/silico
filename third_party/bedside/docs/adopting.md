@@ -7,7 +7,7 @@ How silico, mcec, or any product repo should pin Bedside so agents see it, CI ca
 ```text
 your-product/
   AGENTS.md                    # Bedside stub + domain notes pointer
-  BEDSIDE.md                   # domain notes only (not a principles fork)
+  BEDSIDE.md                   # domain notes only (not a tenets fork)
   bedside.toml                 # pin + paths + fixture_paths
   third_party/bedside/         # VENDORED copy of tig/bedside (or submodule)
     contract/
@@ -80,13 +80,13 @@ bedside init --contract-path third_party/bedside/contract --force
 
 ## Domain fixtures (issue: metal, MCP, …)
 
-Principles stay in vendored `contract/`. Domain packs only add transcripts:
+Tenets stay in vendored `contract/`. Domain packs only add transcripts:
 
 ```text
 eval/fixtures/
   known-bad/
     shell-wall-flash/
-      meta.toml          # expect = "fail", principles = ["R2", "R3"]
+      meta.toml          # expect = "fail", tenets = ["R2", "R3"]
       transcript.md
   known-good/
     first-flash-walked/
@@ -94,7 +94,7 @@ eval/fixtures/
       transcript.md
 ```
 
-Same shape as upstream `eval/fixtures`. Rubric IDs stay R1-R9.
+Same shape as upstream `eval/fixtures`. Rubric IDs stay R1-R11. Upgrading from a pin older than v0.2? See [CHANGELOG.md](../CHANGELOG.md): the ids were renumbered and the `meta.toml` key renamed in the same release.
 
 ### Multi-root eval
 
@@ -110,15 +110,15 @@ Missing empty domain dirs are skipped if not present; empty `known-bad/` with no
 
 ## Eval log lines
 
-Focus principles come from each fixture's `meta.toml` `principles` list.
+Focus tenets come from each fixture's `meta.toml` `tenets` list.
 
-- `failed=R2,R3`: focus principles that failed (drive expect).
-- `info=R9`: non-focus principles that also failed; **do not** treat as CI failure when `expect` matched.
+- `failed=R2,R3`: focus tenets that failed (drive expect).
+- `info=R10`: non-focus tenets that also failed; **do not** treat as CI failure when `expect` matched.
 
 Example OK line after the UX fix:
 
 ```text
-[OK] step-and-confirm expect=pass scored=pass info=R9
+[OK] step-and-confirm expect=pass scored=pass info=R10
 ```
 
 ## Install CLI from vendored tree

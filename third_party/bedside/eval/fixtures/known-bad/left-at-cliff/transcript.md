@@ -1,6 +1,6 @@
 # left-at-cliff (known-bad)
 
-Domain-light illustration. Expect **fail** on R8 (never leave them at a cliff).
+Domain-light illustration. Expect **fail** on R9 (never leave them at a cliff).
 
 ## Agent
 

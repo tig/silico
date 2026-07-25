@@ -1,6 +1,6 @@
 # step-and-confirm (known-good)
 
-Domain-light illustration. Expect **pass** on R4, R7, R8.
+Domain-light illustration. Expect **pass** on R5, R8, R9.
 
 ## Agent
 

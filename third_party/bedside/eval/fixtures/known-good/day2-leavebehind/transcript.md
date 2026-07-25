@@ -1,6 +1,6 @@
 # day2-leavebehind (known-good)
 
-Domain-light illustration. Expect **pass** on R9.
+Domain-light illustration. Expect **pass** on R10.
 
 ## Agent
 

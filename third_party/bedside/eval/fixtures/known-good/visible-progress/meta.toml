@@ -1,0 +1,5 @@
+id = "visible-progress"
+expect = "pass"
+tenets = ["R4"]
+title = "Long delegated work reports progress and per-agent status"
+notes = "Agent estimates the wait, names what each sub-agent is doing, and keeps one status shape."

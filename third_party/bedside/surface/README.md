@@ -20,7 +20,7 @@ The contract says *what* good operator care is. The surface is *where* it ships:
 - Error messages and exit codes.
 - Guided multi-step flows (especially body and browser acts).
 - Discovery UIs (ports, accounts, devices, clusters).
-- Docs generators that leave a Day-2 path.
+- Docs generators that leave a routine path.
 
 Design for smart, high-judgment non-experts and for the agents driving the tools on their behalf.
 
@@ -39,7 +39,7 @@ Thin, scriptable commands with operator-facing messages (not only machine logs).
 | `deploy --verify` | Deploy then prove identity or version; fail closed on mismatch |
 | `gate` | Named host proof of done (tests or sim); green means claimable |
 
-Agents should prefer these verbs over assembling ad-hoc shell walls or free-text multi-choice menus. Humans should be able to re-run one documented verb on Day 2.
+Agents should prefer these verbs over assembling ad-hoc shell walls or free-text multi-choice menus. Humans should be able to re-run one documented verb tomorrow.
 
 ### Operator gates (`bedside ask` / `bedside step`)
 
@@ -59,13 +59,13 @@ Rules:
 
 1. **UI-agnostic cores** under `commands/` so argparse, tui-cs/cli, or an agent host adapter can render pickers without rewriting behavior.
 2. Prefer the **agent host structured choice UI** when present; CLI `--answer` / `--confirm` is the scriptable path; interactive stdin is the human fallback.
-3. Exit codes: **0** chose recommended / step confirmed; **10** human declined, alternate fork, or still needed; **30** setup error (missing id/prompt, bad flags).
+3. Exit codes (silico#84 overlay): **0** any valid ask choice or step confirmed; **10** still needed or step declined; **30** setup error (missing id/prompt, bad flags). For ask, branch on `choice=` / `matched_recommended` — exit 0 + non-recommended is an explicit alternate fork, not a decline.
 4. Each run prints a fixture-friendly `Record:` line (`bedside.ask` / `bedside.step`) so sessions can be scored later.
 5. Scope is the **operator path** (setup, scary surfaces, irreversible writes, physical steps). Domain design taste stays in the product.
 
 Prefer `ask` / `step` (or host pickers) over multi-choice free-text walls. See also anti-walls below.
 
-Maps to contract principles 2, 4, 7, and 8.
+Maps to contract tenets 2, 5, 8, and 9.
 
 ### 2. Step machines (human body or account)
 
@@ -82,7 +82,7 @@ Rules:
 3. Block progress until confirmation (or a clear timeout and re-prompt).
 4. Never batch "do A, B, C, then tell me."
 
-Maps to contract principles 4, 7, and 8.
+Maps to contract tenets 5, 8, and 9.
 
 ### 3. Candidate listing (plain language)
 
@@ -92,7 +92,7 @@ For multi-candidate scary surfaces (serial ports, kube contexts, cloud projects,
 2. Prefer explicit IDs over blind `auto` when more than one candidate exists.
 3. On failure, say what you will try next. Do not shame the operator.
 
-Maps to contract principle 6.
+Maps to contract tenet 7.
 
 ### 4. Fail closed and recovery
 
@@ -115,7 +115,7 @@ Prefer:
 
 If a tool must print a command for the human to paste (for example a browser device code), print that one string with context. Not five unlabeled blocks.
 
-Maps to contract principles 2 and 3.
+Maps to contract tenets 2 and 3.
 
 ### 6. Structured choice UI (no free-text multi-choice)
 
@@ -134,9 +134,24 @@ Rules:
 
 Anti-pattern (choice wall): a good plan table followed by "reply with start #15, fold issues, reprioritize P1, …" when a picker was available.
 
-Maps to contract principles 2 and 4.
+Maps to contract tenets 2 and 5.
 
-### 7. Day-2 leave-behind
+### 7. Progress and status
+
+Long work reports itself. A surface that blocks for more than about five seconds shows a progress indicator, a count, or an estimate of time remaining, not a frozen cursor.
+
+Rules:
+
+1. Anything past roughly five seconds gets progress, a step count, or an estimate.
+2. Work delegated to subagents, workers, or background jobs reports what each one is doing and how far along it is.
+3. Use one status shape across the whole tool, so the operator learns to read it once.
+4. On a long failure, say how far it got before it failed. "Failed" alone hides whether the last four minutes were wasted.
+
+Anti-pattern: spawning parallel workers whose only operator-visible output is the final result.
+
+Maps to contract tenet 4.
+
+### 8. Leave-behind
 
 After success, the surface (or the docs it generates) leaves one routine path:
 
@@ -145,7 +160,7 @@ After success, the surface (or the docs it generates) leaves one routine path:
 
 No textbook of equivalent alternatives.
 
-Maps to contract principle 9.
+Maps to contract tenet 10.
 
 ## Agent-first CLI notes
 
@@ -160,7 +175,7 @@ Interactive TUIs are fine for humans. Agents need a scriptable path to the same 
 
 ## Domain packs (surface side)
 
-Domain packs supply verbs, copy, and step graphs. Not new principles.
+Domain packs supply verbs, copy, and step graphs. Not new tenets.
 
 | Domain | Example surface concerns |
 |--------|--------------------------|
@@ -177,6 +192,8 @@ Reference illustration: [silico](https://github.com/tig/silico) host path (docto
 - [ ] First-run is a first-class path (verb or documented step machine), not folklore.
 - [ ] Multi-candidate discovery lists plain-language candidates; avoids blind auto when unsafe.
 - [ ] Fail closed on identity or verify mismatches (or documented exception).
-- [ ] Success leaves one Day-2 command and what "good" looks like.
+- [ ] Work slower than about five seconds shows progress, a count, or an estimate.
+- [ ] Delegated or background work reports what each worker is doing.
+- [ ] Success leaves one routine command and what "good" looks like.
 
 Contract pin: [`contract/`](../contract/). Prove manners: [`eval/`](../eval/).

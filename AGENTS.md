@@ -67,7 +67,7 @@ Context is finite. **Do not** open every manners file into the active window.
 | Priority | Open | Job | Skip when |
 |----------|------|-----|-----------|
 | 1 | This file (`AGENTS.md`) | Silico spine: first-ship stages, silico CLI, plate, host/metal DoD | — |
-| 2 | `bedside.toml` + contract path it names | Normative portable manners (nine principles) | Already summarized below and you are not changing manners |
+| 2 | `bedside.toml` + contract path it names | Normative portable manners (eleven tenets) | Already summarized below and you are not changing manners |
 | 3 | `BEDSIDE.md` | **Metal domain pack only** (COM, first-flash, deploy identity) | Already in first-ship metal sections of this file for the current step |
 | 4 | One topic under `silico/knowledge/` | Board/host caps (ESP32 audio, first-flash notes) | Open **only** the topic you need; never dump the whole tree |
 | — | `third_party/bedside/README.md`, vendored stub `AGENTS.md`/`BEDSIDE.md`, full `eval/` docs | Upstream product / scoring | Almost always — use `bedside doctor|eval|ask|step` instead of loading prose |
@@ -77,10 +77,10 @@ Context is finite. **Do not** open every manners file into the active window.
 
 | Topic | Canonical owner | Silico may hold |
 |-------|-----------------|-----------------|
-| Nine principles, anti-patterns, portable persona | **tig/bedside** `contract/` | One short summary + pin (no kinder soft-fork) |
+| Eleven tenets, anti-patterns, portable persona | **tig/bedside** `contract/` | One short summary + pin (no kinder soft-fork) |
 | Operator gates (`ask` / `step`) | **tig/bedside** surface + CLI | One short pointer here; agent host pickers OK if same contract |
 | first-ship stages, silico verbs, plate, mpy-cross, deploy manifest | **silico AGENTS** + code | Not bedside |
-| Operator language (first prompt orient, first-use term defs, big-step why/where) | **silico AGENTS** + [lexicon](specs/lexicon.md) | Not bedside principles; domain on top of contract |
+| Operator language (first prompt orient, first-use term defs, big-step why/where) | **silico AGENTS** + [lexicon](specs/lexicon.md) | Not bedside tenets; domain on top of contract |
 | COM / first-flash (UF2 **or** esptool) / board identity / metal deploy | **silico BEDSIDE.md** + `silico/knowledge/first-flash.md` + CLI | AGENTS first-ship metal sections may point here; avoid full restatement |
 | GCU `bedside.toml` pin (sibling paths to silico vendor) | **plate** ships it; GCU keeps it | Do not leave GCU without a pin and then invent a prose path |
 | Board/host capability notes (audio, bridges, …) | **silico/knowledge/** (self-improving) | Product must not soft-fork; agents **append** host truths here |
@@ -160,14 +160,16 @@ We follow **[Bedside](https://github.com/tig/bedside)**. Load rules per **Agent 
 Summary (full contract is normative; do not soft-fork):
 
 1. Assume low ops literacy, high judgment.
-2. No wall of unexplained shell.
+2. No walls of shell or choice.
 3. Prefer doing over instructing — **run checks and installs yourself; do not paste command walls.** This is **not** a license to mutate, commit, push, scaffold, or flash past an open or declined operator gate.
-4. Human acts: explicit, one step, dumb-simple.
-5. Own first-time setup from zero.
-6. Own scary surfaces in plain language.
-7. Confirm in their words before irreversible or physical steps.
-8. Never leave them at a cliff.
-9. Teach only what the update path requires.
+4. No silent work — long or delegated work shows progress, an estimate, or per-worker status.
+5. Human acts: explicit, one step, dumb-simple.
+6. Own first-time setup from zero.
+7. Own scary surfaces in plain language.
+8. Confirm in their words before irreversible or physical steps.
+9. Never leave them at a cliff.
+10. Teach only what tomorrow / the update path requires.
+11. Compound what you learn — with the operator's go-ahead, file friction upstream.
 
 Silico domain (metal / host path) details: **BEDSIDE.md** and first-ship stages below. Host tools that encode manners: `silico welcome`, `silico doctor`, `wait-device`, `inspect`, `deploy --yes`, plus Bedside operator gates below.
 
@@ -175,7 +177,7 @@ Prove manners: `bedside doctor` and `bedside eval` (vendored fixtures include `o
 
 ### Operator language (silico domain — not a second contract)
 
-These rules sit **on top of** Bedside for this product. They do not soften or replace the nine principles. Phrase book: [specs/lexicon.md](specs/lexicon.md).
+These rules sit **on top of** Bedside for this product. They do not soften or replace the eleven tenets. Phrase book: [specs/lexicon.md](specs/lexicon.md).
 
 #### First prompt orients the operator
 
@@ -322,7 +324,7 @@ Nothing in this file licenses: *system said declined → I still committed, push
 
 Non-interactive / CI: `--answer` on `ask`, `--confirm` / `--decline` / `--no-wait` on `step` (see `bedside ask --help`).
 
-**Choice walls are contract violations** (Bedside principle 2 / 4), including at stage boundaries. Do **not** end a status message with a free-text numbered menu such as:
+**Choice walls are contract violations** (Bedside tenets 2 / 5), including at stage boundaries. Do **not** end a status message with a free-text numbered menu such as:
 
 > Say when you want to:  
 > 1. Review/merge the PR  
@@ -508,7 +510,7 @@ Also called **[compound](specs/lexicon.md#compound)** (lexicon name for this ten
    - Bedside: gh issue create -R tig/bedside ...
    - Silico: gh issue create -R tig/silico ...
    - Good issues: what you were doing, what went wrong, recovery, proposed change.
-4. **Do not soft-fork Bedside principles** into a kinder local AGENTS section. Pin the contract; improve upstream.
+4. **Do not soft-fork Bedside tenets** into a kinder local AGENTS section. Pin the contract; improve upstream.
 5. **Do not invent a parallel spine** in the GCU to avoid filing upstream.
 
 Leaving tribal recovery in chat only violates **Make it better than you found it** / fails to **compound**.

@@ -99,7 +99,7 @@ def run_eval(
                 "focus": rep.focus,
                 "failed_focus": rep.failed_focus,
                 "info_failed": rep.info_failed,
-                "principles": rep.principle_pass,
+                "tenets": rep.tenet_pass,
                 "reasons": rep.reasons,
             }
             for rep in reports

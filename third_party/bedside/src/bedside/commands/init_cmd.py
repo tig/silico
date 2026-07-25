@@ -15,7 +15,7 @@ AGENTS_SECTION = """## Help the operator (Bedside)
 We follow [Bedside](https://github.com/tig/bedside): manners for agents
 operating tools for smart, high-judgment non-experts.
 
-- Pin: see `bedside.toml` (do not soft-fork principles).
+- Pin: see `bedside.toml` (do not soft-fork tenets).
 - Normative contract path: `{contract_path}`
 - Human gates: call `bedside ask` / `bedside step` (or the host structured
   choice UI). Do not restate multi-choice free-text walls in this file.
@@ -23,25 +23,27 @@ operating tools for smart, high-judgment non-experts.
 Summary (full contract is normative):
 
 1. Assume low ops literacy, high judgment.
-2. No wall of unexplained shell (or free-text choice walls).
+2. No walls of shell or choice.
 3. Prefer doing over instructing.
-4. Human acts: explicit, one step, dumb-simple.
-5. Own first-time setup from zero.
-6. Own scary surfaces in plain language.
-7. Confirm in their words before irreversible or physical steps.
-8. Never leave them at a cliff.
-9. Teach only what Day 2 requires.
+4. No silent work.
+5. Human acts are explicit and dumb-simple.
+6. Own first-time setup from zero.
+7. Own scary surfaces in plain language.
+8. Confirm what they can see, in their words.
+9. Never leave them at a cliff.
+10. Teach only what tomorrow requires.
+11. Compound what you learn.
 
 ### Domain notes (this repo only)
 
 - First-run: <!-- describe from-zero path -->
 - Scary surfaces: <!-- ports, auth, permissions -->
-- Day-2 leave-behind: <!-- one command; what good looks like -->
+- Leave-behind: <!-- one command; what good looks like -->
 """
 
 BEDSIDE_MD = """# BEDSIDE.md (domain notes only)
 
-This file is **not** a fork of the Bedside principles.
+This file is **not** a fork of the Bedside tenets.
 
 Pin and paths: see `bedside.toml`. Normative rules live at the contract path.
 
@@ -50,7 +52,7 @@ Pin and paths: see `bedside.toml`. Normative rules live at the contract path.
 - Operator persona: smart, high-judgment; low ops literacy in our tools.
 - First-run from zero:
 - Scary surfaces (plain language):
-- Day-2 leave-behind (one path + what good looks like):
+- Leave-behind (one path + what good looks like):
 """
 
 
@@ -94,12 +96,14 @@ def run_init(
         dest = (root / vendor_dest).resolve()
         try:
             copied = vendor_copy(src, dest, include_src=include_src)
-        except (OSError, FileNotFoundError) as e:
+        except (OSError, FileNotFoundError, ValueError) as e:
+            # ValueError: self-vendor / dest nested under source safety guards.
             bad = CommandResult(SETUP_ERROR)
             bad.line(f"Vendor copy failed: {e}")
             bad.line(
                 "What to do next: pass a local tig/bedside checkout to "
-                "`--vendor-from` (must contain contract/)."
+                "`--vendor-from` (must contain contract/). Do not point "
+                "`--vendor-from` at the existing product vendor tree itself."
             )
             return bad
         detected = detect_pin(src)
@@ -208,7 +212,7 @@ def run_init(
         r.line("     Docs: docs/adopting.md")
     else:
         r.line("  1. Contract tree is under the vendor dest (see VENDOR.md there).")
-    r.line("  2. Fill domain notes in BEDSIDE.md (first-run, scary surfaces, Day-2).")
+    r.line("  2. Fill domain notes in BEDSIDE.md (first-run, scary surfaces, leave-behind).")
     r.line("  3. Add domain fixtures under eval/fixtures (never under third_party/).")
     r.line("  4. Run `bedside doctor` then `bedside eval`.")
     return r

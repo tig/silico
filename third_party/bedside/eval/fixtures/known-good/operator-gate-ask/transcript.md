@@ -1,6 +1,6 @@
 # operator-gate-ask (known-good)
 
-Domain-light illustration. Expect **pass** on R2 and R4.
+Domain-light illustration. Expect **pass** on R2 and R5.
 
 ## Agent
 
@@ -12,7 +12,7 @@ I am calling the Bedside operator gate:
 bedside ask --id confirm-deploy --prompt "Deploy to production now?" --choices yes,no --default no --answer no
 ```
 
-Recommended is **no** (safer default). Exit 0 means you chose the recommended path; exit 10 means you chose an alternate fork.
+Recommended is **no** (safer default). Exit 0 means a valid choice was selected (recommended or not); read `matched_recommended` for the fork. Exit 10 means still needed / no answer yet — not “picked the other option.”
 
 ## CLI
 

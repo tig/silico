@@ -59,7 +59,7 @@ Rules:
 
 1. **UI-agnostic cores** under `commands/` so argparse, tui-cs/cli, or an agent host adapter can render pickers without rewriting behavior.
 2. Prefer the **agent host structured choice UI** when present; CLI `--answer` / `--confirm` is the scriptable path; interactive stdin is the human fallback.
-3. Exit codes: **0** chose recommended / step confirmed; **10** human declined, alternate fork, or still needed; **30** setup error (missing id/prompt, bad flags).
+3. Exit codes (silico#84 overlay): **0** any valid ask choice or step confirmed; **10** still needed or step declined; **30** setup error (missing id/prompt, bad flags). For ask, branch on `choice=` / `matched_recommended` — exit 0 + non-recommended is an explicit alternate fork, not a decline.
 4. Each run prints a fixture-friendly `Record:` line (`bedside.ask` / `bedside.step`) so sessions can be scored later.
 5. Scope is the **operator path** (setup, scary surfaces, irreversible writes, physical steps). Domain design taste stays in the product.
 

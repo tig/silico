@@ -45,7 +45,7 @@ Summary (full contract is normative):
 - `bedside.commands.*`: UI-agnostic command cores (future tui-cs/cli should call these).
 - `bedside.eval_engine`: rule-based R1-R11 scoring.
 - Operator gates: `ask` (structured choice) and `step` (one human act + confirm).
-- Exit codes: 0 ok, 10 human-needed / non-recommended ask / declined step, 20 manners fail, 30 setup error.
+- Exit codes (silico#84 overlay): 0 any valid ask choice or confirmed step; 10 still needed / step declined; 20 manners fail; 30 setup error. Branch ask on `choice=` / `matched_recommended`, not on exit 0 alone.
 
 ## Definition of done
 

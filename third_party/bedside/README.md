@@ -100,17 +100,19 @@ bedside step --id plug-usb --prompt "Plug the data USB cable." --expect "Power L
 | `init` | Write `bedside.toml`, domain notes, `AGENTS.md` stub; optional `--vendor-from` copy | 0 ok; 30 setup |
 | `doctor` | Plain-language adoption check (config, contract on disk, AGENTS, notes) | 0 ok; 30 setup |
 | `eval` | Score fixture dir(s) against R1-R11; assert `expect` in meta.toml | 0 ok; 20 manners mismatch; 30 setup |
-| `ask` | One structured yes/no or multi-choice operator gate (recommended first) | 0 recommended; 10 other/needed; 30 setup |
+| `ask` | One structured yes/no or multi-choice operator gate (recommended first) | 0 any valid choice; 10 still needed; 30 setup |
 | `step` | One human body/browser act, then confirm in their words | 0 confirmed; 10 declined/needed; 30 setup |
 
-Exit codes (stable for agents):
+Exit codes (stable for agents; this vendored tree includes silico#84):
 
 | Code | Meaning |
 |------|---------|
-| 0 | OK (including recommended ask path / confirmed step) |
-| 10 | Human action needed, declined, or non-recommended ask choice |
+| 0 | OK — any valid ask choice (recommended or not), or confirmed step. Read `choice=` / `matched_recommended`. |
+| 10 | Human action still needed (no answer yet / empty / non-TTY without `--answer`), or step declined |
 | 20 | Manners fail (`eval` expect mismatch) |
 | 30 | Tool or setup error |
+
+Do **not** treat exit 0 + `matched_recommended=false` as declined. That is an explicit alternate fork (e.g. scary yes when default is no). Halt on the safe decline label for that gate, not merely because the choice was not recommended.
 
 **Agent Consumers:** prefer vendor-copy under `third_party/bedside` (see [docs/adopting.md](docs/adopting.md)). Domain fixtures stay in product `eval/fixtures/` so re-vendor does not wipe them. Submodule works too if you already use it.
 

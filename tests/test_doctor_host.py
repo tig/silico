@@ -53,3 +53,49 @@ def test_run_doctor_includes_python_health():
     report = run_doctor()
     joined = "\n".join(report.lines)
     assert "pyexpat" in joined
+
+def _report(idf_py=None, activation=""):
+    from silico.c_toolchain import CToolchainReport, IdfInstall
+
+    selected = None
+    if activation:
+        selected = IdfInstall(
+            name="esp-idf-5.3",
+            path="/home/u/esp/esp-idf",
+            idf_tools_path="/home/u/.espressif",
+            activation_script=activation,
+            python="",
+        )
+    return CToolchainReport(ok=True, idf_py=idf_py, selected=selected)
+
+
+def test_esp_idf_summary_deploy_ready_is_ok():
+    from silico.doctor import esp_idf_summary_lines
+
+    lines = esp_idf_summary_lines(_report(idf_py="/usr/bin/idf.py"), deploy_ready=True)
+    assert lines[0].startswith("OK")
+
+
+def test_esp_idf_summary_catalog_only_is_not_ok():
+    # PR #88 review (P1): catalog-only IDF must not report deploy-ready —
+    # `silico deploy` only accepts idf.py on PATH or IDF_PATH.
+    from silico.doctor import esp_idf_summary_lines
+
+    lines = esp_idf_summary_lines(
+        _report(idf_py="/home/u/esp/esp-idf/tools/idf.py",
+                activation="/home/u/esp/esp-idf/export.sh"),
+        deploy_ready=False,
+    )
+    joined = "\n".join(lines)
+    assert not any(ln.startswith("OK") for ln in lines)
+    assert "WARN" in joined
+    assert "not activated" in joined or "needs activation" in joined
+    assert "export.sh" in joined  # actionable activation hint
+
+
+def test_esp_idf_summary_missing_is_warn():
+    from silico.doctor import esp_idf_summary_lines
+
+    lines = esp_idf_summary_lines(_report(), deploy_ready=False)
+    joined = "\n".join(lines)
+    assert "WARN" in joined and "not found" in joined

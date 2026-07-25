@@ -60,6 +60,30 @@ def cmake_hint_lines(*, which=shutil.which, probe_dirs=None) -> list[str]:
     return ["WARN: cmake not on PATH (needed for C host gate) — install via brew/apt or EIM"]
 
 
+def esp_idf_summary_lines(tc, deploy_ready: bool) -> list[str]:
+    """One honest ESP-IDF availability line for language=c (#87, PR #88 CR).
+
+    ``deploy_ready`` must mirror what `silico deploy` actually accepts
+    (idf.py on PATH or IDF_PATH). A catalog-only install (idf-env.json /
+    EIM) is real but NOT deploy-ready until its export script is sourced —
+    report needs-activation, never a false OK.
+    """
+    if deploy_ready:
+        return [f"OK: ESP-IDF tools available ({tc.idf_py or 'idf.py on PATH / IDF_PATH'})"]
+    if tc.idf_py:
+        hint = ""
+        if tc.selected and tc.selected.activation_script:
+            hint = f' — activate: . "{tc.selected.activation_script}"'
+        return [
+            f"WARN: ESP-IDF installed but not activated ({tc.idf_py} via catalog); "
+            "deploy needs idf.py on PATH or IDF_PATH" + hint
+        ]
+    return [
+        "WARN: ESP-IDF tools not found — language=c deploy needs idf.py "
+        "(PATH, IDF_PATH, EIM, or ~/.espressif/idf-env.json)"
+    ]
+
+
 def run_doctor(*, root: Path | None = None) -> DoctorReport:
     lines: list[str] = []
     ok = True
@@ -140,15 +164,7 @@ def run_doctor(*, root: Path | None = None) -> DoctorReport:
         from silico.c_toolchain import discover_c_toolchain, doctor_c_toolchain_lines
 
         tc = discover_c_toolchain()
-        if tc.idf_py:
-            lines.append(f"OK: ESP-IDF tools available ({tc.idf_py})")
-        elif idf_py_available():
-            lines.append("OK: ESP-IDF tools available (idf.py or IDF_PATH)")
-        else:
-            lines.append(
-                "WARN: ESP-IDF tools not found — language=c deploy needs idf.py "
-                "(PATH, IDF_PATH, EIM, or ~/.espressif/idf-env.json)"
-            )
+        lines.extend(esp_idf_summary_lines(tc, deploy_ready=idf_py_available()))
         lines.extend(cmake_hint_lines())
         # EIM / idf_tools.py catalogs (#79, #87) — resolved paths, not hand-parsed JSON.
         lines.append("--- C toolchain (EIM / IDF) ---")

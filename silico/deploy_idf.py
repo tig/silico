@@ -128,7 +128,9 @@ def plan_idf_deploy(
 
     if not idf_py_available():
         lines.append(
-            "WARN: idf.py not on PATH and IDF_PATH unset — write will fail until ESP-IDF is installed."
+            "WARN: idf.py not on PATH and IDF_PATH unset — write will fail until "
+            "ESP-IDF is activated (installed catalog? `. \"$IDF_PATH/export.sh\"`; "
+            "silico doctor shows the path)."
         )
     if yes:
         lines.append(
@@ -250,8 +252,9 @@ def deploy_idf(
 
     if not idf_py_available():
         log(
-            "FAIL: ESP-IDF tools not found (idf.py / IDF_PATH). "
-            "Install per Espressif getting started; silico doctor reports this."
+            "FAIL: ESP-IDF tools not activated (need idf.py on PATH or IDF_PATH). "
+            "If an install exists (silico doctor lists catalogs), source its "
+            "export.sh first; otherwise install per Espressif getting started."
         )
         return DeployResult(False, log.lines)
 

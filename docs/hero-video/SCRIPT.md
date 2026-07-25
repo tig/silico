@@ -4,7 +4,9 @@ Narrative for the README **hero video**: one end-to-end first ship of the [Xuss]
 
 **Goal:** a viewer who has never opened the repo sees *prompt → clone → agent → board talking → CI green* in a short cut, with an on-screen clock that measures **real first-ship elapsed time** (not how long the edited video runs).
 
-**Assembly:** machine plan is [`timeline.toml`](timeline.toml). Build with [`build.py`](build.py). Capture notes: [`record.md`](record.md).
+**Assembly:** machine plan is [`timeline.toml`](timeline.toml). Build with [`build.py`](build.py).
+
+**Capture:** onscreen beats (browser, terminal, agent, CI) are **driven and recorded with [tig/mcec](https://github.com/tig/mcec)** — playbook [`mcec.md`](mcec.md). Desk metal is a separate camera take. Checklist: [`record.md`](record.md).
 
 ---
 
@@ -31,7 +33,7 @@ Tune segment `speed` / trims in `timeline.toml` after the first rough cut.
 
 ### 2. GitHub: silico Getting Started → copy the prompt
 
-- Screen recording of [github.com/tig/silico](https://github.com/tig/silico) (or the README rendered locally).
+- **MCEC** drives a browser to [github.com/tig/silico](https://github.com/tig/silico) and `record`s the window/region (GIF).
 - Scroll to **Getting Started** / **Step 3** (the agent start prompt).
 - Pause; highlight or zoom the prompt block so it is obviously the thing to copy:
 
@@ -43,7 +45,7 @@ Tune segment `speed` / trims in `timeline.toml` after the first rough cut.
 
 ### 3. Terminal — clone xuss, start agent, paste prompt
 
-- Clean terminal (or TUI shell) at a neutral home directory.
+- **MCEC** drives a clean terminal (large font) and records.
 - Commands, readable at 1× (or slight speed-up between commands only):
 
   ```sh
@@ -57,20 +59,21 @@ Tune segment `speed` / trims in `timeline.toml` after the first rough cut.
 
 ### 4. Welcome — slow for readability
 
-- From the agent session recording: the **Stage 0a orientation** (`silico welcome` skeleton in chat).
-- **Slow** so a viewer can read key lines (~2–3 s of *readable* on-screen time; use `speed < 1` in the timeline).
+- **MCEC** records the agent window for **Stage 0a** only (`silico welcome` skeleton).
+- **Slow** in the timeline so a viewer can read key lines (~2–3 s of *readable* on-screen time; `speed < 1`).
 - Do **not** race past “what Silico is / this GCU / start gate next.”
 
 ### 5. First-ship body — time-lapse, slow on human acts
 
-- Same session (or stitched session clips): Stage A→D as a **time-lapse**.
-- **Slow to ~1× (or gentle slow-mo)** whenever the human must act:
+- **MCEC** records the agent window in **multiple short takes** (GIF duration caps ~60 s default — see [mcec.md](mcec.md)).
+- Stage A→D as a **time-lapse** across those takes.
+- **Slow to ~1×** whenever the human must act:
   - start-gate / yes-adjust chooser
   - plug USB / board confirm
   - deploy overwrite confirm
   - product-face observe (“do you see/hear …?”)
 - Fast through pure agent work (installs, scaffold, pytest green, long thinking).
-- Prefer **many short segments** in `timeline.toml` (same file, different `in_sec`/`out_sec`/`speed`) over one opaque 30× clip.
+- Prefer **many short segments** in `timeline.toml` over one opaque 30× clip.
 
 ### 6. Desk — xuss on metal
 
@@ -82,7 +85,7 @@ Tune segment `speed` / trims in `timeline.toml` after the first rough cut.
 
 ### 7. GitHub — tig/xuss CI green
 
-- Browser or `gh` UI on [tig/xuss](https://github.com/tig/xuss): default branch / latest run **green**.
+- **MCEC** drives browser (or records `gh` UI) on [tig/xuss](https://github.com/tig/xuss): default branch / latest run **green**.
 - Hold long enough to read the check name (~2–3 s).
 
 ### 8. End card

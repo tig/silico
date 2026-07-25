@@ -5,24 +5,30 @@ Reproduce the **silico × xuss** end-to-end hero cut for the root [README](../..
 | File | Role |
 |------|------|
 | [SCRIPT.md](SCRIPT.md) | Narrative beats (what the viewer should see) |
-| [record.md](record.md) | How to capture each source clip |
+| [mcec.md](mcec.md) | **Onscreen drive + record** with [tig/mcec](https://github.com/tig/mcec) |
+| [record.md](record.md) | Capture checklist (MCEC vs desk camera) |
 | [timeline.toml](timeline.toml) | Edit decision list: order, trims, speed, session clock |
 | [build.py](build.py) | ffmpeg assembler (clock burn-in, stills, cards, concat) |
-| `footage/` | Your recordings (gitignored binaries) |
+| `footage/` | MCEC GIFs + desk MP4 (gitignored binaries) |
 | `out/` | Rendered `hero.mp4` (gitignored) |
 
 ## Prerequisites
 
-- **ffmpeg** on `PATH` (`ffmpeg -version`)
-- **Python 3.11+** (stdlib only: `tomllib`, `argparse`, `subprocess`, …)
-- Source clips under `footage/` **or** use `--placeholders` to smoke the pipeline
+- **Windows** host for onscreen takes (MCEC is Windows-only computer use)
+- **[tig/mcec](https://github.com/tig/mcec)** controller via `scripts/Generate-HeroGif.ps1` from a mcec clone (see [mcec.md](mcec.md))
+- **ffmpeg** on `PATH`
+- **Python 3.11+** (stdlib only for `build.py`)
+- Source clips under `footage/` **or** `--placeholders` to smoke the pipeline
 
-Optional: a font ffmpeg can find for `drawtext` (Windows: `C:\\Windows\\Fonts\\segoeui.ttf`; macOS: Helvetica; Linux: DejaVu). The builder probes common paths.
+Optional: a font ffmpeg can find for `drawtext` (Windows Segoe UI, etc.).
 
 ## Quick start
 
 ```text
-# From repo root or this directory:
+# 1) Capture onscreen with MCEC (playbook):
+#    docs/hero-video/mcec.md
+
+# 2) Assemble:
 python docs/hero-video/build.py --placeholders
 python docs/hero-video/build.py --check-footage
 python docs/hero-video/build.py
@@ -32,6 +38,21 @@ Outputs:
 
 - `docs/hero-video/out/hero.mp4` — final cut
 - `docs/hero-video/out/segments/` — intermediate segment encodes (debug)
+
+## Capture model
+
+```text
+  MCEC (drive + record GIF)          Camera
+  ├─ browser silico README           └─ desk xuss boot / product face
+  ├─ terminal clone + agent start
+  ├─ agent welcome + staged first ship
+  └─ browser xuss CI green
+           │
+           ▼
+  footage/*  →  build.py + timeline.toml  →  out/hero.mp4
+```
+
+MCEC `record` is **GIF**, typically **≤60 s** per take unless you raise controller limits. Long first-ship UI is **multiple takes**; the timeline time-lapses them. Session clock in the final video is still real first-ship elapsed time (`session_*_sec`).
 
 ## Clock semantics
 
@@ -43,9 +64,9 @@ Fill session times from the log in [record.md](record.md) after a real capture.
 
 ## Editing workflow
 
-1. Record clips per [record.md](record.md).
-2. Set `in_sec` / `out_sec` / `speed` on each `[[segments]]` entry in `timeline.toml`.
-3. Split the long agent tape into **gate-slow** vs **timelapse** segments (examples commented in the timeline).
+1. Capture onscreen with MCEC per [mcec.md](mcec.md); desk clip with a camera.
+2. Drop files into `footage/`; set `in_sec` / `out_sec` / `speed` in `timeline.toml`.
+3. Split agent UI into **gate-slow** vs **timelapse** segments.
 4. `python build.py` → review → tweak → repeat.
 5. Publish the mp4 (see below) and point the root README at it.
 
@@ -68,5 +89,6 @@ Suggested README shape once hosted:
 ## Design notes
 
 - Same spirit as `docs/_make_social_preview.py`: **docs tooling in-tree**, not product domain in the spine.
-- Placeholders keep the assemble path testable without committing multi‑hundred‑MB screen captures.
+- Onscreen path **composes** with [tig/mcec](https://github.com/tig/mcec) (drive + `record`); silico does not vendor MCEC.
+- Placeholders keep the assemble path testable without committing large captures.
 - No soft-fork of Bedside or first-ship manners: the video *shows* the path; [AGENTS.md](../../AGENTS.md) remains normative for agents.

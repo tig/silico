@@ -38,6 +38,13 @@ def test_timeline_loads_and_has_script_beats(hv):
     assert ids[-1] == "credits"
     assert tl.brand.credit_url.startswith("https://github.com/tig/silico")
     assert tl.clock.enabled
+    # Onscreen path is MCEC GIF (desk remains camera mp4).
+    by_id = {s.id: s for s in tl.segments}
+    assert by_id["gh-scroll"].source.endswith(".gif")
+    assert by_id["terminal-start"].source.endswith(".gif")
+    assert by_id["welcome-slow"].source.endswith(".gif")
+    assert by_id["ci-green"].source.endswith(".gif")
+    assert by_id["desk-metal"].source.endswith(".mp4")
 
 
 def test_clock_drawtext_maps_session_range(hv):
@@ -72,6 +79,15 @@ def test_plan_does_not_require_footage(hv, capsys):
     out = capsys.readouterr().out
     assert "open" in out
     assert "session clock end" in out
+
+
+def test_mcec_playbook_exists():
+    mcec = REPO / "docs" / "hero-video" / "mcec.md"
+    text = mcec.read_text(encoding="utf-8")
+    assert "tig/mcec" in text
+    assert "record" in text
+    assert "Generate-HeroGif.ps1" in text
+    assert "AgentRecordMaxDurationMs" in text or "60 s" in text
 
 
 @pytest.mark.skipif(shutil.which("ffmpeg") is None, reason="ffmpeg not on PATH")

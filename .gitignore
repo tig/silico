@@ -23,5 +23,6 @@ docs/hero-video/**/*.mp4
 docs/hero-video/**/*.mov
 docs/hero-video/**/*.mkv
 docs/hero-video/**/*.webm
+docs/hero-video/**/*.gif
 docs/hero-video/**/*.vf.txt
 docs/hero-video/**/*.pre.mp4

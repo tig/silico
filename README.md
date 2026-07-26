@@ -1,10 +1,12 @@
 ![Silico - Prompt to metal](docs/hero.jpg)
 
-Silico makes building maintainable firmware for embedded devices simple. Given a device [spec](./specs/lexicon.md#spec), it first guides AI agents to [scaffold](./specs/lexicon.md#scaffold) a GitHub repository set up for long-term maintainability.
+Silico it easy for humans who are not technical experts to build maintainable firmware for embedded devices. 
 
-Agents then loop to engineer robust firmware, unit and smoke tests, a simulator, continuous integration (CI) using both real devices and the simulator, and an end-user install/upgrade tool.
+Given a specification for the device (what the hardware is and what the software is **suposed** to do), it guides AI agents to [scaffold](./specs/lexicon.md#scaffold) a GitHub repository set up for long-term maintainability and ensures they can communicate with the hardware over USB.
 
-The human interface is a coding agent, not an installation guide, IDE, or shell tutorial.
+Then, Silico coordinates between the human and agents to iteratively engineer robust firmware, unit and smoke tests, a simulator, continuous integration (CI) using both real devices and the simulator, and an end-user install/upgrade tool.
+
+The human (you) provides product vision, judgement, and taste. The AIs do all the gobblygook required to make the hardware sing and evolve over time.
 
 > ***[Prompt to metal (n)](https://blog.kindel.com/2026/07/22/prompt-to-metal/)***: *Building hardware products from expressed human intent. The high-judgement engineer and/or product person describes and judges; the machines draw the schematics, route the boards, write the firmware and companion software, run the tests, manage customer feedback, and improve the product.*
 
@@ -20,11 +22,11 @@ Silico uses a highly opinionated lexicon to keep AIs and humans on the same page
 
 ### GCU
 
-**General Contact Unit.** One **shippable edge product** with end-user value, private domain logic, and an install/upgrade system.
+**General Contact Unit.** One **shippable edge product** with end-user value, private domain logic, and an install/upgrade system. Also refered to as the **metal**.
 
 ### Host
 
-**The developer or CI machine** (Mac, Windows, Linux runner). The Silico simulator, OSS embedded tooling, test infrastructure, and deploy tools all run on the host; not on the board.
+**The developer or CI machine** (Mac, Windows, Linux). The Silico simulator, OSS embedded tooling, test infrastructure, and deploy tools all run on the host; not on the GCU.
 
 ### Spine
 

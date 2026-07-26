@@ -34,7 +34,7 @@ v1 succeeds when:
 
 1. **first ship:** non-software human + agent on a Mac → real USB device (+ sim) end-to-end, host gate green.
 2. **update path (alpha):** same verified build can leave as a **prototype** with a **real customer for alpha** feedback — not beta polish; not full integrity suite.
-3. **~1 month later (beta horizon):** more customers can get beta-class units; **update integrity** (definition TBD — [spike](https://github.com/tig/silico/issues/4)) and optional self-hosted metal CI belong here, not on update path.
+3. **~1 month later (beta horizon):** more customers can get beta-class units; **update integrity** (definition TBD — [spike](https://github.com/tig/silico/issues/4)) and optional self-hosted metal CI belong here, not on update path. **Host CI is always-on** (every branch); metal is opt-in later — see [silico/knowledge/ci-host-metal.md](../silico/knowledge/ci-host-metal.md) and [tig/silico#101](https://github.com/tig/silico/issues/101).
 4. Ongoing: silico remains how that company updates edge (foundational, not a demo).
 5. All three GCUs share the spine without private folklore dumps into silico.
 

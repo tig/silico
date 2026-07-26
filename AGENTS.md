@@ -345,9 +345,9 @@ Before the first push of first ship (or when locking the product workspace), **i
 | Issues | `gh issue list --limit 5`; issue count / activity |
 | Default branch protection / required checks | only if already visible; do not dig for policy theater |
 
-##### Maintainer practice GCUs: always `main` (hard override)
+##### Maintainer practice GCUs (xuss family)
 
-These remotes are **first-ship / harness practice trees**, not product teams with a merge queue. **Always use the direct-to-`main` strategy** — even if `gh pr list` shows past PR history (prior harness runs leave noise).
+These remotes are **first-ship / harness practice trees**, not product teams with a merge queue.
 
 | Remote | Role |
 |--------|------|
@@ -355,9 +355,16 @@ These remotes are **first-ship / harness practice trees**, not product teams wit
 | [tig/xuss-c](https://github.com/tig/xuss-c) | C / ESP-IDF demo GCU |
 | [tig/xuss-lame](https://github.com/tig/xuss-lame) | Thin/messy interview practice GCU |
 
-**Do not** open a “repo workflow” chooser offering `pr` vs `main` for these three. **Do not** invent a PR path because “this repo has recent PR history.” Land first ship as **individual commits on `main`** (watch CI on push).
+**Two surfaces (target — [tig/silico#101](https://github.com/tig/silico/issues/101)):**
 
-**Clean start point (before mutating Stage A–C):** for the practice GCU you are shipping, verify **`origin`’s default branch tip is the product-only clean start**, not a mid-flight scaffold from a previous agent.
+| Surface | Role |
+|---------|------|
+| **`main`** | Prefer **product-only clean start** (public template face). Do not leave everyday harness firmware here. |
+| **Lab / `session/*` (or a named eval branch)** | Harness runway: first-ship commits, host CI, optional metal later. Archive with `attempt-*` tags; restore `main` to clean-start after eval (operator go on destructive remote update). |
+
+**Do not** invent multi-PR product theater because leftover harness PR history exists. Prefer **few reviewable commits on one lab branch** (or direct `main` only when the operator explicitly continues a dirty tree / golden demo). **Do not** push firmware to `main` “so CI runs” — plate **host-gate runs on every branch** (host always). Metal is a separate opt-in self-hosted plane. Detail: [silico/knowledge/ci-host-metal.md](silico/knowledge/ci-host-metal.md).
+
+**Clean start point (before mutating Stage A–C):** for the practice GCU you are shipping, verify **`origin`’s default branch tip is the product-only clean start** (or you are intentionally on a lab branch that started from it), not a mid-flight scaffold from a previous agent left as if it were cold start.
 
 | Check | How |
 |-------|-----|
@@ -371,18 +378,20 @@ If tip is **not** clean start (e.g. prior “Scaffold plate…”, half-done fir
 2. Tell the operator in plain language: remote is past clean start; options are **reset to clean start** (only with explicit operator go — destructive) or **continue this tree** as an update path.
 3. Do **not** silently open a PR “to keep main clean” as a substitute for checking clean start.
 
-When the operator’s goal is a **fresh first-ship harness run**, all three practice remotes they care about should be at clean start **before** go (at least the one cwd targets; if they named the whole Xuss family, check each).
+When the operator’s goal is a **fresh first-ship harness run**, all three practice remotes they care about should be at clean start **before** go (at least the one cwd targets; if they named the whole Xuss family, check each) — or the session must start from clean-start onto a **lab branch**, not invent that dirty `main` is cold start.
 
-**Anti-pattern:** Stage C green → “repo has PR history → recommend `pr`” on `tig/xuss-c` (or xuss / xuss-lame). That is the failure this override exists to prevent.
+**Anti-pattern:** Stage C green → “repo has PR history → recommend multi-PR product workflow” on `tig/xuss-c` (or xuss / xuss-lame). Harness noise is not a merge queue.
 
-**Simple repo** (typical early GCU / first-ship practice tree — **and always the three practice GCUs above**): few or no extra branches, little or no PR history, thin issue tracker.
+**Anti-pattern:** force mid-flight firmware onto practice `main` only so GitHub Actions runs. Host CI is **host always** (all branches); see [ci-host-metal.md](silico/knowledge/ci-host-metal.md).
 
-1. **Recommend committing and pushing straight to `main`** (or the default branch). For **xuss / xuss-c / xuss-lame**, this is **required**, not optional.
-2. Say in plain language: PRs can wait until the product is more active; direct-to-main keeps CI on every push without merge-queue overhead.
-3. Use a **structured chooser** if they might prefer PRs anyway; recommended option first: **commit to main**. **Skip the chooser** for the three practice GCUs (already decided: main).
-4. Land first ship as **individual, reviewable commits** on that branch. Issues stage intent; **issues ≠ a PR each**.
+**Simple repo** (typical early GCU / first-ship practice tree — **and the three practice GCUs above**): few or no extra branches, little or no real product PR history, thin issue tracker.
 
-**Well-used repo** (active branches, open or recent PRs, non-trivial issue history, or operator already works via PR) — **does not apply** to tig/xuss, tig/xuss-c, tig/xuss-lame (see override above):
+1. **Evaluation / clean-start harness:** recommend a **lab branch** from clean-start (e.g. `session/…`) so public `main` stays template-clean; host CI still runs on push.
+2. **Operator wants main anyway** (or continues a dirty tree): individual reviewable commits on that branch; say the template face is dirty until restore.
+3. Skip multi-option free-text “PR vs main” walls; use a short structured chooser only when the operator might choose lab vs main vs continue-dirty.
+4. Issues stage intent; **issues ≠ a PR each**.
+
+**Well-used repo** (active branches, open or recent PRs, non-trivial issue history, or operator already works via PR) — **does not apply** to the three practice GCUs’ *harness* default (use lab/clean-start rules above). For real product GCUs:
 
 1. **Do not silently force direct-to-main.**
 2. **Verify with the operator** (structured chooser) whether changes should go through **PRs** or **direct commits to the default branch**.
@@ -391,10 +400,12 @@ When the operator’s goal is a **fresh first-ship harness run**, all three prac
 
 **Only open multiple PRs when** the operator clearly asks to stage, split review, or stack work (e.g. “separate PRs per issue,” Graphite stack). Then say how they relate and merge order — do not invent a multi-PR plan unprompted.
 
-**Anti-pattern:** invent a PR workflow on a quiet repo that only needed `main` commits.  
-**Anti-pattern:** invent a PR workflow on **tig/xuss**, **tig/xuss-c**, or **tig/xuss-lame** because of leftover harness PR history.  
+**Anti-pattern:** invent a PR workflow on a quiet repo that only needed `main` or one lab branch.  
+**Anti-pattern:** invent multi-PR theater on **tig/xuss**, **tig/xuss-c**, or **tig/xuss-lame** because of leftover harness PR history.  
 **Anti-pattern:** five open PRs titled variations of “first ship scaffold,” “L0 product face,” … with no operator request to split.  
 **Anti-pattern:** choose PRs and never watch CI — that skips the reason PRs exist for that team.  
+**Anti-pattern:** first-ship mutate on a practice GCU as if cold start when `origin/main` is mid-flight, without telling the operator (or preparing a lab branch from clean-start).  
+**Anti-pattern:** tip is clean start (docs only) but the agent cherry-picks or replays a previous attempt’s display/audio/UI firmware from older commits / other branches / “last session worked” — that is **past-HEAD salvage** (see **Product truth is HEAD**). Verboten.
 
 ##### Push rejected: workflow scope
 
@@ -406,8 +417,6 @@ with a token lacking the `workflow` scope is **refused by GitHub** (clear
 `git push "https://x-access-token:${KT}@github.com/<owner>/<repo>.git" <branch>` —
 and scrub the tokenized remote/upstream afterwards. Do not drop the workflow
 file to make the push pass.
-**Anti-pattern:** first-ship mutate on a practice GCU whose `origin/main` tip is not the product-only clean start, without telling the operator.  
-**Anti-pattern:** tip is clean start (docs only) but the agent cherry-picks or replays a previous attempt’s display/audio/UI firmware from older commits / other branches / “last session worked” — that is **past-HEAD salvage** (see **Product truth is HEAD**). Verboten.
 
 ### Product truth is HEAD (no past-HEAD salvage)
 
@@ -696,7 +705,7 @@ When a human must install or approve something, use **Big steps: why + where** (
 2. If cwd is already a git GCU with `origin`, use it.
 3. If create new: confirm a product or codename (**not** `silico`); `gh` create private; clone **or** init in the empty cwd.
 4. Remind them: silico stays `github.com/tig/silico`; **their product** is the GCU repo.
-5. Once the GCU remote is known: **inspect repo workflow** (branches / PRs / issues) and apply **Repo workflow: inspect, then choose main vs PRs** before the first push. If remote is **tig/xuss**, **tig/xuss-c**, or **tig/xuss-lame**: **main only** (no PR chooser); **verify clean start** tip before mutating (see that section).
+5. Once the GCU remote is known: **inspect repo workflow** (branches / PRs / issues) and apply **Repo workflow** before the first push. If remote is **tig/xuss**, **tig/xuss-c**, or **tig/xuss-lame**: verify **clean start** (or lab branch from clean-start); do not invent multi-PR theater; host CI runs on every branch (see practice GCUs + [ci-host-metal.md](silico/knowledge/ci-host-metal.md)).
 
 ### Stage C - Local silico checkout, pin, and scaffold the GCU
 
@@ -803,7 +812,7 @@ Then: do **not** claim the product is fully specified; implement the current sli
 
 **Anti-patterns:** block forever on a perfect spec; invent vertical moat without judgment; free-text choice walls; skip metal poll when metal is in scope; leave recovery only in chat.
 
-**Practice GCU (maintainers / interview dry-run):** private [tig/xuss-lame](https://github.com/tig/xuss-lame) is a thin, messy first-draft product tree (not labeled as a test in-repo). When first ship is aimed at that checkout, product truth is **only** that tree + the operator — do **not** open `tig/xuss` or `tig/xuss-c` (or use prior knowledge of them) to “complete” the contract. Detail: [silico/knowledge/spec-interview.md](silico/knowledge/spec-interview.md). Repo workflow for **xuss / xuss-c / xuss-lame**: always **direct-to-`main`**; confirm **product-only clean start** on `origin/main` before first-ship mutates (see **Repo workflow** → Maintainer practice GCUs).
+**Practice GCU (maintainers / interview dry-run):** private [tig/xuss-lame](https://github.com/tig/xuss-lame) is a thin, messy first-draft product tree (not labeled as a test in-repo). When first ship is aimed at that checkout, product truth is **only** that tree + the operator — do **not** open `tig/xuss` or `tig/xuss-c` (or use prior knowledge of them) to “complete” the contract. Detail: [silico/knowledge/spec-interview.md](silico/knowledge/spec-interview.md). Repo workflow for **xuss / xuss-c / xuss-lame**: clean-start (or lab branch from it); prefer not leaving harness residue on public `main` (see **Repo workflow** → Maintainer practice GCUs, #101).
 
 ### Stage D - Talk to real hardware (hello metal)
 
@@ -898,12 +907,14 @@ Non-Python deploy assets (e.g. audio riffs) may appear in `[deploy].core`; host 
 ### Stage E - CI proves metal change
 
 1. Ask the human to open a GitHub Issue on the **GCU** repo (or create with `gh` after approve). Title example: `Change the firmware blink pattern (distinct A vs B)`.
-2. Implement: firmware behavior change **and** host tests/CI green. Domain follows product `spec.md` when present.
-3. Push commits to the **existing** first-ship branch/PR (or open the first PR if none yet). Do **not** open a new PR per stage. Watch CI; fix red builds.
-4. Deploy only after operator confirmation again if overwriting; confirm the visible/audible acceptance matches the issue.
-5. Close the issue with a short note linking the commit/PR.
+2. Implement: firmware behavior change **and** host tests green. Domain follows product `spec.md` when present.
+3. Push commits to the **existing** first-ship branch/PR (or open the first PR if none yet). Do **not** open a new PR per stage. Prefer a **lab branch** for practice GCUs so host CI runs without dirtying template `main` ([#101](https://github.com/tig/silico/issues/101), [ci-host-metal.md](silico/knowledge/ci-host-metal.md)).
+4. **Host always:** watch the **`host-gate`** job green on that push (all branches). That is the always-on CI plane. Do **not** claim metal from host alone.
+5. **Metal later:** when a self-hosted `metal-bench` (or equivalent) exists and is green, claim only the layers it proves (deployed / machine accept). Operator see/hear **product face** still needs Stage D1 / field unless instrumented. Detail: [ci-host-metal.md](silico/knowledge/ci-host-metal.md).
+6. Deploy only after operator confirmation again if overwriting; confirm the visible/audible acceptance matches the issue.
+7. Close the issue with a short note linking the commit/PR and the **layer** proven.
 
-Closed loop: **issue → agent → host gate → CI → metal**.
+Closed loop: **issue → agent → host gate → host CI → (optional metal CI) → metal observe**.
 
 ### Stage F - Domain work (still first ship)
 
@@ -1003,7 +1014,8 @@ Default plate stays MicroPython. Arduino is not this path (see issue #59). First
 - Do **not** notice GPIO / product face mismatch and skip asking the operator to clarify (honesty note or issue alone is not a clarify gate).
 - Do **not** invent short forms of lexicon terms (e.g. bare “face” for **product face**) in operator-facing prose.
 - Do **not** present stage forks as free-text `1. / 2. / 3.` menus in chat when a structured chooser exists (or `bedside ask` is available).
-- Do **not** invent a PR workflow on a quiet/simple GCU without asking — recommend **main** first (see **Repo workflow**). Do **not** invent a PR path on **tig/xuss**, **tig/xuss-c**, or **tig/xuss-lame** (always main; check clean start first). Do **not** open a fan-out of PRs for sequential first ship / same-session work unless the operator asked to stage multi-PR.
+- Do **not** invent multi-PR theater on a quiet/simple GCU without asking. Do **not** force practice GCUs (**tig/xuss**, **xuss-c**, **xuss-lame**) onto dirty `main` just for CI — host-gate is host always; prefer lab branch + clean-start (see **Repo workflow**, #101). Do **not** open a fan-out of PRs for sequential first ship / same-session work unless the operator asked to stage multi-PR.
+- Do **not** narrate host-only CI green as metal-accepted or Stage E metal closed (see [ci-host-metal.md](silico/knowledge/ci-host-metal.md)).
 - Do **not** implement or claim product face / domain by **past-HEAD salvage**: cherry-pick, replay, or copy firmware from older commits, other branches, stashes, or prior attempts without explicit operator go to continue that line (see **Product truth is HEAD**). Applies to every GCU clean start and abort-and-retry, not only practice trees.
 - Do **not** treat a board still showing a full app while HEAD is docs/plate-only as “code already landed” — re-flash **this** build after implementing in **this** tree.
 - Do **not** deploy, soft-reset, or otherwise drive metal that may play loud/long audio, flash bright patterns, or move actuators without a clear operator-facing forewarning of what will happen and for how long.

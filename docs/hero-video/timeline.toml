@@ -1,0 +1,142 @@
+# Machine plan for the silico × xuss README hero video.
+# Human storyboard: SCRIPT.md · onscreen drive/record: mcec.md · checklist: record.md · assemble: build.py
+#
+# Onscreen sources are MCEC `record` GIFs (ffmpeg reads .gif). Desk is camera .mp4.
+# session_*_sec = real first-ship elapsed time shown on the on-screen clock
+# (not the length of the edited video). speed > 1 = time-lapse; speed < 1 = slow-mo.
+
+[video]
+width = 1920
+height = 1080
+fps = 30
+output = "out/hero.mp4"
+# CRF quality (lower = larger/better). 20 is a good README/release default.
+crf = 20
+# Prefer yuv420p + +faststart for web playback.
+preset = "medium"
+
+[brand]
+title = "silico"
+tagline = "Prompt to metal."
+credit_url = "https://github.com/tig/silico"
+# Opening still relative to this file's directory (docs/hero-video/).
+hero_image = "../hero.jpg"
+
+[clock]
+enabled = true
+# ffmpeg drawtext x/y expressions (w/h = frame, tw/th = text box)
+x = "w-tw-48"
+y = "40"
+font_size = 40
+font_color = "white"
+box = true
+box_color = "black@0.55"
+box_border_w = 12
+# Prefix shown before time, e.g. "" or "T+"
+prefix = ""
+
+# ---------------------------------------------------------------------------
+# Segments play in order. kind = still | clip | card
+# ---------------------------------------------------------------------------
+
+[[segments]]
+id = "open"
+kind = "still"
+source = "../hero.jpg"
+duration_sec = 3.0
+session_start_sec = 0
+session_end_sec = 0
+show_clock = true
+title_overlay = true
+
+[[segments]]
+id = "gh-scroll"
+kind = "clip"
+source = "footage/01-gh-silico-getting-started.gif"
+# in_sec / out_sec optional (seconds into source). Omit out_sec = to end.
+# .mp4 also fine if you convert the MCEC GIF first.
+speed = 1.0
+session_start_sec = 0
+session_end_sec = 45
+show_clock = true
+keep_audio = false
+note = "MCEC: scroll silico README to Getting Started; highlight agent prompt."
+
+[[segments]]
+id = "terminal-start"
+kind = "clip"
+source = "footage/02-terminal-clone-and-prompt.gif"
+speed = 1.0
+session_start_sec = 45
+session_end_sec = 120
+show_clock = true
+keep_audio = false
+note = "MCEC: git clone xuss, cd, start grok, paste prompt."
+
+# Welcome: slow for readability (~2–3 s of readable screen time).
+[[segments]]
+id = "welcome-slow"
+kind = "clip"
+source = "footage/03a-welcome.gif"
+speed = 0.35
+session_start_sec = 120
+session_end_sec = 150
+show_clock = true
+keep_audio = false
+note = "MCEC: Stage 0a welcome skeleton; slow so it is readable."
+
+# Agent work time-lapse — add more 03b/03c segments after capture (MCEC ≤60s takes).
+[[segments]]
+id = "agent-timelapse"
+kind = "clip"
+source = "footage/03b-agent-work.gif"
+speed = 30.0
+session_start_sec = 150
+session_end_sec = 2400
+show_clock = true
+keep_audio = false
+note = "MCEC: time-lapse first-ship body; split further after markers."
+
+# Example human-gate insert (enable after capture):
+# [[segments]]
+# id = "gate-deploy"
+# kind = "clip"
+# source = "footage/03c-human-gates.gif"
+# speed = 1.0
+# session_start_sec = 2100
+# session_end_sec = 2130
+# show_clock = true
+# keep_audio = false
+# note = "MCEC: confirm-deploy operator gate at 1×"
+
+[[segments]]
+id = "desk-metal"
+kind = "clip"
+source = "footage/04-desk-xuss-boot-demo.mp4"
+speed = 1.0
+session_start_sec = 2400
+session_end_sec = 2520
+show_clock = true
+keep_audio = true
+note = "Desk: boot sound, product face, short demo."
+
+[[segments]]
+id = "ci-green"
+kind = "clip"
+source = "footage/05-xuss-ci-green.gif"
+speed = 1.0
+session_start_sec = 2520
+session_end_sec = 2580
+show_clock = true
+keep_audio = false
+note = "MCEC: tig/xuss CI green on main."
+
+[[segments]]
+id = "credits"
+kind = "card"
+duration_sec = 4.0
+session_start_sec = 2580
+session_end_sec = 2580
+show_clock = false
+lines = ["https://github.com/tig/silico"]
+subtitle = "Prompt to metal."

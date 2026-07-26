@@ -13,3 +13,16 @@ build/
 # local installs of vendored packages
 third_party/**/src/*.egg-info/
 third_party/**/*.egg-info/
+
+# Hero video raw footage + renders (keep .gitkeep; see docs/hero-video/)
+docs/hero-video/footage/*
+!docs/hero-video/footage/.gitkeep
+docs/hero-video/out/*
+!docs/hero-video/out/.gitkeep
+docs/hero-video/**/*.mp4
+docs/hero-video/**/*.mov
+docs/hero-video/**/*.mkv
+docs/hero-video/**/*.webm
+docs/hero-video/**/*.gif
+docs/hero-video/**/*.vf.txt
+docs/hero-video/**/*.pre.mp4

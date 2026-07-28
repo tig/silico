@@ -87,7 +87,8 @@ When adopting esprec in a screened GCU:
 4. Host path: document the one-liner in product `install/` or `scripts/` only
    after the tool is ready (same commands as CI when the GCU opts into capture).
 5. Panel path still needs color/partial-paint host knowledge when relevant:
-   [esp32-lcd-ips.md](esp32-lcd-ips.md), [esp32s3-amoled-1.8.md](esp32s3-amoled-1.8.md).
+   [esp32-lcd-ips.md](esp32-lcd-ips.md) (and any other **in-tree** panel topics under
+   `silico/knowledge/` for the board class — do not link unmerged topic files).
 
 ## What not to do
 

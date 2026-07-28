@@ -65,10 +65,18 @@ Pattern that worked:
 3. Push panel buffer in **horizontal stripes** (height even; 16 px is fine).  
 4. Byte-swap RGB565 for QSPI the same way Waveshare colorbar does (`SPI_SWAP_DATA_TX` / hi-lo swap).
 
-### Rotation
+### Rotation (operator-confirmed upright map)
 
-If the face is **upside-down**, flip the blit (CW vs CCW), do not re-layout the product UI.  
 Canonical product intent: USB + MODE/units labels on the **top** edge of the landscape face.
+
+| Direction | Panel ← logical (forward) | Logical ← panel (inverse, for present loops) |
+|-----------|---------------------------|-----------------------------------------------|
+| **CCW 90° (default upright for this board class)** | `px = FACE_H - 1 - ly`, `py = lx` | `lx = py`, `ly = FACE_H - 1 - px` |
+| CW 90° (wrong on Aether first metal — face upside-down) | `px = ly`, `py = FACE_W - 1 - lx` | `lx = FACE_W - 1 - py`, `ly = px` |
+
+**Field lesson (Aether LVGL face, 2026-07):** first metal + first LVGL pass both shipped **CW** and the operator reported **upside-down**. Switching present() to **CCW** fixed it. Agents: default to **CCW** on this board class; if the face is upside-down, flip CW↔CCW in the present path only — do **not** re-layout product UI.
+
+Document any counter-example (unit that needs CW) here with date + product, do not leave it only in chat.
 
 ### Rounded corners (chrome inset)
 

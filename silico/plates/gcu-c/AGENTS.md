@@ -64,6 +64,8 @@ silico deploy --port COMx --yes --verify
 
 ESP-IDF must be installed (`idf.py` or `IDF_PATH`). First flash and update flash are the same image path.
 
+After deploy, **operator-confirm product face** on the bench (see silico root Stage D1). If this GCU’s face is a **screen**, open silico `knowledge/esprec.md` when **esprec** is ready for optional PNG/GIF agent capture — not a substitute for operator confirm, and not a reason to add QEMU to this GCU’s host gate by default.
+
 ## HAL seam
 
 Portable domain under `include/` + `src/` must not include freertos / esp_* / driver headers.

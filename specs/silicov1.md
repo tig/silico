@@ -317,6 +317,7 @@ Until then, Quilan owns modem, credentials, and uplink protocol in private app c
 8. Minimal package layout so `pip install` of a tag works (make-PR-true; pre-alpha until then).
 9. CLI verbs (spec now; see tui-cs/cli design discussion) and first ship rehearsal harness.
 10. MicroPython host-sim stack ([issue #3](https://github.com/tig/silico/issues/3)); integrity for beta ([issue #4](https://github.com/tig/silico/issues/4)).
+11. **esprec** ([tig/esprec](https://github.com/tig/esprec)): when ready, agent screen capture for screened ESP GCUs. Spine holds knowledge + first-ship pointers only until a second GCU forces a pin/CLI verb (**Extract, then open**). Do not redefine GCU **sim** as QEMU; esprec’s own CI may use QEMU for its firmware path.
 
 ## 16. Acceptance for silico v1
 

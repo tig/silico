@@ -215,7 +215,7 @@ def run_doctor(*, root: Path | None = None) -> DoctorReport:
 
     # Point agents at growing host knowledge (board caps, audio, first-flash).
     lines.append(
-        "Host knowledge: silico/knowledge/ (ESP32 audio, first-flash notes). "
+        "Host knowledge: silico/knowledge/ (ESP32 audio, first-flash, esprec when ready). "
         "When first ship friction is board/host-generic, add a note there (Make it better)."
     )
 

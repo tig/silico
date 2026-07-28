@@ -157,7 +157,7 @@ See also: [HAL](#hal), [host-first](#host-first), [esprec](#esprec).
 
 ### esprec
 
-**External companion tooling** ([tig/esprec](https://github.com/tig/esprec)): on-device screen capture over USB serial to host **PNG** / **GIF** so agents can see ESP display UIs (tuirec for panels). **Not** a GCU and **not** the Silico package. When ready: optional agent evidence for screened product faces. Until ready: do not invent a parallel capture stack in the spine.
+**External companion tooling** ([tig/esprec](https://github.com/tig/esprec)): on-device screen capture over USB serial to host **PNG** / **GIF** so agents can see ESP display UIs (tuirec *analogue* for panels). **Not** a GCU and **not** the Silico package. **Ready** for agent use via `esprec snapshot|record` + on-device component; optional agent evidence for screened product faces.
 
 Host knowledge: [silico/knowledge/esprec.md](../silico/knowledge/esprec.md). Does not replace [product face](#product-face) operator confirm or GCU [sim](#sim).
 

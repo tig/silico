@@ -1,14 +1,14 @@
-# esprec — agent eyes on ESP displays (when ready)
+# esprec — agent eyes on ESP displays (**ready**)
 
-**Status:** companion tooling is **not** shipped as a silico package feature.
-Upstream: [tig/esprec](https://github.com/tig/esprec) (requirements / CI shape;
-implementation landing later). Open this file only when the GCU has a **screened
-ESP32-class** product face and you need capture, not for LED-only or audio-only
+**Status:** **implemented** as external tooling ([tig/esprec](https://github.com/tig/esprec)).
+Not a silico package feature. Open this file only when the GCU has a **screened
+ESP32-class** product face and you need capture — not for LED-only or audio-only
 first ship.
 
-esprec is the [tuirec](https://github.com/tui-cs/tuirec) equivalent for **device
-screens**: on command, on-device capture → USB serial → host **PNG** (snapshot)
-or **GIF** (short record) so agents can **see** the panel without a camera.
+esprec is the [tuirec](https://github.com/tui-cs/tuirec) *analogue* for **device
+screens** (mission kinship, not a port of tuirec’s PTY/cast pipeline): on
+command, on-device capture → USB serial → host **PNG** (snapshot) or **GIF**
+(keyframe or continuous sequence).
 
 ## Relationship to silico (do not soft-fork)
 
@@ -17,33 +17,45 @@ or **GIF** (short record) so agents can **see** the panel without a camera.
 | **product face** | Operator **see/hear** acceptance for first ship | Optional **agent** evidence of the screen face — does **not** replace operator confirm on first ship |
 | **sim** / host plant | GCU `sim/` HAL double + pytest/CTest | **Not** esprec. Do not rename GCU sim to “QEMU” |
 | **host gate** | Named product gate (`pytest` / `silico gate`) | GCU CI stays this; do **not** force every GCU to run QEMU |
-| **QEMU gate** | — | Lives in **esprec’s** CI ([specs/ci.md](https://github.com/tig/esprec/blob/main/specs/ci.md) via [tobozo/esp32-qemu-sim](https://github.com/tobozo/esp32-qemu-sim)): unit → QEMU → optional metal. Proves esprec’s capture path, not every GCU plant |
-| **metal** | Real USB + operator-observable face | Real panel still confirms color/timing quirks QEMU cannot prove |
+| **QEMU gate** | — | esprec’s own CI ladder (unit required; QEMU example may be follow-up). Proves esprec’s capture path, not every GCU plant |
+| **metal** | Real USB + operator-observable face | Real panel still confirms color/timing quirks |
 
 **Apps stay apps.** Product domain UI stays in the GCU. esprec is **tooling**
-(firmware component + host CLI). Pin or vendor only when a GCU needs it —
-prefer treating it as an external tool until a second GCU forces a silico pin
-(**Extract, then open**).
+(firmware component + host CLI). Prefer sibling clone + `pip install -e` until
+a second GCU forces a silico pin (**Extract, then open**).
 
-## When ready (readiness bar)
+## Readiness (current)
 
-Treat esprec as **usable by agents** only when **all** of these are true:
+| Bar | State |
+|-----|--------|
+| Host CLI (`esprec snapshot` / `record` / `agent-guide`) | **yes** |
+| On-device component (`component/esprec`, `esprec_emit_rgb565_spi_be`) | **yes** |
+| Unit gate `python -m pytest -q` (protocol integrity, PNG/GIF, fake device) | **yes** |
+| QEMU CI example | **follow-up** if env lacks it — metal + unit are honest for firmware path |
+| Agent guide | `esprec agent-guide` |
 
-1. Upstream ships a host CLI (or library) agents can run non-interactively with
-   stable flags and exit codes.
-2. On-device component has a documented integration surface (raw framebuffer
-   and/or LVGL snapshot path).
-3. Upstream **unit** gate is green without metal.
-4. Upstream **QEMU** gate is green (example firmware + capture assertion), or
-   metal capture is proven and documented if QEMU is temporarily unavailable.
-5. `esprec --help` / agent-guide (or equivalent) exists so agents do not read
-   source to discover the capture command.
+## Install / invoke
 
-Until then: **do not** invent a parallel capture stack in silico or the GCU
-“because esprec is coming.” Use operator observe + product docs. File friction
-on [tig/esprec](https://github.com/tig/esprec) if the gap blocks UI work.
+```text
+# sibling layout (typical): …/tig/esprec next to …/tig/<gcu>
+python -m pip install -e "../esprec[dev]"
+esprec agent-guide
+esprec snapshot --fake -o face.png          # offline
+esprec snapshot --port COMx -o face.png     # metal still
+esprec record --port COMx --frames 5 --hz 2 -o clip.gif
+# named unit gate:
+python -m pytest -q   # inside the esprec checkout
+```
 
-## Agent recipe (after ready)
+Device commands: `esprec shot` or `shot` (alias). Wire: **ESPREC1** header +
+base64 raster + end line; CRC covers **metadata + raster** (fail closed on
+truncate / header tamper). Legacy `SHOT` (pixels-only CRC) still decodes.
+
+**Serial open:** esprec sets DTR/RTS low before open so ESP auto-reset does not
+reboot mid-session (black unpainted shadow). Prefer **one open session** for
+btn inject + multiple snaps (see esprec `scripts/xuss_c_screen_scenario.py`).
+
+## Agent recipe
 
 **Where we are:** Stage D (hello metal) or UI domain work after deploy. Host
 gate is green; board talks; product face includes a **screen**.
@@ -53,62 +65,38 @@ buffer is evidence; the operator still owns first-ship product face judgment.
 
 ```text
 # After confirmed deploy + app running (soft-reset if verify parked the loop):
-# 1. Confirm esprec is installed / on PATH (or GCU-documented path).
-# 2. Snapshot (illustrative — use real flags from esprec help when shipped):
-esprec snapshot --port COMx --out .silico/esprec/face.png
-# 3. Read the PNG (vision / multimodal) and compare to product face “good.”
-# 4. For multi-step UI checks, bounded record → GIF (finite frames/duration).
+esprec snapshot --port COMx --command shot -o .silico/esprec/face.png
+# Read the PNG (vision) vs product face “good.”
+# Multi-step: keep one serial session; settle after each product action; then snap.
 ```
 
 Rules:
 
-1. **Announce** before capture if the product UI will change brightness/content
-   in a surprising way (same spirit as surprising metal effects).
+1. **Announce** before capture if UI will change brightness/content surprisingly.
 2. Prefer **snapshot** for “what is on screen now?” Prefer **bounded GIF** for
-   boot/navigation sequences — never unbounded stream that can fill disk.
-3. Store captures under **gitignored** paths (e.g. `.silico/esprec/`) unless the
-   product explicitly wants checked-in docs stills.
-4. **Do not** claim metal acceptance from PNG alone on first ship — still ask
-   the operator whether the documented product face is true on the bench.
-5. **Do not** add esprec QEMU jobs to every GCU `ci.yml` by default. Rely on
-   esprec’s own CI for component honesty; GCU may optionally add a snapshot
-   step later when the product needs regression visuals.
+   sequences — never unbounded streams.
+3. Store under **gitignored** paths (e.g. `.silico/esprec/`) unless product docs want stills.
+4. **Do not** claim metal acceptance from PNG alone on first ship — still ask the operator.
+5. **Do not** add esprec QEMU jobs to every GCU `ci.yml` by default.
+6. If PNG disagrees with the glass: **pipeline first** (integrity, packing, cooked serial), not product folklore.
 
 ## Integration surface (GCU)
 
-When adopting esprec in a screened GCU:
-
-1. Link the component per esprec’s firmware-api (when published); keep capture
-   polite (bounded RAM; product UI continues after capture).
-2. Coexist with product serial logging — structured capture must be recoverable
-   amid log noise.
-3. Choose **raw framebuffer** vs **LVGL snapshot** explicitly in product docs /
-   HAL; do not silently guess.
-4. Host path: document the one-liner in product `install/` or `scripts/` only
-   after the tool is ready (same commands as CI when the GCU opts into capture).
-5. Panel path still needs color/partial-paint host knowledge when relevant:
-   [esp32-lcd-ips.md](esp32-lcd-ips.md) (and any other **in-tree** panel topics under
-   `silico/knowledge/` for the board class — do not link unmerged topic files).
+1. EXTRA_COMPONENT_DIRS → `esprec/component` (sibling clone) or vendor `component/esprec`.
+2. Maintain a full-frame **shadow** RGB565 (`spi_be` packing as on panel DMA).
+3. On `shot` / `esprec shot`: hush logs, call `esprec_emit_rgb565_spi_be(shadow, w, h)`.
+4. Document host one-liner in product `install/` when capture is part of the update path.
+5. Panel color/partial paint: [esp32-lcd-ips.md](esp32-lcd-ips.md) when relevant.
 
 ## What not to do
 
-- Treat esprec as silico’s default **sim** (HAL plant) or replace `sim/hal_double`.
-- Require QEMU on cloud CI for every MicroPython or LED-only GCU.
-- Claim first ship complete from agent-viewed PNG while the operator never
-  confirmed product face.
-- Embed product UI logic into silico or into esprec.
-- Build a private camera-on-desk folklore path when esprec is ready and the GCU
-  already embeds the component.
+- Treat esprec as silico’s default **sim** (HAL plant).
+- Require QEMU on cloud CI for every GCU.
+- Claim first ship complete from agent-viewed PNG without operator product face confirm.
+- Embed product UI logic into silico or esprec.
+- Reopen serial with default DTR/RTS between every snap (resets ESP, black frames).
 
 ## Compound
 
-If the path is rough (serial framing, QEMU serial attach, LVGL major drift):
-prefer a durable fix or issue on **tig/esprec**; promote a silico knowledge note
-here only when the truth is host/board-generic beyond the tool itself.
-
-## Spec map (upstream)
-
-| Spec | Scope |
-|------|--------|
-| [esprec specs/spec.md](https://github.com/tig/esprec/blob/main/specs/spec.md) | Product requirements |
-| [esprec specs/ci.md](https://github.com/tig/esprec/blob/main/specs/ci.md) | Unit → QEMU → optional metal |
+Protocol/CRC/serial friction → fix **tig/esprec**. Board-generic panel notes →
+this knowledge tree. Product domain → GCU.

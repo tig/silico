@@ -90,3 +90,7 @@ word = ((r & 0xF8) << 8) | ((g & 0xFC) << 3) | (b >> 3)
 ```
 
 Still **measure** primaries on LEDs vs panel before freezing a theme table.
+
+### ESP32 little-endian host
+
+When composing RGB565 in uint16_t on classic ESP32 (LE), **byte-swap each pixel** before `esp_lcd_panel_draw_bitmap` if the panel path expects SPI big-endian words. Skipping the swap shifts channel packing and makes theme blues look green/purple on glass.

@@ -48,7 +48,7 @@ Self-hosted ESP32 (or other) on a runner is a **bench**, not a general build far
 - One physical board → **concurrency group** so two jobs never flash the same port.
 - Tools: same as human host path (`silico`, esptool / IDF / mpremote, Python).
 - Non-interactive only (`deploy --yes`, no TTY operator gates). Pin board identity in runner env (`SILICO_METAL_PORT`, expected USB id).
-- **Never** metal on untrusted fork PRs (brick + secret risk). Prefer same-repo `session/*`, `workflow_dispatch`, or owner branches.
+- **Never** metal on untrusted fork PRs (brick + secret risk). Prefer same-repo `session/*`, `workflow_dispatch`, or owner branches. Plate `metal-bench` jobs enforce this in YAML: `SILICO_METAL_CI == true` **and** (`event_name != pull_request` **or** `pull_request.head.repo.full_name == github.repository`).
 
 ### Metal job ladder (when enabled)
 
@@ -62,13 +62,14 @@ Self-hosted ESP32 (or other) on a runner is a **bench**, not a general build far
 
 ### Enabling the stub
 
-Plate `ci.yml` may include a `metal-bench` job gated by repository variable:
+Plate `ci.yml` may include a `metal-bench` job gated by repository variable **and** a same-repo guard:
 
 ```text
 SILICO_METAL_CI=true
+# plus: not a fork pull_request (see plate workflow `if:`)
 ```
 
-Until steps are wired, that job is a **documented stub** (fails closed with a pointer here, or stays disabled when the var is unset — default).
+Until steps are wired, that job is a **documented stub** (fails closed with a pointer here, or stays disabled when the var is unset — default). Fork PRs never schedule metal even when the var is true.
 
 ### Acceptance layers (spec / suite)
 

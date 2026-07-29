@@ -47,7 +47,11 @@ jobs:
   metal-bench:
     name: metal-bench
     needs: host-gate
-    if: ${{ vars.SILICO_METAL_CI == 'true' }}
+    # Opt-in var + never untrusted fork PRs (brick/secret risk; see ci-host-metal.md).
+    if: >-
+      ${{ vars.SILICO_METAL_CI == 'true'
+          && (github.event_name != 'pull_request'
+              || github.event.pull_request.head.repo.full_name == github.repository) }}
     runs-on: [self-hosted, silico-metal]
     concurrency:
       group: silico-metal-${{ github.repository }}

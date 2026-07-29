@@ -74,3 +74,19 @@ Off-screen compose (bytearray of RGB565) + windowed SPI write is the durable pat
 2. Ground colors with **LED vs panel** measurement, not host-monitor screenshots alone.
 3. Prefer regional blit for continuous animation.
 4. Extend this file when a new panel family needs a different pack or init sequence.
+
+## Footgun: double R/B swap (measured Xuss-C / M5GO)
+
+If the panel is already opened with **BGR element order + INVON**, packing pixels with an *extra* R/B swap in software:
+
+```text
+word = ((b & 0xF8) << 8) | ((g & 0xFC) << 3) | (r >> 3)   # extra swap
+```
+
+turns intended dark blue themes into **purple** on glass (and in esprec capture). Prefer standard RGB565 pack and let the panel driver own BGR:
+
+```text
+word = ((r & 0xF8) << 8) | ((g & 0xFC) << 3) | (b >> 3)
+```
+
+Still **measure** primaries on LEDs vs panel before freezing a theme table.

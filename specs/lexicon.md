@@ -80,7 +80,9 @@ The **human-observable product indication** on the [GCU](#gcu) after the app is 
 
 Always say the full term **product face**. Never shorten to bare “face.” On first use in a session, define it (see Silico `AGENTS.md` operator language). First-ship [metal](#metal) acceptance requires the operator to confirm the product face, not only a version string.
 
-See also: [metal](#metal), [host gate](#host-gate), [Help the operator](#help-the-operator), [first ship](#first-ship).
+For **screened** ESP32-class products, agents may later use [esprec](#esprec) (when ready) as optional eyes on the panel; that does **not** replace operator product face confirm on first ship.
+
+See also: [metal](#metal), [host gate](#host-gate), [Help the operator](#help-the-operator), [first ship](#first-ship), [esprec](#esprec).
 
 ### first ship
 
@@ -149,7 +151,17 @@ See also: [version identity](#version-identity).
 
 Also **host plant** / **closed-loop plant.** [Host](#host)-only simulation of the product world used for regression without a board. Never deployed to the device. Complements [metal](#metal); does not replace [host gate](#host-gate) or real USB on first ship.
 
-See also: [HAL](#hal), [host-first](#host-first).
+Default GCU shape: `sim/` HAL doubles + host tests (pytest or CTest) — **not** full SoC emulation. Companion tools (e.g. [esprec](#esprec) QEMU gates for *their* firmware path) may use QEMU; that does **not** redefine Silico **sim** for every GCU.
+
+See also: [HAL](#hal), [host-first](#host-first), [esprec](#esprec).
+
+### esprec
+
+**External companion tooling** ([tig/esprec](https://github.com/tig/esprec)): on-device screen capture over USB serial to host **PNG** / **GIF** so agents can see ESP display UIs (tuirec *analogue* for panels). **Not** a GCU and **not** the Silico package. **Ready** for agent use via `esprec snapshot|record` + on-device component; optional agent evidence for screened product faces.
+
+Host knowledge: [silico/knowledge/esprec.md](../silico/knowledge/esprec.md). Does not replace [product face](#product-face) operator confirm or GCU [sim](#sim).
+
+See also: [product face](#product-face), [agent-first CLI](#agent-first-cli), [ESP32-class](#esp32-class).
 
 ---
 

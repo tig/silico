@@ -1,9 +1,11 @@
 name: ci
 
+# Host always for the spine package. Metal plane is GCU-side (plates); see
+# silico/knowledge/ci-host-metal.md (tig/silico#101).
 on:
   push:
-    branches: [main, master, develop]
   pull_request:
+  workflow_dispatch:
 
 jobs:
   host-gate:

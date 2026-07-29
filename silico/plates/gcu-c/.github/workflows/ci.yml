@@ -1,9 +1,10 @@
 name: ci
 
+# Host always / metal later — silico/knowledge/ci-host-metal.md (tig/silico#101)
 on:
   push:
-    branches: [main, master, develop]
   pull_request:
+  workflow_dispatch:
 
 # C plate host path on CI:
 #   1) cmake host_test (pure C; no silico required for that step)
@@ -39,3 +40,38 @@ jobs:
         run: cmake --build build/host --target host_test
       - name: silico gate (include hygiene + host.gate)
         run: silico gate
+
+  # Opt-in self-hosted metal plane. Unset SILICO_METAL_CI → job skipped (host always is enough).
+  # When true: register a runner labeled [self-hosted, silico-metal] and replace the stub step
+  # with wait-device → inspect → idf-flash/deploy → machine accept (see ci-host-metal.md).
+  metal-bench:
+    name: metal-bench
+    needs: host-gate
+    # Opt-in var + never untrusted fork PRs (brick/secret risk; see ci-host-metal.md).
+    if: >-
+      ${{ vars.SILICO_METAL_CI == 'true'
+          && (github.event_name != 'pull_request'
+              || github.event.pull_request.head.repo.full_name == github.repository) }}
+    runs-on: [self-hosted, silico-metal]
+    concurrency:
+      group: silico-metal-${{ github.repository }}
+      cancel-in-progress: false
+    defaults:
+      run:
+        working-directory: gcu
+    steps:
+      - name: Checkout GCU
+        uses: actions/checkout@v4
+        with:
+          path: gcu
+      - name: Checkout silico (sibling host spine)
+        uses: actions/checkout@v4
+        with:
+          repository: tig/silico
+          path: silico
+      - name: Metal plane stub (wire me)
+        run: |
+          echo "::error::SILICO_METAL_CI is true but metal-bench steps are not wired yet."
+          echo "See tig/silico silico/knowledge/ci-host-metal.md — host-gate alone is the always-on plane."
+          echo "Replace this step with: wait-device, inspect, idf build/flash or silico deploy, machine accept."
+          exit 1

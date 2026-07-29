@@ -20,6 +20,7 @@ Product domain (idle control, drone songs, vehicle acceptance) stays in the **GC
 | First-flash UF2 vs esptool | [first-flash.md](first-flash.md) |
 | Thin / contradictory product `spec.md` (interview mode) | [spec-interview.md](spec-interview.md) |
 | macOS Codex + ESP-IDF (PowerShell, Python env) | [macos-codex-esp-idf.md](macos-codex-esp-idf.md) |
+| Host-always CI / self-hosted metal plane later | [ci-host-metal.md](ci-host-metal.md) |
 | Index of topics | [INDEX.md](INDEX.md) |
 
 Do **not** load every knowledge file into context. Open only the topic needed for the current task.

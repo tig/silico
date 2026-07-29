@@ -14,5 +14,6 @@
 | board-profiles | first-ship product-face pin packs; board-profile seed → defaults.py | [board-profiles.md](board-profiles.md) |
 | spec-interview | Thin/contradictory product specs; interview vs interactive path | [spec-interview.md](spec-interview.md) |
 | macos-codex-esp-idf | macOS Codex PowerShell/export.ps1 + IDF Python env | [macos-codex-esp-idf.md](macos-codex-esp-idf.md) |
+| ci-host-metal | Host-always CI vs opt-in self-hosted metal plane (#101) | [ci-host-metal.md](ci-host-metal.md) |
 
 Add a row when you add a file.

@@ -20,8 +20,15 @@ add_test(NAME time64 COMMAND test_time)
 
 # Convenience: cmake --build build/host --target host_test runs ctest.
 # Do not name this target "test" — CMake reserves that name when enable_testing() is on.
+# Multi-config generators (Visual Studio) need -C; single-config (Ninja) use no -C.
+# Prefer on Windows: cmake -S host -B build/host -G Ninja
+if(CMAKE_CONFIGURATION_TYPES)
+  set(_gcu_ctest_config_args -C $<CONFIG>)
+else()
+  set(_gcu_ctest_config_args)
+endif()
 add_custom_target(host_test
-  COMMAND ${CMAKE_CTEST_COMMAND} --output-on-failure
+  COMMAND ${CMAKE_CTEST_COMMAND} --output-on-failure ${_gcu_ctest_config_args}
   DEPENDS test_defaults test_time
   WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
 )

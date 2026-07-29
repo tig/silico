@@ -10,6 +10,7 @@ This file is **not** a fork of the Bedside tenets.
 | ESP32 USB duplex / console lockout | `silico/knowledge/esp32-usb-serial.md` |
 | ESP32 audio / DAC / PWM silence | `silico/knowledge/esp32-audio.md` |
 | SPI IPS color / partial blit | `silico/knowledge/esp32-lcd-ips.md` |
+| ESP screen capture for agents (when ready) | `silico/knowledge/esprec.md` ([tig/esprec](https://github.com/tig/esprec)) |
 | Large binary asset deploy | `silico/knowledge/deploy-assets.md` |
 | M5GO / Core v2.7 power button | `silico/knowledge/m5go-power.md` |
 | This file | metal-host glossary only — do **not** also reload the full contract if AGENTS already pinned it |
@@ -35,7 +36,7 @@ Host tools and first-ship **stage order** live in **AGENTS.md**. Metal-specific 
 5. Deploy overwrite only after `bedside ask --id confirm-deploy` (or host UI same contract).
 6. **Before write/reset:** clearly tell the operator what the board may do after boot (tones, LEDs, motion, duration) — especially audio products. Permission to overwrite is not a license to startle.
 7. After `--verify`, **soft-reset again** so the product boot entry runs (verify parks the app loop).
-8. **Operator-observable good:** confirm the human can **see or hear** the documented **product face** for **this** product board (not only `FW_VERSION` over REPL). Always say **product face**, never bare “face.” Plate generic LED on the wrong pin is not acceptance.
+8. **Operator-observable good:** confirm the human can **see or hear** the documented **product face** for **this** product board (not only `FW_VERSION` over REPL). Always say **product face**, never bare “face.” Plate generic LED on the wrong pin is not acceptance. Screened ESP: when **esprec** is ready, agents may capture PNG/GIF for evidence — that does **not** replace this operator confirm (`silico/knowledge/esprec.md`).
 9. **Pin / product face mismatch → ask first:** if GPIO, LED, or audio that makes up the product face is unclear vs product docs/board, **stop and clarify with the operator** (`bedside ask` / host picker) before assuming, filing-only, or advancing stages. Then fix → redeploy → re-confirm observe.
 10. App updates after first-flash: no re-teaching UF2/esptool.
 

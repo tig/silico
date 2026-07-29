@@ -83,7 +83,7 @@ Context is finite. **Do not** open every manners file into the active window.
 | Operator language (first prompt orient, first-use term defs, big-step why/where) | **silico AGENTS** + [lexicon](specs/lexicon.md) | Not bedside tenets; domain on top of contract |
 | COM / first-flash (UF2 **or** esptool) / board identity / metal deploy | **silico BEDSIDE.md** + `silico/knowledge/first-flash.md` + CLI | AGENTS first-ship metal sections may point here; avoid full restatement |
 | GCU `bedside.toml` pin (sibling paths to silico vendor) | **plate** ships it; GCU keeps it | Do not leave GCU without a pin and then invent a prose path |
-| Board/host capability notes (audio, bridges, …) | **silico/knowledge/** (self-improving) | Product must not soft-fork; agents **append** host truths here |
+| Board/host capability notes (audio, bridges, screened capture via esprec when ready, …) | **silico/knowledge/** (self-improving) | Product must not soft-fork; agents **append** host truths here; open [esprec.md](silico/knowledge/esprec.md) only for ESP display capture |
 | Eval rubric / fixtures | **tig/bedside** `eval/` | Run CLI; do not paste rubric into context |
 | Product domain (idle, vehicle, tunes-as-product, …) | **GCU repo** | Never silico or bedside |
 
@@ -860,6 +860,17 @@ Deploy verify + `FW_VERSION` match prove the **host wrote this build**. They do 
 3. If product docs name a product face (e.g. M5 front-panel / side LEDs, speaker riff) and the plate only toggles a generic/dev-board pin (e.g. XIAO GPIO LED that is not the product face): **that is HW confusion, not first ship done.** Resolve it with the operator — prefer **`silico board-profile`** pin packs (e.g. `m5go`: side strip **15**, speaker **25**) and `silico board-profile seed` into `firmware/defaults.py` **after** operator confirm of the map; also use parts/spec/board knowledge. Host-test, redeploy, re-confirm observe. Filing a GitHub issue is a tracker, not acceptance.
 4. Product face gaps that block observe are **in-scope first-ship metal work**. Silico exists to help the operator through this. Do not label the session “on the metal” / “first ship complete” while an open issue still says the product face is unproven.
 
+##### Screened ESP UIs — esprec (**ready**)
+
+When the product face is a **display** on ESP32-class hardware, agents use **esprec** ([tig/esprec](https://github.com/tig/esprec) — tuirec *analogue* for device screens) for **PNG/GIF capture** over USB serial: `pip install -e ../esprec`, then `esprec snapshot --port COMx -o face.png`. Detail: [silico/knowledge/esprec.md](silico/knowledge/esprec.md).
+
+| Do | Do not |
+|----|--------|
+| Open `esprec.md` only when the GCU has a screen face and you need agent eyes | Invent a private capture stack when esprec already covers the wire |
+| Use capture as **extra** evidence after deploy + app running | Replace **operator** product face confirm on first ship with “I viewed a PNG” |
+| Keep GCU **host gate** as pytest/CTest + plate CI | Force QEMU jobs onto every GCU because esprec may use QEMU in *its* CI |
+| Treat esprec as **external tooling** until a second GCU forces a pin | Redefine GCU **sim** (`sim/` HAL plant) as “run under QEMU” |
+
 ##### GPIO / pin / product face ambiguity → **stop and ask** (mandatory)
 
 When you notice (or should notice) that the **pin, LED, speaker, or product face “good”** in firmware does not clearly match the **product board / spec**, you **must not** quietly assume, monologue an “Honesty” paragraph, or only open a GitHub issue. Never call this bare “face.”
@@ -900,7 +911,8 @@ bedside ask --id clarify-product-face \
 6. Soft-reset so **main.py runs as the app** (deploy verify uses REPL and parks the loop). If the soft-reset itself will start sound/motion, announce that **before** the reset. If raw REPL fails: product `repl` door or boot window (Ctrl-C may be data).
 7. **Operator-observable check:** document the **product face** “good”; confirm with the operator from the bench. If product face ≠ plate generic pin (or mapping is unclear): **clarify with the operator first** (structured ask), then fix, redeploy, re-confirm observe — do not stop at version match or issue-only.
 8. Optional: `silico monitor --port COMx --duration 10`.
-9. Document `install/` leave-behind (update-path one-liner + product face “good”: LEDs/audio/etc.).
+9. Optional (screened ESP): `esprec snapshot --port COMx -o …` for agent eyes — still confirm product face with the operator on first ship ([knowledge/esprec.md](silico/knowledge/esprec.md)).
+10. Document `install/` leave-behind (update-path one-liner + product face “good”: LEDs/audio/etc.).
 
 Non-Python deploy assets (e.g. audio riffs) may appear in `[deploy].core`; host hygiene skips them as copy-only.
 

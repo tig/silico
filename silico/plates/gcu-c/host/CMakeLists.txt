@@ -18,6 +18,10 @@ add_executable(test_time test_time.c)
 target_link_libraries(test_time gcu_core)
 add_test(NAME time64 COMMAND test_time)
 
+add_executable(test_protocol test_protocol.c)
+target_link_libraries(test_protocol gcu_core)
+add_test(NAME protocol COMMAND test_protocol)
+
 # Convenience: cmake --build build/host --target host_test runs ctest.
 # Do not name this target "test" — CMake reserves that name when enable_testing() is on.
 # Multi-config generators (Visual Studio) need -C; single-config (Ninja) use no -C.
@@ -29,6 +33,6 @@ else()
 endif()
 add_custom_target(host_test
   COMMAND ${CMAKE_CTEST_COMMAND} --output-on-failure ${_gcu_ctest_config_args}
-  DEPENDS test_defaults test_time
+  DEPENDS test_defaults test_time test_protocol
   WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
 )

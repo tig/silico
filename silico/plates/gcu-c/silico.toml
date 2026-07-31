@@ -23,3 +23,19 @@ allow_device_headers = ["hal_board"]
 [deploy]
 mode = "idf-flash"
 project = "firmware"
+
+# Data-partition payloads (songs, LUTs, calibration blobs) ride along with the
+# app image: `silico deploy` plans them and flashes after --yes, same confirm
+# manners as the image. Use this instead of hand-rolling an esptool
+# write_flash line into your install docs — a command wall in a README is the
+# thing this replaces, and an asset flashed by hand is an asset that silently
+# goes missing on the next operator's bench.
+#
+# `partition` is the name column in firmware/partitions.csv; `offset` is only
+# needed when there is no matching row to resolve.
+#
+# [[deploy.data]]
+# name = "song"
+# file = "assets/first.u8.raw"
+# partition = "storage"
+# # offset = "0x210000"

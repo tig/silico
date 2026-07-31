@@ -148,9 +148,42 @@ For product audio that must sound better than bit-bang DAC:
 
 Do not copy keypad/Web-UI surfaces into silico; extract only host techniques that every GCU might need.
 
+## Two C paths to the built-in DAC — pick with the board, not the docs
+
+On `language=c` GCUs there are **two** ways to feed the classic-ESP32 internal DAC, and the better one is board-dependent:
+
+| Path | Use when | Measured trouble |
+|------|----------|------------------|
+| `dac_continuous` (DMA) | Short-to-medium PCM; boards where it stays fed | **M5GO: descriptor timeouts under load** on multi-minute streams |
+| **I2S → built-in DAC** (`I2S_MODE_DAC_BUILT_IN`) | Multi-minute streams, or when `dac_continuous` times out | Channel-format trap below — silently plays **2× fast** |
+
+Do not treat either as *the* C answer. Measure on the board, then record which one you shipped and why. Both sections below are live guidance.
+
+### I2S → built-in DAC (measured on M5GO / classic ESP32)
+
+The reliable long-stream path on M5-class cores. Shape that worked:
+
+```text
+mode              = I2S_MODE_MASTER | I2S_MODE_TX | I2S_MODE_DAC_BUILT_IN
+bits_per_sample   = 16                       # DAC takes the top 8 bits
+channel_format    = I2S_CHANNEL_FMT_RIGHT_LEFT   # NOT ONLY_RIGHT — see trap
+communication_fmt = I2S_COMM_FORMAT_STAND_MSB
+dma_buf_count     = 8
+dma_buf_len       = 256
+use_apll          = true
+tx_desc_auto_clear = true
+then: i2s_set_dac_mode(I2S_DAC_CHANNEL_BOTH_EN)
+```
+
+**The 2× fast trap (costs hours if you do not know it).** With `I2S_CHANNEL_FMT_ONLY_RIGHT`, content clocks about **twice as fast** as its true rate on this path. The symptom looks exactly like a sample-rate bug, so the natural (wrong) fix is to halve the configured rate — which then makes every other rate assumption in the product wrong. **Correct fix:** use `I2S_CHANNEL_FMT_RIGHT_LEFT` and duplicate the mono sample into both L and R slots. Suspect channel format *before* you touch the asset's sample rate.
+
+**Feeding u8 mono.** Expand each unsigned byte to a signed 16-bit frame written to both channels. Digital gain belongs here, and it has a ceiling: on the M5 amp **4× clipped audibly; 2× was desk-loud and clean**. Gain is product behavior — put the factor in the shipped defaults table, not a literal buried in the expander, and keep the comment honest about which factor actually shipped.
+
+**Stopping cleanly.** Park to **u8 mid (128 → `0x8000` in a 16-bit frame)** and stop there if more audio follows. Writing mid and then hard-writing **zero** steps the DAC to rail and **clicks** — the same cliff described under *Silence is hard*, just one abstraction up. Ramp mid → 0 if you truly want the pin at 0 V.
+
 ## ESP-IDF `dac_continuous` (C / native path) — queue depth is product behavior
 
-Native ESP-IDF continuous DAC (DMA) is the right path for multi-minute PCM on `language=c` GCUs. **Queue depth is audible product behavior**, not a free tuning knob (#79 field report).
+Native ESP-IDF continuous DAC (DMA) is a good path for PCM on `language=c` GCUs **where it stays fed** — see the table above before committing to it on an M5-class board. **Queue depth is audible product behavior**, not a free tuning knob (#79 field report).
 
 ### Queue depth vs pause / teardown
 
@@ -196,10 +229,14 @@ returns.
 
 ### Agent checklist (C audio)
 
+- [ ] Path chosen by **measurement** on this board (`dac_continuous` vs I2S→DAC), and the reason recorded.
+- [ ] If I2S→DAC: `RIGHT_LEFT` + mono duplicated. Pitch wrong? Suspect **channel format before sample rate**.
+- [ ] Digital gain measured against the board's amp, and stored in the shipped defaults table.
 - [ ] Queue depth chosen for **pause UX**, not max underrun margin alone.
-- [ ] Stop path **drains** before disable.
+- [ ] Stop path **drains** before disable; park at **mid**, never hard-zero after mid.
 - [ ] Rate from header + probe validation.
 - [ ] Operator forewarning before long boot riffs (AGENTS: announce surprising metal effects).
+- [ ] UI paint cost checked against the feeder: per-pixel `fill_rect` text rendering can issue tens of thousands of SPI transactions per second and starve the audio task. Compose regions and blit once.
 
 ## Deploy / CDC interaction
 
@@ -240,3 +277,7 @@ Keep results in the GCU (script + notes). Promote durable bullets **here**.
 - NeoPixel side-strip updates interleaved with DAC sample loops coupled noise into the amp; static sides during long PCM helped.
 - Streaming u8 mono from flash in ~1 KiB chunks with button polls between/inside chunks allows pause without loading the whole file into RAM.
 - `period = 1_000_000 // 11025` floors to 90 µs (~0.78% fast); use rounded period or remainder-accumulator (`base` + distribute `1e6 % hz`) for correct pitch/duration.
+- **C / M5GO:** `dac_continuous` hit descriptor timeouts under load on multi-minute streams; I2S → built-in DAC (`I2S_MODE_DAC_BUILT_IN`, 8 × 256 DMA, APLL) streamed the full track reliably (measured 2026-07).
+- **C / classic ESP32:** `I2S_CHANNEL_FMT_ONLY_RIGHT` on the built-in-DAC path clocked content **~2× fast**; `I2S_CHANNEL_FMT_RIGHT_LEFT` with the mono sample duplicated into both slots fixed pitch. The symptom mimics a sample-rate error and burned several commits chasing 44.1 k vs 22.05 k before the channel format was found.
+- **C / M5 amp:** 4× digital gain on u8 PCM distorted; 2× was desk-loud and clean.
+- Parking an I2S DAC at u8 mid and then writing a zero frame re-introduced the click that parking at mid exists to avoid.

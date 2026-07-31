@@ -12,9 +12,15 @@
 #include <unistd.h>
 
 /*
+ * Link plumbing only. Parsing and dispatch live in portable domain code
+ * (gcu_handle_command) so the command surface is host-testable — this file
+ * moves bytes, it does not decide what a command means.
+ *
  * Identity on the link (#78 / #79): boot-print alone is not enough for
  * silico inspect after the greeting scrolls past. The app must also answer
  * the host word "identity" (CR/LF framed) with fw_name=… fw_version=….
+ * `repl` and `reboot` are required alongside it — a build without the
+ * escape hatch cannot be reclaimed without hardware gymnastics.
  *
  * stdin MUST be non-blocking before the forever loop. Blocking getchar()
  * would park app_main and kill the product face (tick/LED) until a host
@@ -35,7 +41,7 @@ static void stdin_set_nonblocking(void) {
   }
 }
 
-static void drain_identity_command(void) {
+static void drain_link_commands(gcu_state_t *st) {
   static char line[48];
   static int n;
   int c;
@@ -48,15 +54,10 @@ static void drain_identity_command(void) {
   while ((c = getchar()) != EOF) {
     if (c == '\r' || c == '\n') {
       if (n > 0) {
+        char reply[80];
         line[n] = '\0';
-        char *p = line;
-        while (*p && isspace((unsigned char)*p)) {
-          p++;
-        }
-        if (strcmp(p, "identity") == 0) {
-          char id[64];
-          gcu_identity_line(id, (int)sizeof id);
-          printf("%s\n", id);
+        if (gcu_handle_command(st, line, reply, (int)sizeof reply)) {
+          printf("%s\n", reply);
           fflush(stdout);
         }
         n = 0;
@@ -98,7 +99,14 @@ void app_main(void) {
 
   gcu_init(&st, hal);
   for (;;) {
-    drain_identity_command();
+    drain_link_commands(&st);
+    if (st.reboot_pending) {
+      /* Reply already flushed above; outputs already parked by the domain. */
+      st.reboot_pending = 0;
+      if (hal && hal->reboot) {
+        hal->reboot(hal);
+      }
+    }
     gcu_tick(&st);
     if (hal && hal->delay_ms) {
       hal->delay_ms(hal, gcu_tick_sleep_ms(&st));

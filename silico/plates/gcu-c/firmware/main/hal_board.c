@@ -2,6 +2,7 @@
 #include "hal_board.h"
 
 #include "driver/gpio.h"
+#include "esp_system.h"
 #include "esp_timer.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
@@ -27,10 +28,25 @@ static int64_t now_ms(gcu_hal_t *self) {
   return esp_timer_get_time() / 1000;
 }
 
+/* Escape hatch: quiet everything this board drives. Extend as the product
+ * grows outputs (speaker to parked level, strips off, actuators safe) —
+ * `repl` must not hand the console back with the product still singing. */
+static void park_outputs(gcu_hal_t *self) {
+  (void)self;
+  gpio_set_level(GCU_LED_GPIO, 0);
+}
+
+static void board_reboot(gcu_hal_t *self) {
+  (void)self;
+  esp_restart();
+}
+
 static gcu_hal_t board_hal = {
     .set_led = set_led,
     .delay_ms = delay_ms,
     .now_ms = now_ms,
+    .park_outputs = park_outputs,
+    .reboot = board_reboot,
 };
 
 gcu_hal_t *gcu_make_board_hal(void) {

@@ -88,7 +88,7 @@ exactly that; keep that seed when you extend the domain.
   `silico doctor` reads it; check before installing another IDF.
 - More: `silico/knowledge/macos-codex-esp-idf.md`.
 
-## Identity (required on the link)
+## Link command surface (identity + escape hatch)
 
 **Boot-print alone is not enough** for `silico inspect` after a greeting or banner scrolls past (#78 / #79). The image **must answer** the host word `identity` (CR/LF framed) with:
 
@@ -98,4 +98,27 @@ fw_name=GCU fw_version=0.0.1
 
 Plate `main.c` shows the pattern: print once at boot **and** respond when the host knocks. A boot-print-only app is invisible to inspect as soon as the banner is gone.
 
-Escape hatch (`repl` / `reboot`) is a product requirement for reclaim without hard reset when possible.
+`identity`, `repl`, and `reboot` all ship in the plate. The escape hatch is **not optional decoration**: `repl` parks outputs and releases the console so a host can redeploy without hardware gymnastics, and `reboot` parks then hard-resets. A build without the door cannot be reclaimed on a bench.
+
+### Parsing lives in the domain, not in main.c
+
+`gcu_parse_command` / `gcu_handle_command` are in `src/domain.c`; `firmware/main/main.c` only moves bytes. Keep it that way:
+
+1. `silico inspect` knocks **`identity`** and nothing else. Whatever else your product declares is verified by **your** host tests or not at all — so put the surface where a host test can reach it.
+2. A dispatcher inside `firmware/` is device-only code, which means "protocol parsing" can never be part of a host-green claim.
+
+`host/test_protocol.c` covers identity, `repl` parking, deferred `reboot`, blank lines, and unknown input failing closed. **Add a row for every command your product spec declares** — including the ones that must be refused. If your spec says the listed commands are the complete surface, do not quietly ship a fourth one (diagnostic capture hooks included).
+
+Outputs your board drives get quieted in the HAL's `park_outputs` — extend it as the product grows a speaker, strips, or actuators. `repl` handing back a console while the product is still singing is a defect.
+
+## Product defaults and host coverage
+
+`silico product-path` proves a host scenario **loads** `[host].product_defaults` — it does not prove your spec's normative behavior is covered. Those are different claims. When the product spec has normative tables (button map, state machine, cycle order, screen layout), give each one a host test; the plate's `host/` files are a **floor to build on, not a ceiling**. Three shipped test files is what the plate happens to need, not what your product needs.
+
+Anything unmeasurable in the spec ("smooth", "comfortable", "a debounce") becomes a number the moment you implement it. Put it in `include/gcu/defaults.h` and tell the operator you chose it — do not let the choice exist only in your head.
+
+## Display HAL granularity (screens)
+
+If the product face is a screen, the HAL's drawing primitives are a performance contract, not a formality. Compose a region into a buffer and **blit it once**; do not render text or glyphs by calling a per-pixel `fill_rect` in a loop. A 5x7 glyph drawn pixel-by-pixel is ~35 SPI transactions (and ~35 allocations if the backend allocates per call) **per character** — a six-row sensor readout at 10 Hz becomes tens of thousands of transactions per second, which is exactly the load that fights an audio DMA feeder and shows up as stutter the operator can hear.
+
+Keep partial paints regional (eye only, banner strip only, value fields only) and reserve full-screen clears for mode changes.
